@@ -1,0 +1,195 @@
+/* ── Kaayu Studio Manager — Brand-aligned styles ────────────────────────── */
+/* Brand palette:
+   Desert      #B17457   primary accent
+   Sea Green   #637C60   secondary / completed
+   Milk        #F9FFF0   background
+   Light Stone #D8D2D2   borders / neutral
+   Charcoal    #2E2E2E   text / sidebar
+*/
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+#sidebar {
+  width: 220px;
+  background: #2E2E2E;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  transition: transform 0.25s ease;
+}
+
+/* Overlay (mobile) */
+#sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 39;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+#sidebar-overlay.overlay-visible {
+  display: block;
+  opacity: 1;
+}
+
+/* Mobile close button — hidden on desktop */
+.sidebar-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Mobile top bar */
+.mobile-topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: #2E2E2E;
+  padding: 12px 16px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mobile-topbar button {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+/* Content area */
+.content-area {
+  margin-left: 220px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── RESPONSIVE: tablet / mobile (<768px) ───────────────────────────────── */
+@media (max-width: 767px) {
+  #sidebar {
+    transform: translateX(-220px);
+  }
+  #sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+  .sidebar-close-btn {
+    display: flex;
+  }
+  .mobile-topbar {
+    display: flex;
+  }
+  .content-area {
+    margin-left: 0;
+  }
+}
+
+/* ── Stage pipeline stepper ─────────────────────────────────────────────── */
+.stage-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.stage-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 60%;
+  width: 80%;
+  height: 2px;
+  background-color: #D8D2D2;
+  z-index: 0;
+}
+
+.stage-step.completed:not(:last-child)::after {
+  background-color: #637C60;
+}
+
+.stage-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  z-index: 1;
+  position: relative;
+}
+
+.stage-icon.completed {
+  background-color: #637C60;
+  color: white;
+}
+
+.stage-icon.current {
+  background-color: #B17457;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(177,116,87,0.2);
+}
+
+.stage-icon.pending {
+  background-color: #D8D2D2;
+  color: #9ca3af;
+}
+
+.stage-label {
+  margin-top: 6px;
+  font-size: 11px;
+  text-align: center;
+  max-width: 80px;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+.stage-label.current {
+  color: #B17457;
+  font-weight: 600;
+}
+
+.stage-label.completed {
+  color: #637C60;
+}
+
+.stage-label.pending {
+  color: #b0a9a9;
+}
+
+/* ── Status badges ──────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.badge-active    { background: rgba(99,124,96,0.12);  color: #4d5f4a; border: 1px solid rgba(99,124,96,0.25); }
+.badge-on_hold   { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.badge-completed { background: rgba(177,116,87,0.1);  color: #7a503c; border: 1px solid rgba(177,116,87,0.25); }
+.badge-cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+/* Quote status badges */
+.badge-draft     { background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; }
+.badge-sent      { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-accepted  { background: rgba(99,124,96,0.12); color: #4d5f4a; border: 1px solid rgba(99,124,96,0.25); }
+.badge-rejected  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+.rev-status-in_progress { background: #fef3c7; color: #92400e; }
+.rev-status-approved    { background: rgba(99,124,96,0.12); color: #4d5f4a; }
+.rev-status-rejected    { background: #fee2e2; color: #991b1b; }

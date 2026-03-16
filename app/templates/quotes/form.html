@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Quote' if quote else 'New Quote' }}{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  {% if quote %}
+  <a href="/quotes/{{ quote.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Quote</a>
+  {% else %}
+  <a href="/quotes" class="text-sm text-indigo-600 hover:underline">&larr; All Quotes</a>
+  {% endif %}
+  <h1 class="text-2xl font-bold text-gray-900 mt-2">{{ 'Edit Quote' if quote else 'New Quote' }}</h1>
+</div>
+
+<form method="post"
+      action="{{ '/quotes/' + quote.id|string + '/edit' if quote else '/quotes/new' }}"
+      id="quoteForm">
+
+  <!-- Project + Valid Until + Notes + Terms -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5 space-y-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Project <span class="text-red-500">*</span></label>
+        <select name="project_id" required
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          <option value="">— Select Project —</option>
+          {% for p in projects %}
+          <option value="{{ p.id }}"
+            {% if quote and quote.project_id == p.id %}selected
+            {% elif prefill_project_id and prefill_project_id == p.id|string %}selected{% endif %}>
+            {{ p.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Valid Until</label>
+        <input type="date" name="valid_until"
+          value="{{ quote.valid_until.isoformat() if quote and quote.valid_until else '' }}"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+      <textarea name="notes" rows="2" placeholder="Internal notes or client-facing remarks..."
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ quote.notes or '' if quote else '' }}</textarea>
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Terms &amp; Conditions</label>
+      <textarea name="terms_conditions" rows="3" placeholder="Payment terms, delivery conditions, etc."
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ quote.terms_conditions or '' if quote else '' }}</textarea>
+    </div>
+  </div>
+
+  <!-- Line Items -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800">Line Items</h2>
+      <button type="button" onclick="addItemRow()"
+        class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded text-sm hover:bg-indigo-100 transition">
+        + Add Item
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm" id="itemsTable">
+      <thead class="border-b border-gray-200 text-gray-500">
+        <tr>
+          <th class="pb-2 text-left font-medium">Item Name</th>
+          <th class="pb-2 text-left font-medium w-28">Size</th>
+          <th class="pb-2 text-left font-medium">Description</th>
+          <th class="pb-2 text-right font-medium w-14">Qty</th>
+          <th class="pb-2 text-left font-medium w-14">Unit</th>
+          <th class="pb-2 text-right font-medium w-24">Rate (₹)</th>
+          <th class="pb-2 text-right font-medium w-24">Amount (₹)</th>
+          <th class="pb-2 w-8"></th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody">
+        {% if quote and quote.items %}
+          {% for item in quote.items %}
+          <tr class="item-row border-b border-gray-100">
+            <td class="py-1.5 pr-2">
+              <input type="text" name="item_name" value="{{ item.item_name }}" placeholder="Item name"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+            </td>
+            <td class="py-1.5 pr-2">
+              <input type="text" name="size" value="{{ item.size or '' }}" placeholder="e.g. 2×3 ft"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+            </td>
+            <td class="py-1.5 pr-2">
+              <input type="text" name="description" value="{{ item.description or '' }}" placeholder="Details"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+            </td>
+            <td class="py-1.5 pr-2">
+              <input type="number" name="qty" value="{{ item.qty }}" min="0" step="any"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 qty-input" />
+            </td>
+            <td class="py-1.5 pr-2">
+              <input type="text" name="unit" value="{{ item.unit or 'pcs' }}" placeholder="pcs"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+            </td>
+            <td class="py-1.5 pr-2">
+              <input type="number" name="unit_price" value="{{ item.unit_price }}" min="0" step="any"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 price-input" />
+            </td>
+            <td class="py-1.5 pr-2 text-right">
+              <span class="amount-display font-medium text-gray-700">{{ "%.0f"|format(item.amount) }}</span>
+            </td>
+            <td class="py-1.5 text-center">
+              <button type="button" onclick="removeRow(this)" class="text-gray-300 hover:text-red-500 text-lg leading-none">&times;</button>
+            </td>
+          </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+    </div>
+    <p id="noItemsMsg" class="text-center text-gray-400 text-sm py-4 {% if quote and quote.items %}hidden{% endif %}">
+      No items yet. Click "+ Add Item" to start.
+    </p>
+  </div>
+
+  <!-- Sundries -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800">Sundries</h2>
+      <button type="button" onclick="addSundryRow()"
+        class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded text-sm hover:bg-indigo-100 transition">
+        + Add Sundry
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm" id="sundriesTable">
+      <thead class="border-b border-gray-200 text-gray-500">
+        <tr>
+          <th class="pb-2 text-left font-medium">Particular</th>
+          <th class="pb-2 text-right font-medium w-32">Amount (₹)</th>
+          <th class="pb-2 w-8"></th>
+        </tr>
+      </thead>
+      <tbody id="sundriesBody">
+        {% if quote and quote.sundries %}
+          {% for s in quote.sundries %}
+          <tr class="sundry-row border-b border-gray-100">
+            <td class="py-1.5 pr-2">
+              <input type="text" name="sundry_particular" value="{{ s.particular }}" placeholder="e.g. Transportation"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+            </td>
+            <td class="py-1.5 pr-2">
+              <input type="number" name="sundry_amount" value="{{ s.amount }}" min="0" step="any"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 sundry-amount-input" />
+            </td>
+            <td class="py-1.5 text-center">
+              <button type="button" onclick="removeSundryRow(this)" class="text-gray-300 hover:text-red-500 text-lg leading-none">&times;</button>
+            </td>
+          </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+    </div>
+    <p id="noSundriesMsg" class="text-center text-gray-400 text-sm py-3 {% if quote and quote.sundries %}hidden{% endif %}">
+      No sundries. Click "+ Add Sundry" to add extras.
+    </p>
+  </div>
+
+  <!-- GST + Live Totals -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+
+    <!-- GST -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-4">
+      <h2 class="text-base font-semibold text-gray-800">GST</h2>
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">CGST %</label>
+          <input type="number" name="cgst_percent" id="cgstPct" min="0" step="any"
+            value="{{ quote.cgst_percent if quote else 9 }}"
+            oninput="recalcTotals()"
+            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">SGST %</label>
+          <input type="number" name="sgst_percent" id="sgstPct" min="0" step="any"
+            value="{{ quote.sgst_percent if quote else 9 }}"
+            oninput="recalcTotals()"
+            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">IGST %</label>
+          <input type="number" name="igst_percent" id="igstPct" min="0" step="any"
+            value="{{ quote.igst_percent if quote else 0 }}"
+            oninput="recalcTotals()"
+            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Totals -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+      <h2 class="text-base font-semibold text-gray-800 mb-4">Totals</h2>
+      <table class="w-full text-sm">
+        <tbody>
+          <tr>
+            <td class="py-1 text-gray-500">Items Subtotal</td>
+            <td class="py-1 text-right font-medium" id="dispItemsSub">₹0</td>
+          </tr>
+          <tr id="sundriesRow" class="hidden">
+            <td class="py-1 text-gray-500">Sundries</td>
+            <td class="py-1 text-right" id="dispSundries">₹0</td>
+          </tr>
+          <tr class="border-t border-gray-100">
+            <td class="py-1 text-gray-600 font-medium">Subtotal</td>
+            <td class="py-1 text-right font-semibold" id="dispSubtotal">₹0</td>
+          </tr>
+          <tr id="cgstRow" class="hidden">
+            <td class="py-1 text-gray-500">CGST</td>
+            <td class="py-1 text-right" id="dispCgst">₹0</td>
+          </tr>
+          <tr id="sgstRow" class="hidden">
+            <td class="py-1 text-gray-500">SGST</td>
+            <td class="py-1 text-right" id="dispSgst">₹0</td>
+          </tr>
+          <tr id="igstRow" class="hidden">
+            <td class="py-1 text-gray-500">IGST</td>
+            <td class="py-1 text-right" id="dispIgst">₹0</td>
+          </tr>
+          <tr class="border-t border-gray-200">
+            <td class="pt-2 font-semibold text-gray-800">Total</td>
+            <td class="pt-2 text-right font-bold text-lg text-indigo-700" id="dispTotal">₹0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">
+      {{ 'Save Changes' if quote else 'Create Quote' }}
+    </button>
+    <a href="{{ '/quotes/' + quote.id|string if quote else '/quotes' }}"
+       class="bg-gray-100 text-gray-700 px-5 py-2 rounded hover:bg-gray-200 transition text-sm">Cancel</a>
+  </div>
+</form>
+
+<script>
+// ── Item rows ─────────────────────────────────────────────────────────────────
+const _itemRowTpl = `
+<tr class="item-row border-b border-gray-100">
+  <td class="py-1.5 pr-2">
+    <input type="text" name="item_name" value="" placeholder="Item name"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+  </td>
+  <td class="py-1.5 pr-2">
+    <input type="text" name="size" value="" placeholder="e.g. 2×3 ft"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+  </td>
+  <td class="py-1.5 pr-2">
+    <input type="text" name="description" value="" placeholder="Details"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+  </td>
+  <td class="py-1.5 pr-2">
+    <input type="number" name="qty" value="1" min="0" step="any"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 qty-input" />
+  </td>
+  <td class="py-1.5 pr-2">
+    <input type="text" name="unit" value="pcs" placeholder="pcs"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+  </td>
+  <td class="py-1.5 pr-2">
+    <input type="number" name="unit_price" value="0" min="0" step="any"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 price-input" />
+  </td>
+  <td class="py-1.5 pr-2 text-right">
+    <span class="amount-display font-medium text-gray-700">0</span>
+  </td>
+  <td class="py-1.5 text-center">
+    <button type="button" onclick="removeRow(this)" class="text-gray-300 hover:text-red-500 text-lg leading-none">&times;</button>
+  </td>
+</tr>`;
+
+const _sundryRowTpl = `
+<tr class="sundry-row border-b border-gray-100">
+  <td class="py-1.5 pr-2">
+    <input type="text" name="sundry_particular" value="" placeholder="e.g. Transportation"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+  </td>
+  <td class="py-1.5 pr-2">
+    <input type="number" name="sundry_amount" value="0" min="0" step="any"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 sundry-amount-input" />
+  </td>
+  <td class="py-1.5 text-center">
+    <button type="button" onclick="removeSundryRow(this)" class="text-gray-300 hover:text-red-500 text-lg leading-none">&times;</button>
+  </td>
+</tr>`;
+
+function addItemRow() {
+  const tbody = document.getElementById('itemsBody');
+  tbody.insertAdjacentHTML('beforeend', _itemRowTpl);
+  const row = tbody.lastElementChild;
+  bindItemRow(row);
+  document.getElementById('noItemsMsg').classList.add('hidden');
+}
+
+function removeRow(btn) {
+  btn.closest('tr').remove();
+  document.getElementById('noItemsMsg').classList.toggle(
+    'hidden', document.querySelectorAll('.item-row').length > 0);
+  recalcTotals();
+}
+
+function addSundryRow() {
+  const tbody = document.getElementById('sundriesBody');
+  tbody.insertAdjacentHTML('beforeend', _sundryRowTpl);
+  const row = tbody.lastElementChild;
+  row.querySelector('.sundry-amount-input').addEventListener('input', recalcTotals);
+  document.getElementById('noSundriesMsg').classList.add('hidden');
+}
+
+function removeSundryRow(btn) {
+  btn.closest('tr').remove();
+  document.getElementById('noSundriesMsg').classList.toggle(
+    'hidden', document.querySelectorAll('.sundry-row').length > 0);
+  recalcTotals();
+}
+
+function bindItemRow(row) {
+  row.querySelectorAll('.qty-input, .price-input').forEach(inp =>
+    inp.addEventListener('input', () => { updateRowAmount(row); recalcTotals(); })
+  );
+}
+
+function updateRowAmount(row) {
+  const qty   = parseFloat(row.querySelector('.qty-input').value)   || 0;
+  const price = parseFloat(row.querySelector('.price-input').value) || 0;
+  const amt   = qty * price;
+  row.querySelector('.amount-display').textContent = Math.round(amt);
+  return amt;
+}
+
+function fmtRupee(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function fmtDec(n)   { return '₹' + n.toFixed(2); }
+
+function recalcTotals() {
+  let itemsSub = 0;
+  document.querySelectorAll('.item-row').forEach(row => { itemsSub += updateRowAmount(row); });
+
+  let sundriesSub = 0;
+  document.querySelectorAll('.sundry-amount-input').forEach(inp => {
+    sundriesSub += parseFloat(inp.value) || 0;
+  });
+
+  const subtotal = Math.round(itemsSub + sundriesSub);
+  const taxable  = subtotal;
+  const cgstPct  = parseFloat(document.getElementById('cgstPct').value) || 0;
+  const sgstPct  = parseFloat(document.getElementById('sgstPct').value) || 0;
+  const igstPct  = parseFloat(document.getElementById('igstPct').value) || 0;
+  const cgst = taxable * cgstPct / 100;
+  const sgst = taxable * sgstPct / 100;
+  const igst = taxable * igstPct / 100;
+  const total = Math.round(taxable + cgst + sgst + igst);
+
+  document.getElementById('dispItemsSub').textContent  = fmtRupee(itemsSub);
+  document.getElementById('dispSubtotal').textContent   = fmtRupee(subtotal);
+  document.getElementById('dispTotal').textContent      = fmtRupee(total);
+
+  const hasSundries = sundriesSub > 0;
+  document.getElementById('sundriesRow').classList.toggle('hidden', !hasSundries);
+  if (hasSundries) document.getElementById('dispSundries').textContent = fmtRupee(sundriesSub);
+
+  document.getElementById('cgstRow').classList.toggle('hidden', cgst === 0);
+  document.getElementById('sgstRow').classList.toggle('hidden', sgst === 0);
+  document.getElementById('igstRow').classList.toggle('hidden', igst === 0);
+  if (cgst) document.getElementById('dispCgst').textContent = fmtDec(cgst);
+  if (sgst) document.getElementById('dispSgst').textContent = fmtDec(sgst);
+  if (igst) document.getElementById('dispIgst').textContent = fmtDec(igst);
+}
+
+// Bind existing rows (edit mode) and run initial calc
+document.querySelectorAll('.item-row').forEach(bindItemRow);
+document.querySelectorAll('.sundry-amount-input').forEach(inp =>
+  inp.addEventListener('input', recalcTotals)
+);
+recalcTotals();
+</script>
+{% endblock %}

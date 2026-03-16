@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Quotes{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold text-gray-900">Quotes</h1>
+  <a href="/quotes/new" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">+ New Quote</a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="mb-4 flex flex-wrap gap-3 items-center">
+  <select name="status" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    <option value="">All Statuses</option>
+    {% for s, l in status_labels.items() %}
+    <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ l }}</option>
+    {% endfor %}
+  </select>
+  <select name="project_id" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    <option value="">All Projects</option>
+    {% for p in projects %}
+    <option value="{{ p.id }}" {% if project_filter == p.id|string %}selected{% endif %}>{{ p.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition">Filter</button>
+  {% if status_filter or project_filter %}
+  <a href="/quotes" class="text-sm text-gray-500 hover:text-gray-700">Clear</a>
+  {% endif %}
+</form>
+
+{% if quotes %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+  <div class="overflow-x-auto">
+  <table class="w-full text-sm min-w-[640px]">
+    <thead class="bg-gray-50 border-b border-gray-200">
+      <tr class="text-left text-gray-500">
+        <th class="px-4 py-3 font-medium">Quote #</th>
+        <th class="px-4 py-3 font-medium">Project</th>
+        <th class="px-4 py-3 font-medium">Ver.</th>
+        <th class="px-4 py-3 font-medium">Status</th>
+        <th class="px-4 py-3 font-medium text-right">Total</th>
+        <th class="px-4 py-3 font-medium">Date</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for q in quotes %}
+      <tr class="border-b last:border-0 hover:bg-gray-50">
+        <td class="px-4 py-3">
+          <a href="/quotes/{{ q.id }}" class="font-medium text-indigo-600 hover:underline">{{ q.quote_number }}</a>
+          {% if q.is_final %}<span class="ml-1 text-xs text-seagreen font-medium">(Final)</span>{% endif %}
+        </td>
+        <td class="px-4 py-3">
+          <a href="/projects/{{ q.project_id }}" class="text-gray-700 hover:underline">{{ q.project.name }}</a>
+        </td>
+        <td class="px-4 py-3 text-gray-500">v{{ q.version }}</td>
+        <td class="px-4 py-3">
+          <span class="badge badge-{{ q.status }}">{{ status_labels[q.status] }}</span>
+        </td>
+        <td class="px-4 py-3 text-right font-medium text-gray-800">
+          {% if q.total_amount %}₹{{ "%.2f"|format(q.total_amount) }}{% else %}—{% endif %}
+        </td>
+        <td class="px-4 py-3 text-gray-400">{{ q.created_at.strftime('%d %b %Y') }}</td>
+        <td class="px-4 py-3 text-right whitespace-nowrap">
+          <a href="/quotes/{{ q.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs mr-3">Edit</a>
+          <form method="post" action="/quotes/{{ q.id }}/delete" class="inline"
+                onsubmit="return confirm('Delete quote {{ q.quote_number }}?')">
+            <button type="submit" class="text-gray-400 hover:text-red-600 text-xs">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400">
+  <div class="text-4xl mb-3">&#128203;</div>
+  <p class="text-lg">No quotes found</p>
+  <a href="/quotes/new" class="mt-4 inline-block text-indigo-600 hover:underline text-sm">Create your first quote &rarr;</a>
+</div>
+{% endif %}
+{% endblock %}

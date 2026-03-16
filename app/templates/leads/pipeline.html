@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Lead Pipeline{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Lead Pipeline</h1>
+    <p class="text-sm text-gray-500 mt-1">{{ total }} total leads</p>
+  </div>
+  <a href="/contacts/new" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">+ New Contact / Lead</a>
+</div>
+
+<!-- Kanban board -->
+<div class="flex gap-4 overflow-x-auto pb-4">
+  {% for stage in stages %}
+  {% set leads_in_stage = by_stage[stage] %}
+  {% set is_won = stage == 'won' %}
+  {% set is_lost = stage == 'lost' %}
+
+  <div class="flex-shrink-0 w-64 bg-gray-100 rounded-lg p-3">
+    <!-- Column header -->
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <h3 class="text-sm font-semibold
+          {% if is_won %}text-green-700
+          {% elif is_lost %}text-red-600
+          {% else %}text-gray-700{% endif %}">
+          {{ stage_labels[stage] }}
+        </h3>
+        <span class="text-xs bg-white text-gray-500 rounded-full px-2 py-0.5 font-medium">
+          {{ leads_in_stage | length }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="space-y-2 min-h-16">
+      {% for lead in leads_in_stage %}
+      <a href="/leads/{{ lead.id }}"
+         class="block bg-white rounded-lg p-3 shadow-sm border border-gray-200 hover:border-indigo-300 hover:shadow transition">
+        <div class="text-sm font-medium text-gray-900 truncate">{{ lead.client.name }}</div>
+        {% if lead.client.principal_architect_name %}
+        <div class="text-xs text-gray-500 truncate">{{ lead.client.principal_architect_name }}</div>
+        {% endif %}
+        <div class="flex items-center justify-between mt-2">
+          <span class="text-xs font-mono text-gray-400">{{ lead.lead_code }}</span>
+          {% if lead.budget %}
+          <span class="text-xs text-gray-600">&#8377;{{ "{:,.0f}".format(lead.budget) }}</span>
+          {% endif %}
+        </div>
+        {% if lead.client.city %}
+        <div class="text-xs text-gray-400 mt-1">{{ lead.client.city }}</div>
+        {% endif %}
+        <div class="text-xs text-gray-300 mt-1">{{ lead.updated_at.strftime('%d %b') }}</div>
+      </a>
+      {% endfor %}
+      {% if not leads_in_stage %}
+      <div class="text-xs text-gray-400 text-center py-4">No leads</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

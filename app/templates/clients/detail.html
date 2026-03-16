@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block title %}{{ client.name }}{% endblock %}
+
+{% block content %}
+
+<!-- ── Header ─────────────────────────────────────────────────── -->
+<div class="mb-5 flex items-start justify-between">
+  <div>
+    <a href="/contacts" class="text-sm text-indigo-600 hover:underline">&larr; All Contacts</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">{{ client.name }}</h1>
+    <p class="text-gray-500 text-sm mt-0.5">
+      {% set first_arch = client.principal_architects_list[0].name if client.principal_architects_list else '' %}
+      {% if first_arch %}{{ first_arch }}{% endif %}
+      {% if first_arch and client.city %} &middot; {% endif %}
+      {% if client.city %}{{ client.city }}{% endif %}
+    </p>
+  </div>
+  <div class="flex gap-2">
+    <a href="/projects/new?client_id={{ client.id }}"
+       class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">+ New Project</a>
+    <a href="/contacts/{{ client.id }}/edit"
+       class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition text-sm">Edit</a>
+    <form method="post" action="/contacts/{{ client.id }}/delete"
+          onsubmit="return confirm('Delete {{ client.name }}? All related data will be removed.')">
+      <button type="submit"
+              class="bg-red-50 text-red-600 px-4 py-2 rounded hover:bg-red-100 transition text-sm">Delete</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── Body grid ──────────────────────────────────────────────── -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- ── Left column ─────────────────────────────────────────── -->
+  <div class="space-y-4">
+
+    <!-- Contact Info -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Contact Info</h2>
+      <dl class="space-y-3 text-sm">
+        {% if client.principal_architects_list %}
+        <div>
+          <dt class="text-xs text-gray-400 mb-0.5">Principal Architect{{ 's' if client.principal_architects_list | length > 1 }}</dt>
+          {% for arch in client.principal_architects_list %}
+          <dd class="text-gray-800 font-medium {% if not loop.first %}mt-2{% endif %}">{{ arch.name }}</dd>
+          {% for num in arch.numbers %}
+          <dd class="text-gray-600 text-xs mt-0.5">{{ num }}</dd>
+          {% endfor %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if client.contact_persons_list %}
+        <div>
+          <dt class="text-xs text-gray-400 mb-0.5">Contact Person{{ 's' if client.contact_persons_list | length > 1 }}</dt>
+          {% for cp in client.contact_persons_list %}
+          <dd class="text-gray-800 {% if not loop.first %}mt-2{% endif %}">{{ cp.name }}</dd>
+          {% if cp.number %}
+          <dd class="text-gray-600 text-xs">{{ cp.number }}</dd>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if client.email %}
+        <div>
+          <dt class="text-xs text-gray-400 mb-0.5">Email</dt>
+          <dd><a href="mailto:{{ client.email }}" class="text-indigo-600 hover:underline">{{ client.email }}</a></dd>
+        </div>
+        {% endif %}
+
+        {% if client.address or client.city %}
+        <div>
+          <dt class="text-xs text-gray-400 mb-0.5">Address</dt>
+          <dd class="text-gray-700 whitespace-pre-line text-xs leading-relaxed">
+            {{ client.address or '' }}{% if client.address and client.city %},<br>{% endif %}{{ client.city or '' }}
+          </dd>
+        </div>
+        {% endif %}
+
+        <div>
+          <dt class="text-xs text-gray-400 mb-0.5">Contact Since</dt>
+          <dd class="text-gray-700">{{ client.created_at.strftime('%d %b %Y') }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Quick Send Email -->
+    {% if client.email %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Quick Email</h2>
+      {% if sent == '1' %}
+      <div class="bg-green-50 border border-green-200 text-green-700 rounded px-3 py-2 text-xs mb-3">Email sent.</div>
+      {% elif error_msg %}
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded px-3 py-2 text-xs mb-3">{{ error_msg }}</div>
+      {% endif %}
+      <form method="post" action="/contacts/{{ client.id }}/send-email" class="space-y-2">
+        <input type="text" name="subject" required placeholder="Subject"
+          class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        <textarea name="body" rows="3" required placeholder="Message..."
+          class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
+        <button type="submit" class="w-full bg-indigo-600 text-white py-1.5 rounded text-sm hover:bg-indigo-700 transition">
+          Send to {{ client.email }}
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Right column (2 cols) ────────────────────────────────── -->
+  <div class="lg:col-span-2 space-y-4">
+
+    <!-- Log Activity -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Log Activity</h2>
+      <form method="post" action="/contacts/{{ client.id }}/activities">
+        <div class="flex flex-wrap gap-3 items-end">
+          <div class="w-36">
+            <label class="block text-xs text-gray-500 mb-1">Type</label>
+            <select id="client-activity-type" name="activity_type" onchange="toggleClientSchedule(this)"
+              class="w-full border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+              {% for value, label in activity_types.items() %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="flex-1 min-w-48">
+            <label class="block text-xs text-gray-500 mb-1">Note</label>
+            <input type="text" name="note" placeholder="e.g. Discussed kitchen layout, follow up next week"
+              class="w-full border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+          </div>
+          <div class="w-44">
+            <label class="block text-xs text-gray-500 mb-1"><span id="client-schedule-label">Time (optional)</span></label>
+            <input type="datetime-local" id="client-scheduled-input" name="scheduled_at"
+              class="w-full border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+          </div>
+          <button type="submit"
+            class="bg-indigo-600 text-white px-5 py-2 rounded text-sm hover:bg-indigo-700 transition font-medium">
+            Add Activity
+          </button>
+        </div>
+      </form>
+    </div>
+    <script>
+      const _clientTimeTypes = ['call', 'meeting', 'site_visit'];
+      function toggleClientSchedule(sel) {
+        const input = document.getElementById('client-scheduled-input');
+        const label = document.getElementById('client-schedule-label');
+        input.value = '';
+        if (_clientTimeTypes.includes(sel.value)) {
+          input.type = 'datetime-local';
+          label.textContent = 'Time (optional)';
+        } else {
+          input.type = 'date';
+          label.textContent = 'Date (optional)';
+        }
+      }
+    </script>
+
+    <!-- Activity feed -->
+    {% if recent_activities %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Recent Activity</h2>
+      <div class="space-y-1">
+        {% for act in recent_activities %}
+        <div class="flex items-start gap-3 py-2.5 border-b last:border-0">
+          <!-- Icon badge -->
+          <div class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm
+            {% if act.activity_type == 'call' %}bg-blue-100 text-blue-600
+            {% elif act.activity_type == 'site_visit' %}bg-green-100 text-green-600
+            {% elif act.activity_type == 'email_sent' %}bg-purple-100 text-purple-600
+            {% elif act.activity_type == 'send' %}bg-indigo-100 text-indigo-600
+            {% elif act.activity_type == 'follow_up' %}bg-orange-100 text-orange-600
+            {% elif act.activity_type == 'meeting' %}bg-teal-100 text-teal-600
+            {% else %}bg-gray-100 text-gray-500{% endif %}">
+            {% if act.activity_type == 'call' %}&#128222;
+            {% elif act.activity_type == 'site_visit' %}&#127968;
+            {% elif act.activity_type == 'email_sent' %}&#9993;
+            {% elif act.activity_type == 'send' %}&#9992;
+            {% elif act.activity_type == 'follow_up' %}&#8635;
+            {% elif act.activity_type == 'meeting' %}&#128197;
+            {% else %}&#128203;{% endif %}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm font-medium text-gray-700">
+                {{ activity_types.get(act.activity_type, act.activity_type) }}
+              </span>
+              {% if act.is_completed %}
+              <span class="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">Done</span>
+              {% endif %}
+              {% if act.scheduled_at and not act.is_completed %}
+              <span class="text-xs bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full">
+                &#9201; {% if act.scheduled_at.hour == 0 and act.scheduled_at.minute == 0 %}{{ act.scheduled_at.strftime('%d %b %Y') }}{% else %}{{ act.scheduled_at.strftime('%d %b, %H:%M') }}{% endif %}
+              </span>
+              {% endif %}
+            </div>
+            {% if act.note %}
+            <p class="text-sm text-gray-500 mt-0.5 break-words">{{ act.note }}</p>
+            {% endif %}
+            <span class="text-xs text-gray-300">{{ act.created_at.strftime('%d %b %Y, %H:%M') }}{% if act.logged_by_name %} &middot; {{ act.logged_by_name }}{% endif %}</span>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            {% if not act.is_completed %}
+            <form method="post" action="/contacts/{{ client.id }}/activities/{{ act.id }}/complete">
+              <button type="submit"
+                class="text-xs text-green-600 bg-green-50 hover:bg-green-100 px-2 py-1 rounded transition">Done</button>
+            </form>
+            {% else %}
+            <form method="post" action="/contacts/{{ client.id }}/activities/{{ act.id }}/revert">
+              <button type="submit"
+                class="text-xs text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded transition">Undo</button>
+            </form>
+            {% endif %}
+            <form method="post" action="/contacts/{{ client.id }}/activities/{{ act.id }}/delete"
+                  onsubmit="return confirm('Delete this activity?')">
+              <button type="submit"
+                class="text-xs text-gray-300 hover:text-red-500 px-1.5 py-1 rounded transition">&times;</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Projects -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-gray-800">Projects ({{ client.projects | length }})</h2>
+        <a href="/projects/new?client_id={{ client.id }}"
+           class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700 transition">+ New Project</a>
+      </div>
+
+      {% if client.projects %}
+      <div class="space-y-3">
+        {% for p in client.projects | sort(attribute='updated_at', reverse=True) %}
+        <div class="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition">
+          <div class="flex items-start justify-between">
+            <div>
+              <a href="/projects/{{ p.id }}" class="font-medium text-indigo-600 hover:underline">{{ p.name }}</a>
+              <div class="flex gap-2 mt-1">
+                <span class="text-xs text-gray-500">{{ stage_labels[p.current_stage] }}</span>
+                <span class="text-xs text-gray-300">·</span>
+                <span class="badge badge-{{ p.status }} text-xs">{{ p.status.replace('_', ' ').title() }}</span>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 shrink-0 ml-2">{{ p.updated_at.strftime('%d %b %Y') }}</span>
+          </div>
+          {% if p.description %}
+          <p class="text-xs text-gray-500 mt-2">{{ p.description | truncate(120) }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-gray-400 text-sm">No projects yet.
+        <a href="/projects/new?client_id={{ client.id }}" class="text-indigo-600 hover:underline">Create one</a>.
+      </p>
+      {% endif %}
+    </div>
+
+  </div><!-- /right col -->
+</div><!-- /grid -->
+
+{% endblock %}

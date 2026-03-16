@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}{{ q.quote_number }}{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <a href="/quotes" class="text-sm text-indigo-600 hover:underline">&larr; All Quotes</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1 flex flex-wrap items-center gap-2">
+      {{ q.quote_number }}
+      <span class="text-base font-normal text-gray-400">v{{ q.version }}</span>
+      <span class="badge badge-{{ q.status }}">{{ status_labels[q.status] }}</span>
+      {% if q.is_final %}<span class="text-xs bg-seagreen text-white px-2 py-0.5 rounded-full">Final</span>{% endif %}
+    </h1>
+    <p class="text-sm text-gray-500 mt-1">
+      Project: <a href="/projects/{{ q.project_id }}" class="text-indigo-600 hover:underline">{{ q.project.name }}</a>
+      &nbsp;·&nbsp; Created {{ q.created_at.strftime('%d %b %Y') }}
+      {% if q.valid_until %}&nbsp;·&nbsp; Valid until {{ q.valid_until.strftime('%d %b %Y') }}{% endif %}
+    </p>
+  </div>
+
+  <div class="flex flex-wrap gap-2">
+    {% if q.status == 'draft' %}
+      <a href="/quotes/{{ q.id }}/edit"
+         class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-50 transition">Edit</a>
+      <form method="post" action="/quotes/{{ q.id }}/send">
+        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 transition">Mark as Sent</button>
+      </form>
+      <form method="post" action="/quotes/{{ q.id }}/delete"
+            onsubmit="return confirm('Delete quote {{ q.quote_number }}?')">
+        <button type="submit" class="text-gray-400 hover:text-red-600 text-sm px-2 py-2 transition">Delete</button>
+      </form>
+
+    {% elif q.status == 'sent' %}
+      <form method="post" action="/quotes/{{ q.id }}/revert">
+        <button type="submit" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-50 transition">Revert to Draft</button>
+      </form>
+      <form method="post" action="/quotes/{{ q.id }}/reject"
+            onsubmit="return confirm('Mark this quote as rejected?')">
+        <button type="submit" class="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm hover:bg-red-100 transition">Reject</button>
+      </form>
+      <form method="post" action="/quotes/{{ q.id }}/accept">
+        <button type="submit" class="bg-seagreen text-white px-4 py-2 rounded text-sm hover:opacity-90 transition">Accept</button>
+      </form>
+
+    {% elif q.status == 'rejected' %}
+      <form method="post" action="/quotes/{{ q.id }}/revert">
+        <button type="submit" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-50 transition">Revert to Draft</button>
+      </form>
+    {% endif %}
+
+    {% if q.status in ('sent', 'accepted', 'rejected') %}
+    <form method="post" action="/quotes/{{ q.id }}/new-version">
+      <button type="submit" class="bg-white border border-indigo-300 text-indigo-700 px-4 py-2 rounded text-sm hover:bg-indigo-50 transition">+ New Version</button>
+    </form>
+    {% endif %}
+
+    <a href="/quotes/{{ q.id }}/print" target="_blank"
+       class="bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded text-sm hover:bg-gray-50 transition flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      Download PDF
+    </a>
+  </div>
+</div>
+
+{% if success %}
+<div class="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded text-sm">{{ success }}</div>
+{% endif %}
+{% if error %}
+<div class="mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded text-sm">{{ error }}</div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+  <!-- Items + Sundries (left 2/3) -->
+  <div class="lg:col-span-2 space-y-4">
+
+    <!-- Line Items -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+      {% if q.items %}
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-100">
+          <tr class="text-left text-gray-400 text-xs">
+            <th class="px-5 py-2 font-medium">Item</th>
+            <th class="px-3 py-2 font-medium w-24">Size</th>
+            <th class="px-3 py-2 font-medium text-right w-12">Qty</th>
+            <th class="px-3 py-2 font-medium w-12">Unit</th>
+            <th class="px-3 py-2 font-medium text-right w-24">Rate (₹)</th>
+            <th class="px-5 py-2 font-medium text-right w-24">Amount (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in q.items %}
+          <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+            <td class="px-5 py-2.5">
+              <div class="font-medium text-gray-800">{{ item.item_name }}</div>
+              {% if item.description %}
+              <div class="text-xs text-gray-400 mt-0.5">{{ item.description }}</div>
+              {% endif %}
+            </td>
+            <td class="px-3 py-2.5 text-gray-500 text-xs">{{ item.size or '—' }}</td>
+            <td class="px-3 py-2.5 text-right text-gray-700">{{ item.qty | int if item.qty == item.qty | int else item.qty }}</td>
+            <td class="px-3 py-2.5 text-gray-500 text-xs">{{ item.unit }}</td>
+            <td class="px-3 py-2.5 text-right text-gray-700">{{ "%.0f"|format(item.unit_price) }}</td>
+            <td class="px-5 py-2.5 text-right font-medium text-gray-800">{{ "%.0f"|format(item.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="text-center py-10 text-gray-400 text-sm">No items in this quote.</div>
+      {% endif %}
+    </div>
+
+    <!-- Sundries -->
+    {% if q.sundries %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+      <div class="px-5 py-2.5 bg-gray-50 border-b border-gray-100">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Sundries</span>
+      </div>
+      <table class="w-full text-sm">
+        <tbody>
+          {% for s in q.sundries %}
+          <tr class="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+            <td class="px-5 py-2.5 text-gray-800">{{ s.particular }}</td>
+            <td class="px-5 py-2.5 text-right font-medium text-gray-800">₹{{ "%.0f"|format(s.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- Right: Totals + Timeline + Notes -->
+  <div class="space-y-4">
+
+    <!-- Summary -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Summary</h3>
+      <table class="w-full text-sm">
+        <tbody>
+          {% set items_sub = q.items | sum(attribute='amount') %}
+          {% set sundries_sub = q.sundries | sum(attribute='amount') %}
+          {% if q.sundries %}
+          <tr>
+            <td class="py-1 text-gray-500">Items</td>
+            <td class="py-1 text-right">₹{{ "%.0f"|format(items_sub) }}</td>
+          </tr>
+          <tr>
+            <td class="py-1 text-gray-500">Sundries</td>
+            <td class="py-1 text-right">₹{{ "%.0f"|format(sundries_sub) }}</td>
+          </tr>
+          {% endif %}
+          <tr class="{% if q.sundries %}border-t border-gray-100{% endif %}">
+            <td class="py-1 text-gray-600 font-medium">Subtotal</td>
+            <td class="py-1 text-right font-semibold">₹{{ "%.0f"|format(q.subtotal or 0) }}</td>
+          </tr>
+          {% if q.cgst_amount %}
+          <tr>
+            <td class="py-1 text-gray-500">CGST ({{ q.cgst_percent | int if q.cgst_percent == q.cgst_percent | int else q.cgst_percent }}%)</td>
+            <td class="py-1 text-right">₹{{ "%.2f"|format(q.cgst_amount) }}</td>
+          </tr>
+          {% endif %}
+          {% if q.sgst_amount %}
+          <tr>
+            <td class="py-1 text-gray-500">SGST ({{ q.sgst_percent | int if q.sgst_percent == q.sgst_percent | int else q.sgst_percent }}%)</td>
+            <td class="py-1 text-right">₹{{ "%.2f"|format(q.sgst_amount) }}</td>
+          </tr>
+          {% endif %}
+          {% if q.igst_amount %}
+          <tr>
+            <td class="py-1 text-gray-500">IGST ({{ q.igst_percent | int if q.igst_percent == q.igst_percent | int else q.igst_percent }}%)</td>
+            <td class="py-1 text-right">₹{{ "%.2f"|format(q.igst_amount) }}</td>
+          </tr>
+          {% endif %}
+          <tr class="border-t border-gray-200">
+            <td class="pt-2 font-semibold text-gray-800">Total</td>
+            <td class="pt-2 text-right font-bold text-lg text-indigo-700">₹{{ "%.0f"|format(q.total_amount or 0) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Timeline -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Timeline</h3>
+      <ul class="text-sm space-y-2 text-gray-600">
+        <li class="flex items-start gap-2">
+          <span class="mt-0.5 text-gray-300">&#9679;</span>
+          <span>Created <span class="text-gray-400">{{ q.created_at.strftime('%d %b %Y, %H:%M') }}</span></span>
+        </li>
+        {% if q.sent_at %}
+        <li class="flex items-start gap-2">
+          <span class="mt-0.5 text-indigo-400">&#9679;</span>
+          <span>Sent <span class="text-gray-400">{{ q.sent_at.strftime('%d %b %Y, %H:%M') }}</span></span>
+        </li>
+        {% endif %}
+        {% if q.accepted_at %}
+        <li class="flex items-start gap-2">
+          <span class="mt-0.5 text-seagreen">&#9679;</span>
+          <span>Accepted <span class="text-gray-400">{{ q.accepted_at.strftime('%d %b %Y, %H:%M') }}</span></span>
+        </li>
+        {% endif %}
+        {% if q.valid_until %}
+        <li class="flex items-start gap-2">
+          <span class="mt-0.5 text-yellow-400">&#9679;</span>
+          <span>Valid until <span class="text-gray-400">{{ q.valid_until.strftime('%d %b %Y') }}</span></span>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+
+    {% if q.notes or q.terms_conditions %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5 space-y-3">
+      {% if q.notes %}
+      <div>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Notes</p>
+        <p class="text-sm text-gray-700 whitespace-pre-line">{{ q.notes }}</p>
+      </div>
+      {% endif %}
+      {% if q.terms_conditions %}
+      <div>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Terms &amp; Conditions</p>
+        <p class="text-sm text-gray-700 whitespace-pre-line">{{ q.terms_conditions }}</p>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

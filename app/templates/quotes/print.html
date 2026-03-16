@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ q.quote_number }} — Kaayu Studio</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 32px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    @media print {
+      body { padding: 0; }
+      .no-print { display: none !important; }
+      @page { margin: 20mm 18mm; size: A4; }
+    }
+
+    /* ── Header ── */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; border-bottom: 2px solid #B17457; padding-bottom: 16px; }
+    .company-name { font-size: 22px; font-weight: 700; color: #B17457; letter-spacing: 0.02em; }
+    .company-sub  { font-size: 11px; color: #888; margin-top: 3px; }
+    .quote-meta   { text-align: right; }
+    .quote-number { font-size: 18px; font-weight: 700; color: #2E2E2E; }
+    .quote-date   { font-size: 11px; color: #888; margin-top: 3px; }
+
+    /* ── Info row ── */
+    .info-row { display: flex; gap: 32px; margin-bottom: 24px; }
+    .info-block label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #999; display: block; margin-bottom: 3px; }
+    .info-block p { font-size: 13px; color: #2E2E2E; }
+
+    /* ── Status badge ── */
+    .status-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+      background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db;
+    }
+    .status-badge.accepted { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+    .status-badge.sent     { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+    .status-badge.rejected { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    thead th {
+      background: #f9f5f1; border-top: 1px solid #e5d9cf; border-bottom: 1px solid #e5d9cf;
+      padding: 7px 10px; text-align: left; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em; color: #7a503c;
+    }
+    thead th.right { text-align: right; }
+    tbody td { padding: 8px 10px; border-bottom: 1px solid #f0ebe6; vertical-align: top; }
+    tbody td.right { text-align: right; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fdf8f5; }
+
+    /* ── Section header row ── */
+    .section-label td {
+      background: #f9f5f1; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em; color: #7a503c;
+      padding: 5px 10px; border-top: 1px solid #e5d9cf;
+    }
+
+    /* ── Sundries ── */
+    .sundries-header {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #888; margin: 20px 0 6px;
+    }
+
+    /* ── Totals box ── */
+    .totals-wrap { display: flex; justify-content: flex-end; margin-top: 4px; }
+    .totals-table { width: 280px; border: 1px solid #e5d9cf; border-radius: 6px; overflow: hidden; }
+    .totals-table td { padding: 6px 12px; font-size: 13px; }
+    .totals-table td:last-child { text-align: right; }
+    .totals-table tr:not(:last-child) td { border-bottom: 1px solid #f0ebe6; }
+    .totals-table .total-row td { background: #f9f5f1; font-weight: 700; font-size: 15px; color: #B17457; }
+
+    /* ── Notes ── */
+    .notes-section { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5d9cf; }
+    .notes-label  { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 5px; }
+    .notes-body   { font-size: 12px; color: #444; white-space: pre-line; line-height: 1.6; }
+
+    /* ── Footer ── */
+    .print-footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5d9cf; display: flex; justify-content: space-between; font-size: 11px; color: #aaa; }
+
+    /* ── Print button (screen only) ── */
+    .print-btn {
+      position: fixed; top: 20px; right: 20px;
+      background: #B17457; color: #fff; border: none; border-radius: 6px;
+      padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .print-btn:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">&#128438; Print / Save PDF</button>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div>
+    <div class="company-name">Kaayu Studio</div>
+    <div class="company-sub">Interior Design &amp; Furniture</div>
+  </div>
+  <div class="quote-meta">
+    <div class="quote-number">{{ q.quote_number }}</div>
+    <div class="quote-date">Version {{ q.version }} &nbsp;·&nbsp; {{ q.created_at.strftime('%d %b %Y') }}</div>
+    <div style="margin-top:6px;">
+      <span class="status-badge {{ q.status }}">{{ status_labels[q.status] }}</span>
+      {% if q.is_final %}<span class="status-badge accepted" style="margin-left:6px;">Final</span>{% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ── Info row: Project + Valid Until ── -->
+<div class="info-row">
+  <div class="info-block">
+    <label>Project</label>
+    <p>{{ q.project.name }}</p>
+    {% if q.project.client %}<p style="color:#888;font-size:12px;">{{ q.project.client.name }}</p>{% endif %}
+  </div>
+  {% if q.valid_until %}
+  <div class="info-block">
+    <label>Valid Until</label>
+    <p>{{ q.valid_until.strftime('%d %b %Y') }}</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Line Items ── -->
+{% if q.items %}
+<table>
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Size</th>
+      <th>Description</th>
+      <th class="right" style="width:50px;">Qty</th>
+      <th style="width:40px;">Unit</th>
+      <th class="right" style="width:80px;">Rate (₹)</th>
+      <th class="right" style="width:80px;">Amount (₹)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in q.items %}
+    <tr>
+      <td><strong>{{ item.item_name }}</strong></td>
+      <td style="color:#666;">{{ item.size or '' }}</td>
+      <td style="color:#666;font-size:12px;">{{ item.description or '' }}</td>
+      <td class="right">{{ item.qty | int if item.qty == item.qty | int else item.qty }}</td>
+      <td style="color:#888;font-size:11px;">{{ item.unit }}</td>
+      <td class="right">{{ "%.0f"|format(item.unit_price) }}</td>
+      <td class="right"><strong>{{ "%.0f"|format(item.amount) }}</strong></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<!-- ── Sundries ── -->
+{% if q.sundries %}
+<div class="sundries-header">Sundries</div>
+<table>
+  <thead>
+    <tr>
+      <th>Particular</th>
+      <th class="right" style="width:120px;">Amount (₹)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in q.sundries %}
+    <tr>
+      <td>{{ s.particular }}</td>
+      <td class="right"><strong>{{ "%.0f"|format(s.amount) }}</strong></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<!-- ── Totals ── -->
+<div class="totals-wrap">
+  <table class="totals-table">
+    {% if q.sundries %}
+    {% set items_sub = q.items | sum(attribute='amount') %}
+    {% set sundries_sub = q.sundries | sum(attribute='amount') %}
+    <tr><td>Items</td><td>₹{{ "%.0f"|format(items_sub) }}</td></tr>
+    <tr><td>Sundries</td><td>₹{{ "%.0f"|format(sundries_sub) }}</td></tr>
+    {% endif %}
+    <tr><td><strong>Subtotal</strong></td><td><strong>₹{{ "%.0f"|format(q.subtotal or 0) }}</strong></td></tr>
+    {% if q.cgst_amount %}<tr><td>CGST ({{ q.cgst_percent | int if q.cgst_percent == q.cgst_percent | int else q.cgst_percent }}%)</td><td>₹{{ "%.2f"|format(q.cgst_amount) }}</td></tr>{% endif %}
+    {% if q.sgst_amount %}<tr><td>SGST ({{ q.sgst_percent | int if q.sgst_percent == q.sgst_percent | int else q.sgst_percent }}%)</td><td>₹{{ "%.2f"|format(q.sgst_amount) }}</td></tr>{% endif %}
+    {% if q.igst_amount %}<tr><td>IGST ({{ q.igst_percent | int if q.igst_percent == q.igst_percent | int else q.igst_percent }}%)</td><td>₹{{ "%.2f"|format(q.igst_amount) }}</td></tr>{% endif %}
+    <tr class="total-row"><td>TOTAL</td><td>₹{{ "%.0f"|format(q.total_amount or 0) }}</td></tr>
+  </table>
+</div>
+
+<!-- ── Notes & Terms ── -->
+{% if q.notes or q.terms_conditions %}
+<div class="notes-section">
+  {% if q.notes %}
+  <div style="margin-bottom:14px;">
+    <div class="notes-label">Notes</div>
+    <div class="notes-body">{{ q.notes }}</div>
+  </div>
+  {% endif %}
+  {% if q.terms_conditions %}
+  <div>
+    <div class="notes-label">Terms &amp; Conditions</div>
+    <div class="notes-body">{{ q.terms_conditions }}</div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ── Footer ── -->
+<div class="print-footer">
+  <span>Kaayu Studio LLP</span>
+  <span>{{ q.quote_number }} &nbsp;·&nbsp; Generated {{ q.created_at.strftime('%d %b %Y') }}</span>
+</div>
+
+</body>
+</html>

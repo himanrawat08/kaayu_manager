@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Lead {{ lead.lead_code }}{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="mb-6 flex items-start justify-between">
+  <div>
+    <a href="/leads" class="text-sm text-indigo-600 hover:underline">&larr; Pipeline</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-1">{{ lead.client.name }}</h1>
+    <div class="flex items-center gap-3 mt-1">
+      <span class="font-mono text-sm text-gray-400">{{ lead.lead_code }}</span>
+      <a href="/contacts/{{ lead.client.id }}" class="text-sm text-indigo-600 hover:underline">View Contact &rarr;</a>
+    </div>
+  </div>
+</div>
+
+<!-- Stage pipeline -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
+  <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-5">Lead Stage</h2>
+  <div class="flex items-start justify-between">
+    {% for stage in stages %}
+    {% set is_won = stage == 'won' %}
+    {% set is_lost = stage == 'lost' %}
+    {% set is_current = stage == lead.stage %}
+
+    {% if not is_won and not is_lost %}
+      {% set non_terminal = stages | reject('equalto', 'won') | reject('equalto', 'lost') | list %}
+      {% set is_completed = (not is_current) and (non_terminal.index(stage) < non_terminal.index(lead.stage)) if lead.stage in non_terminal and stage in non_terminal else false %}
+    {% else %}
+      {% set is_completed = false %}
+    {% endif %}
+
+    <div class="stage-step {% if is_completed %}completed{% elif is_current %}current{% else %}pending{% endif %}">
+      <div class="stage-icon {% if is_completed %}completed{% elif is_current and is_won %}completed{% elif is_current and is_lost %}!bg-red-500 text-white{% elif is_current %}current{% else %}pending{% endif %}"
+           {% if is_current and is_lost %}style="background:#ef4444"{% endif %}>
+        {% if is_completed %}&#10003;
+        {% elif is_won %}&#9733;
+        {% elif is_lost %}&#10007;
+        {% else %}{{ loop.index }}{% endif %}
+      </div>
+      <div class="stage-label {% if is_completed %}completed{% elif is_current %}current{% else %}pending{% endif %}
+                  {% if is_current and is_won %}!text-green-600{% elif is_current and is_lost %}!text-red-600{% endif %}">
+        {{ stage_labels[stage] }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- Left: Lead Info + Stage Change -->
+  <div class="space-y-4">
+
+    <!-- Lead details form -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Lead Details</h2>
+      <form method="post" action="/leads/{{ lead.id }}/update" class="space-y-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Source</label>
+          <select name="source" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+            {% for value, label in lead_sources.items() %}
+            <option value="{{ value }}" {% if lead.source == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Budget (&#8377;)</label>
+          <input type="number" name="budget" value="{{ lead.budget or '' }}" placeholder="e.g. 500000" step="1000"
+            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Requirements</label>
+          <textarea name="requirements" rows="3" placeholder="Project requirements, scope, materials..."
+            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ lead.requirements or '' }}</textarea>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Notes</label>
+          <textarea name="notes" rows="2" placeholder="Internal notes..."
+            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ lead.notes or '' }}</textarea>
+        </div>
+        <button type="submit" class="w-full bg-gray-100 text-gray-700 py-2 rounded text-sm hover:bg-gray-200 transition">Save Details</button>
+      </form>
+    </div>
+
+    <!-- Change stage -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Move Stage</h2>
+      <form method="post" action="/leads/{{ lead.id }}/stage" class="space-y-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">New Stage</label>
+          <select name="stage" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
+            {% for s in stages %}
+            <option value="{{ s }}" {% if lead.stage == s %}selected{% endif %}>{{ stage_labels[s] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div id="lost-reason-field" class="{% if lead.stage != 'lost' %}hidden{% endif %}">
+          <label class="block text-xs text-gray-500 mb-1">Lost Reason</label>
+          <textarea name="lost_reason" rows="2" placeholder="Why was this lead lost?"
+            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ lead.lost_reason or '' }}</textarea>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Note (optional)</label>
+          <input type="text" name="note" placeholder="Reason for stage change..."
+            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded text-sm hover:bg-indigo-700 transition">Update Stage</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Right: Activities + History -->
+  <div class="lg:col-span-2 space-y-4">
+
+    <!-- Add Activity -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 class="text-lg font-semibold mb-4">Log Activity</h2>
+      <form method="post" action="/leads/{{ lead.id }}/activities" class="flex flex-wrap gap-3 items-end">
+        <div class="w-40">
+          <label class="block text-xs text-gray-500 mb-1">Type</label>
+          <select name="activity_type" class="w-full border border-gray-300 rounded px-2 py-2 text-sm">
+            {% for value, label in activity_types.items() %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex-1 min-w-48">
+          <label class="block text-xs text-gray-500 mb-1">Note</label>
+          <input type="text" name="note" placeholder="What happened?"
+            class="w-full border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <div class="w-44">
+          <label class="block text-xs text-gray-500 mb-1">Scheduled At (optional)</label>
+          <input type="datetime-local" name="scheduled_at"
+            class="w-full border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        </div>
+        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 transition">Log</button>
+      </form>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 class="text-lg font-semibold mb-4">Activity Log</h2>
+      {% if activities %}
+      <div class="space-y-3">
+        {% for act in activities %}
+        <div class="flex items-start gap-3 py-2 border-b last:border-0">
+          <div class="shrink-0 mt-0.5">
+            <span class="inline-block w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 text-xs flex items-center justify-center font-bold">
+              {% if act.activity_type == 'call' %}&#128222;
+              {% elif act.activity_type == 'site_visit' %}&#127968;
+              {% elif act.activity_type == 'email_sent' %}&#9993;
+              {% elif act.activity_type == 'follow_up' %}&#128336;
+              {% else %}&#128203;{% endif %}
+            </span>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-medium text-gray-700">
+                {{ activity_types.get(act.activity_type, act.activity_type) }}
+              </span>
+              {% if act.is_completed %}
+              <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Done</span>
+              {% endif %}
+            </div>
+            {% if act.note %}
+            <p class="text-sm text-gray-600 mt-0.5">{{ act.note }}</p>
+            {% endif %}
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-xs text-gray-400">{{ act.created_at.strftime('%d %b %Y, %H:%M') }}</span>
+              {% if act.scheduled_at %}
+              <span class="text-xs text-orange-500">Scheduled: {{ act.scheduled_at.strftime('%d %b %Y, %H:%M') }}</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            {% if not act.is_completed %}
+            <form method="post" action="/leads/{{ lead.id }}/activities/{{ act.id }}/complete">
+              <button type="submit" class="text-xs text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 px-2 py-1 rounded transition">Done</button>
+            </form>
+            {% endif %}
+            <form method="post" action="/leads/{{ lead.id }}/activities/{{ act.id }}/delete"
+                  onsubmit="return confirm('Delete this activity?')">
+              <button type="submit" class="text-xs text-gray-400 hover:text-red-600 px-2 py-1 transition">&times;</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-sm text-gray-400">No activities logged yet. Use the form above to log a call, visit, or note.</p>
+      {% endif %}
+    </div>
+
+    <!-- Stage History -->
+    {% if history %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+      <h2 class="text-lg font-semibold mb-4">Stage History</h2>
+      <div class="space-y-2">
+        {% for h in history %}
+        <div class="flex items-center gap-3 text-sm py-1.5 border-b last:border-0">
+          <span class="text-gray-400 text-xs w-32 shrink-0">{{ h.changed_at.strftime('%d %b %Y, %H:%M') }}</span>
+          <span class="text-gray-500">
+            {% if h.from_stage %}{{ stage_labels[h.from_stage] }} &rarr;{% else %}Started at{% endif %}
+          </span>
+          <span class="font-medium text-indigo-700">{{ stage_labels[h.to_stage] }}</span>
+          {% if h.note %}<span class="text-gray-400 text-xs truncate">— {{ h.note }}</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelector('select[name="stage"]').addEventListener('change', function() {
+  document.getElementById('lost-reason-field').classList.toggle('hidden', this.value !== 'lost');
+});
+</script>
+{% endblock %}

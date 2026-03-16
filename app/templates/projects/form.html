@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if project else 'New Project' }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <div class="mb-6">
+    {% if project %}
+    <a href="/projects/{{ project.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Project</a>
+    {% elif prefill_client %}
+    <a href="/contacts/{{ prefill_client.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Contact</a>
+    {% else %}
+    <a href="/projects" class="text-sm text-indigo-600 hover:underline">&larr; All Projects</a>
+    {% endif %}
+    <h1 class="text-2xl font-bold text-gray-900 mt-2">{{ 'Edit Project' if project else 'New Project' }}</h1>
+  </div>
+
+  <form method="post" action="{{ '/projects/' + project.id|string + '/edit' if project else '/projects/new' }}"
+        class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-5">
+
+    <!-- Client -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Contact <span class="text-red-500">*</span></label>
+      <select name="client_id" required
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+        <option value="">— Select Client —</option>
+        {% for c in clients %}
+        <option value="{{ c.id }}"
+          {% if project and project.client_id == c.id %}selected
+          {% elif prefill_client and prefill_client.id == c.id %}selected{% endif %}>
+          {{ c.name }}{% if c.city %} — {{ c.city }}{% endif %}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Project Name -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Project Name <span class="text-red-500">*</span></label>
+      <input type="text" name="name" required value="{{ project.name if project else '' }}"
+        placeholder="e.g. Office Renovation — Phase 1"
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+      <textarea name="description" rows="3" placeholder="Brief scope, notes, requirements..."
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ project.description or '' if project else '' }}</textarea>
+      <p class="text-xs text-gray-400 mt-1">Reference files (drawings, mood boards) can be uploaded from the project detail page.</p>
+    </div>
+
+    <!-- Completion Date -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Target Completion Date</label>
+        <input type="date" name="completion_date"
+          value="{{ project.completion_date.isoformat() if project and project.completion_date else '' }}"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+
+      {% if project %}
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select name="status"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          <option value="active" {% if project.status == 'active' %}selected{% endif %}>Active</option>
+          <option value="on_hold" {% if project.status == 'on_hold' %}selected{% endif %}>On Hold</option>
+          <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>Completed</option>
+          <option value="cancelled" {% if project.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Project Contact -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Project Contact Name</label>
+        <input type="text" name="project_contact_name"
+          value="{{ project.project_contact_name or '' if project else '' }}"
+          placeholder="e.g. Site Coordinator"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Project Contact Phone</label>
+        <input type="text" name="project_contact_phone"
+          value="{{ project.project_contact_phone or '' if project else '' }}"
+          placeholder="+91 98765 43210"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+    </div>
+
+    <div class="flex gap-3 pt-2">
+      <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">
+        {{ 'Save Changes' if project else 'Create Project' }}
+      </button>
+      <a href="{{ '/projects/' + project.id|string if project else '/projects' }}"
+         class="bg-gray-100 text-gray-700 px-5 py-2 rounded hover:bg-gray-200 transition text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

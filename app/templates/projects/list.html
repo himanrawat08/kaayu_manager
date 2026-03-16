@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Projects{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold text-gray-900">Projects</h1>
+  <a href="/projects/new" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">+ New Project</a>
+</div>
+
+<!-- Filters -->
+<form method="get" class="mb-4 flex flex-wrap gap-3 items-center">
+  <select name="stage" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    <option value="">All Stages</option>
+    {% for s, l in stage_labels.items() %}
+    <option value="{{ s }}" {% if stage_filter == s %}selected{% endif %}>{{ l }}</option>
+    {% endfor %}
+  </select>
+  <select name="status" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    <option value="">All Statuses</option>
+    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+    <option value="on_hold" {% if status_filter == 'on_hold' %}selected{% endif %}>On Hold</option>
+    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+  </select>
+  <button type="submit" class="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition">Filter</button>
+  {% if stage_filter or status_filter %}
+  <a href="/projects" class="text-sm text-gray-500 hover:text-gray-700">Clear</a>
+  {% endif %}
+</form>
+
+{% if projects %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+  <div class="overflow-x-auto">
+  <table class="w-full text-sm min-w-[560px]">
+    <thead class="bg-gray-50 border-b border-gray-200">
+      <tr class="text-left text-gray-500">
+        <th class="px-4 py-3 font-medium">Project</th>
+        <th class="px-4 py-3 font-medium">Contact</th>
+        <th class="px-4 py-3 font-medium">Stage</th>
+        <th class="px-4 py-3 font-medium">Status</th>
+        <th class="px-4 py-3 font-medium">Updated</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in projects %}
+      <tr class="border-b last:border-0 hover:bg-gray-50">
+        <td class="px-4 py-3">
+          <a href="/projects/{{ p.id }}" class="font-medium text-indigo-600 hover:underline">{{ p.name }}</a>
+          {% if p.description %}
+          <p class="text-xs text-gray-400 mt-0.5">{{ p.description | truncate(60) }}</p>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3">
+          <a href="/contacts/{{ p.client_id }}" class="text-gray-600 hover:underline">{{ p.client.name }}</a>
+        </td>
+        <td class="px-4 py-3 text-gray-700">{{ stage_labels[p.current_stage] }}</td>
+        <td class="px-4 py-3">
+          <span class="badge badge-{{ p.status }}">{{ p.status.replace('_', ' ').title() }}</span>
+        </td>
+        <td class="px-4 py-3 text-gray-400">{{ p.updated_at.strftime('%d %b %Y') }}</td>
+        <td class="px-4 py-3 text-right">
+          <a href="/projects/{{ p.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs mr-3">Edit</a>
+          <form method="post" action="/projects/{{ p.id }}/delete" class="inline"
+                onsubmit="return confirm('Delete project {{ p.name }}?')">
+            <button type="submit" class="text-gray-400 hover:text-red-600 text-xs">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400">
+  <div class="text-4xl mb-3">&#128193;</div>
+  <p class="text-lg">No projects found</p>
+  <a href="/projects/new" class="mt-4 inline-block text-indigo-600 hover:underline text-sm">Create your first project &rarr;</a>
+</div>
+{% endif %}
+{% endblock %}

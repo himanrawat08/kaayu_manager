@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if client else 'New Contact' }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+  <div class="mb-6">
+    <a href="{{ '/contacts/' + client.id|string if client else '/contacts' }}" class="text-sm text-indigo-600 hover:underline">&larr; Back</a>
+    <h1 class="text-2xl font-bold text-gray-900 mt-2">{{ 'Edit Contact' if client else 'New Contact' }}</h1>
+  </div>
+
+  <form method="post" action="{{ '/contacts/' + client.id|string + '/edit' if client else '/contacts/new' }}"
+        class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-5">
+
+    <!-- Studio Name -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Studio Name <span class="text-red-500">*</span></label>
+      <input type="text" name="name" required value="{{ client.name if client else '' }}"
+        placeholder="e.g. Vertex Architecture Studio"
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+    </div>
+
+    <!-- Email -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Email Id</label>
+      <input type="email" name="email" value="{{ client.email or '' if client else '' }}"
+        placeholder="studio@example.com"
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      <p class="text-xs text-gray-400 mt-1">Syncs to Email Tool contacts</p>
+    </div>
+
+    <!-- Principal Architects (dynamic multi-block) -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Principal Architect(s)</label>
+      <div id="arch-list" class="space-y-3">
+        {% if client and client.principal_architects_list %}
+          {% for arch in client.principal_architects_list %}
+          <div class="arch-block border border-gray-200 rounded-lg p-4 relative">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Name</label>
+                <input type="text" name="arch_name" value="{{ arch.name }}"
+                  placeholder="Ar. Priya Sharma"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Phone Numbers</label>
+                <input type="text" name="arch_numbers" value="{{ arch.numbers | join('; ') }}"
+                  placeholder="+91 98765 43210; +91 87654 32109"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                <p class="text-xs text-gray-400 mt-0.5">Separate multiple with ;</p>
+              </div>
+            </div>
+            <button type="button" onclick="removeArch(this)"
+              class="arch-remove absolute top-2 right-2 text-gray-300 hover:text-red-500 text-xl leading-none">&times;</button>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="arch-block border border-gray-200 rounded-lg p-4 relative">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Name</label>
+                <input type="text" name="arch_name" value=""
+                  placeholder="Ar. Priya Sharma"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Phone Numbers</label>
+                <input type="text" name="arch_numbers" value=""
+                  placeholder="+91 98765 43210; +91 87654 32109"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                <p class="text-xs text-gray-400 mt-0.5">Separate multiple with ;</p>
+              </div>
+            </div>
+            <button type="button" onclick="removeArch(this)"
+              class="arch-remove absolute top-2 right-2 text-gray-300 hover:text-red-500 text-xl leading-none">&times;</button>
+          </div>
+        {% endif %}
+      </div>
+      <button type="button" onclick="addArch()"
+        class="mt-2 text-indigo-600 text-sm hover:underline">+ Add Architect</button>
+    </div>
+
+    <!-- Contact Persons (dynamic multi-block) -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Contact Person(s)</label>
+      <div id="cp-list" class="space-y-3">
+        {% if client and client.contact_persons_list %}
+          {% for cp in client.contact_persons_list %}
+          <div class="cp-block border border-gray-200 rounded-lg p-4 relative">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Name</label>
+                <input type="text" name="cp_name" value="{{ cp.name }}"
+                  placeholder="e.g. Ravi Kumar (Site Manager)"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Phone Number</label>
+                <input type="text" name="cp_number" value="{{ cp.number }}"
+                  placeholder="+91 91234 56789"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+              </div>
+            </div>
+            <button type="button" onclick="removeCP(this)"
+              class="cp-remove absolute top-2 right-2 text-gray-300 hover:text-red-500 text-xl leading-none">&times;</button>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="cp-block border border-gray-200 rounded-lg p-4 relative">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Name</label>
+                <input type="text" name="cp_name" value=""
+                  placeholder="e.g. Ravi Kumar (Site Manager)"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Phone Number</label>
+                <input type="text" name="cp_number" value=""
+                  placeholder="+91 91234 56789"
+                  class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+              </div>
+            </div>
+            <button type="button" onclick="removeCP(this)"
+              class="cp-remove absolute top-2 right-2 text-gray-300 hover:text-red-500 text-xl leading-none">&times;</button>
+          </div>
+        {% endif %}
+      </div>
+      <button type="button" onclick="addCP()"
+        class="mt-2 text-indigo-600 text-sm hover:underline">+ Add Contact Person</button>
+    </div>
+
+    <!-- Address + City -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Studio Address</label>
+        <textarea name="address" rows="2" placeholder="Street, Locality..."
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ client.address or '' if client else '' }}</textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+        <input type="text" name="city" value="{{ client.city or '' if client else '' }}"
+          placeholder="Type to search city..."
+          list="india-cities-list"
+          autocomplete="off"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        <datalist id="india-cities-list">
+          {% for city in indian_cities %}
+          <option value="{{ city }}">
+          {% endfor %}
+        </datalist>
+      </div>
+    </div>
+
+    <div class="flex gap-3 pt-2">
+      <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">
+        {{ 'Save Changes' if client else 'Create Contact' }}
+      </button>
+      <a href="{{ '/contacts/' + client.id|string if client else '/contacts' }}"
+         class="bg-gray-100 text-gray-700 px-5 py-2 rounded hover:bg-gray-200 transition text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ARCH_BLOCK_HTML = `
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Name</label>
+      <input type="text" name="arch_name" placeholder="Ar. Priya Sharma"
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Phone Numbers</label>
+      <input type="text" name="arch_numbers" placeholder="+91 98765 43210; +91 87654 32109"
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      <p class="text-xs text-gray-400 mt-0.5">Separate multiple with ;</p>
+    </div>
+  </div>
+  <button type="button" onclick="removeArch(this)"
+    class="arch-remove absolute top-2 right-2 text-gray-300 hover:text-red-500 text-xl leading-none">&times;</button>
+`;
+
+const CP_BLOCK_HTML = `
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Name</label>
+      <input type="text" name="cp_name" placeholder="e.g. Ravi Kumar"
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+    </div>
+    <div>
+      <label class="block text-xs text-gray-500 mb-1">Phone Number</label>
+      <input type="text" name="cp_number" placeholder="+91 91234 56789"
+        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+    </div>
+  </div>
+  <button type="button" onclick="removeCP(this)"
+    class="cp-remove absolute top-2 right-2 text-gray-300 hover:text-red-500 text-xl leading-none">&times;</button>
+`;
+
+function addArch() {
+  const block = document.createElement('div');
+  block.className = 'arch-block border border-gray-200 rounded-lg p-4 relative';
+  block.innerHTML = ARCH_BLOCK_HTML;
+  document.getElementById('arch-list').appendChild(block);
+}
+
+function removeArch(btn) {
+  const blocks = document.querySelectorAll('.arch-block');
+  if (blocks.length <= 1) return;
+  btn.closest('.arch-block').remove();
+}
+
+function addCP() {
+  const block = document.createElement('div');
+  block.className = 'cp-block border border-gray-200 rounded-lg p-4 relative';
+  block.innerHTML = CP_BLOCK_HTML;
+  document.getElementById('cp-list').appendChild(block);
+}
+
+function removeCP(btn) {
+  const blocks = document.querySelectorAll('.cp-block');
+  if (blocks.length <= 1) return;
+  btn.closest('.cp-block').remove();
+}
+</script>
+{% endblock %}

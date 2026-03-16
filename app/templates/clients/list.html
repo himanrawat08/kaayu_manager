@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Contacts{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold text-gray-900">Contacts</h1>
+  <div class="flex gap-2">
+    <a href="/contacts/import" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition text-sm font-medium">&#11015; Import CSV</a>
+    <a href="/contacts/new" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">+ New Contact</a>
+  </div>
+</div>
+
+<!-- Search -->
+<form method="get" class="mb-4 flex gap-2">
+  <input type="text" name="q" value="{{ q or '' }}" placeholder="Search by studio name, architect, city, email..."
+    class="border border-gray-300 rounded px-3 py-2 text-sm flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+  <button type="submit" class="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition">Search</button>
+  {% if q %}<a href="/contacts" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">Clear</a>{% endif %}
+</form>
+
+{% if clients %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+  <div class="overflow-x-auto">
+  <table class="w-full text-sm min-w-[640px]">
+    <thead class="bg-gray-50 border-b border-gray-200">
+      <tr class="text-left text-gray-500">
+        <th class="px-4 py-3 font-medium">Studio Name</th>
+        <th class="px-4 py-3 font-medium">Principal Architect</th>
+        <th class="px-4 py-3 font-medium">Contact</th>
+        <th class="px-4 py-3 font-medium">City</th>
+        <th class="px-4 py-3 font-medium">Projects</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for client in clients %}
+      <tr class="border-b last:border-0 hover:bg-gray-50">
+        <td class="px-4 py-3 font-medium">
+          <a href="/contacts/{{ client.id }}" class="text-indigo-600 hover:underline">{{ client.name }}</a>
+          {% if client.email %}
+          <div class="text-xs text-gray-400">{{ client.email }}</div>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3">
+          {% set archs = client.principal_architects_list %}
+          {% if archs %}
+          <div class="text-gray-700">{{ archs[0].name }}</div>
+          {% if archs[0].numbers %}
+          <div class="text-xs text-gray-400">{{ archs[0].numbers | join(', ') }}</div>
+          {% endif %}
+          {% if archs | length > 1 %}
+          <div class="text-xs text-indigo-400">+{{ archs | length - 1 }} more</div>
+          {% endif %}
+          {% else %}—{% endif %}
+        </td>
+        <td class="px-4 py-3 text-gray-600">
+          {% if client.contact_person_name %}
+          <div>{{ client.contact_person_name }}</div>
+          <div class="text-xs text-gray-400">{{ client.contact_person_number or '' }}</div>
+          {% else %}—{% endif %}
+        </td>
+        <td class="px-4 py-3 text-gray-600">{{ client.city or '—' }}</td>
+        <td class="px-4 py-3 text-center text-gray-600">{{ client.projects | length }}</td>
+        <td class="px-4 py-3 text-right">
+          <a href="/contacts/{{ client.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs mr-3">Edit</a>
+          <form method="post" action="/contacts/{{ client.id }}/delete" class="inline"
+                onsubmit="return confirm('Delete {{ client.name }}? All related data will be removed.')">
+            <button type="submit" class="text-gray-400 hover:text-red-600 text-xs">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400">
+  <div class="text-4xl mb-3">&#128100;</div>
+  <p class="text-lg">{% if q %}No contacts match "{{ q }}"{% else %}No contacts yet{% endif %}</p>
+  <a href="/contacts/new" class="mt-4 inline-block text-indigo-600 hover:underline text-sm">Add your first contact &rarr;</a>
+</div>
+{% endif %}
+{% endblock %}

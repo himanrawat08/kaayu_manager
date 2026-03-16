@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Phonebook{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Phonebook</h1>
+    <p class="text-sm text-gray-400 mt-0.5">{{ total }} entr{{ 'y' if total == 1 else 'ies' }} across all studios</p>
+  </div>
+</div>
+
+<!-- Search -->
+<form method="get" class="mb-5 flex gap-2">
+  <input type="text" name="q" value="{{ q or '' }}"
+    placeholder="Search by name, number, studio or city..."
+    class="border border-gray-300 rounded px-3 py-2 text-sm w-96 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+  <button type="submit"
+    class="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition">Search</button>
+  {% if q %}
+  <a href="/phonebook" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">Clear</a>
+  {% endif %}
+</form>
+
+{% if entries %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 border-b border-gray-200">
+      <tr class="text-left text-gray-500 text-xs">
+        <th class="px-4 py-3 font-medium">Name</th>
+        <th class="px-4 py-3 font-medium">Phone Number(s)</th>
+        <th class="px-4 py-3 font-medium">Role</th>
+        <th class="px-4 py-3 font-medium">Studio</th>
+        <th class="px-4 py-3 font-medium">City</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% set ns = namespace(prev_letter='') %}
+      {% for entry in entries %}
+      {% set letter = entry.name[0].upper() %}
+      {% if letter != ns.prev_letter %}
+      {% set ns.prev_letter = letter %}
+      <tr class="bg-indigo-50 border-b border-indigo-100">
+        <td colspan="5" class="px-4 py-1.5 text-xs font-bold text-indigo-500 tracking-widest">{{ letter }}</td>
+      </tr>
+      {% endif %}
+      <tr class="border-b last:border-0 hover:bg-gray-50">
+        <td class="px-4 py-3 font-medium text-gray-800">{{ entry.name }}</td>
+        <td class="px-4 py-3">
+          {% if entry.numbers %}
+            {% for num in entry.numbers %}
+            <div class="flex items-center gap-2 {% if not loop.first %}mt-1{% endif %}">
+              <span class="font-mono text-sm text-gray-700">{{ num }}</span>
+              <button type="button" onclick="copyNumber('{{ num }}', this)"
+                class="text-xs text-gray-300 hover:text-indigo-500 transition" title="Copy">
+                &#128203;
+              </button>
+            </div>
+            {% endfor %}
+          {% else %}
+            <span class="text-gray-300">—</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3">
+          {% if entry.role == 'Principal Architect' %}
+          <span class="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">Architect</span>
+          {% else %}
+          <span class="text-xs bg-gray-100 text-gray-600 border border-gray-200 px-2 py-0.5 rounded-full">Contact</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3">
+          <a href="/contacts/{{ entry.studio_id }}" class="text-indigo-600 hover:underline font-medium">
+            {{ entry.studio_name }}
+          </a>
+        </td>
+        <td class="px-4 py-3 text-gray-500">{{ entry.city or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400">
+  <div class="text-4xl mb-3">&#128222;</div>
+  {% if q %}
+  <p class="text-lg">No results for "{{ q }}"</p>
+  <a href="/phonebook" class="mt-3 inline-block text-indigo-600 hover:underline text-sm">Clear search</a>
+  {% else %}
+  <p class="text-lg">No contacts with phone numbers yet</p>
+  <a href="/contacts/new" class="mt-3 inline-block text-indigo-600 hover:underline text-sm">Add your first contact &rarr;</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyNumber(num, btn) {
+  navigator.clipboard.writeText(num).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '&#10003;';
+    btn.classList.add('text-green-500');
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.classList.remove('text-green-500');
+    }, 1500);
+  });
+}
+</script>
+{% endblock %}
