@@ -31,3 +31,6 @@ Login Images/
 clear_pg.py
 check_user.py
 reset_password.py
+
+# Yarn Excel source (data lives in Supabase after migration)
+"SK  - Yarn Tracker.xlsx"

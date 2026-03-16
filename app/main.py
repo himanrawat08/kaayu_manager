@@ -14,7 +14,7 @@ from starlette.responses import RedirectResponse
 
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, clients, projects, design, email_quick, tasks, social, users, activity_log, quotes
+from app.routers import auth, clients, projects, design, email_quick, tasks, social, users, activity_log, quotes, yarn
 from app.routers import files as files_router
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -140,6 +140,7 @@ app.include_router(files_router.router)
 app.include_router(users.router)
 app.include_router(quotes.router)
 app.include_router(activity_log.router)
+app.include_router(yarn.router)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Yarn Master Table{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-charcoal">Yarn Master Table</h1>
+      <p class="text-sm text-gray-500 mt-0.5">All {{ total_colors }} Anchor thread colors with stock levels</p>
+    </div>
+    <a href="/yarn"
+       style="padding:8px 16px;border-radius:8px;border:1px solid #D8D2D2;font-size:13px;color:#2E2E2E;text-decoration:none;font-family:'Roboto',sans-serif;background:#fff;"
+       onmouseover="this.style.background='#f7f5f2';" onmouseout="this.style.background='#fff';">
+      ← Back
+    </a>
+  </div>
+
+  <!-- Stats chips -->
+  <div style="display:flex;flex-wrap:wrap;gap:10px;">
+    <div style="background:#fff;border:1px solid #E5E0DC;border-radius:8px;padding:9px 16px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:rgba(46,46,46,0.45);font-family:'Roboto',sans-serif;">Showing</span>
+      <span style="font-size:16px;font-weight:700;color:#2E2E2E;font-family:'Roboto',sans-serif;">{{ rows|length }}</span>
+    </div>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:9px 16px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#92400e;font-family:'Roboto',sans-serif;">Low Stock</span>
+      <span style="font-size:16px;font-weight:700;color:#b45309;font-family:'Roboto',sans-serif;">{{ low_stock_count }}</span>
+    </div>
+    <div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;padding:9px 16px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#9f1239;font-family:'Roboto',sans-serif;">Out of Stock</span>
+      <span style="font-size:16px;font-weight:700;color:#be123c;font-family:'Roboto',sans-serif;">{{ out_of_stock_count }}</span>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <form method="get" action="/yarn/master">
+    <div style="display:flex;gap:8px;max-width:320px;">
+      <input type="text" name="search" value="{{ search }}" placeholder="Filter by color code…"
+             style="flex:1;padding:8px 12px;border:1px solid #D8D2D2;border-radius:8px;font-size:13px;font-family:'Roboto',sans-serif;outline:none;background:#fff;" />
+      <button type="submit"
+              style="background:#B17457;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;font-family:'Roboto',sans-serif;">Filter</button>
+      {% if search %}
+      <a href="/yarn/master" style="padding:8px 12px;border:1px solid #D8D2D2;border-radius:8px;font-size:13px;color:#666;text-decoration:none;font-family:'Roboto',sans-serif;display:flex;align-items:center;">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- Table -->
+  <div style="background:#fff;border:1px solid #E5E0DC;border-radius:10px;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:13px;">
+      <thead>
+        <tr style="background:#f7f5f2;border-bottom:1px solid #E5E0DC;">
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Color Code</th>
+          <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Opening</th>
+          <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Total In</th>
+          <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Total Out</th>
+          <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Balance</th>
+          <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        {% if row.balance <= 0 %}
+          {% set row_bg = "background:#fff1f2;" %}
+          {% set bal_color = "color:#be123c;" %}
+          {% set badge = '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#fecdd3;color:#be123c;font-weight:600;margin-left:6px;">OUT</span>' %}
+        {% elif row.balance < low_stock_threshold %}
+          {% set row_bg = "background:#fffbeb;" %}
+          {% set bal_color = "color:#b45309;" %}
+          {% set badge = '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:#fde68a;color:#92400e;font-weight:600;margin-left:6px;">LOW</span>' %}
+        {% else %}
+          {% set row_bg = "" %}
+          {% set bal_color = "color:#2E2E2E;" %}
+          {% set badge = "" %}
+        {% endif %}
+        <tr style="border-bottom:1px solid #f0ece8;{{ row_bg }}"
+            onmouseover="this.style.filter='brightness(0.97)';"
+            onmouseout="this.style.filter='';">
+          <td style="padding:10px 16px;font-weight:500;color:#2E2E2E;">
+            {{ row.color_code }}{{ badge | safe }}
+          </td>
+          <td style="padding:10px 16px;text-align:right;color:rgba(46,46,46,0.55);">{{ row.opening_stock | int }}</td>
+          <td style="padding:10px 16px;text-align:right;color:#15803d;font-weight:500;">+{{ row.total_in | int }}</td>
+          <td style="padding:10px 16px;text-align:right;color:#be123c;font-weight:500;">-{{ row.total_out | int }}</td>
+          <td style="padding:10px 16px;text-align:right;font-weight:700;font-size:14px;{{ bal_color }}">{{ row.balance | int }}</td>
+          <td style="padding:10px 16px;text-align:center;">
+            <a href="/yarn/history?color={{ row.color_code }}"
+               style="font-size:12px;padding:3px 10px;border-radius:5px;border:1px solid #D8D2D2;color:#666;text-decoration:none;font-family:'Roboto',sans-serif;white-space:nowrap;"
+               onmouseover="this.style.background='#f7f5f2';" onmouseout="this.style.background='';">History</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="padding:32px;text-align:center;color:rgba(46,46,46,0.4);font-family:'Roboto',sans-serif;font-size:13px;">
+          No colors found{% if search %} matching "{{ search }}"{% endif %}.
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

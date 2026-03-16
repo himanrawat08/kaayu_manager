@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Yarn Transaction History{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-charcoal">Yarn History</h1>
+      <p class="text-sm text-gray-500 mt-0.5">All stock-in and stock-out transactions</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="/yarn"
+         style="padding:8px 14px;border-radius:8px;border:1px solid #D8D2D2;font-size:13px;color:#2E2E2E;text-decoration:none;font-family:'Roboto',sans-serif;background:#fff;"
+         onmouseover="this.style.background='#f7f5f2';" onmouseout="this.style.background='#fff';">← Back</a>
+      <a href="/yarn/master"
+         style="padding:8px 14px;border-radius:8px;border:1px solid #D8D2D2;font-size:13px;color:#2E2E2E;text-decoration:none;font-family:'Roboto',sans-serif;background:#fff;"
+         onmouseover="this.style.background='#f7f5f2';" onmouseout="this.style.background='#fff';">Master Table</a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" action="/yarn/history">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;">
+      <div>
+        <label style="display:block;font-size:11px;font-weight:500;color:rgba(46,46,46,0.5);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Roboto',sans-serif;">Color Code</label>
+        <input type="text" name="color" value="{{ filter_color }}" placeholder="e.g. 70A"
+               style="padding:7px 10px;border:1px solid #D8D2D2;border-radius:7px;font-size:13px;font-family:'Roboto',sans-serif;width:110px;outline:none;background:#fff;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:500;color:rgba(46,46,46,0.5);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Roboto',sans-serif;">Type</label>
+        <select name="tx_type"
+                style="padding:7px 10px;border:1px solid #D8D2D2;border-radius:7px;font-size:13px;font-family:'Roboto',sans-serif;outline:none;background:#fff;">
+          <option value="">All</option>
+          <option value="in" {% if filter_type == 'in' %}selected{% endif %}>Stock In</option>
+          <option value="out" {% if filter_type == 'out' %}selected{% endif %}>Stock Out</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:500;color:rgba(46,46,46,0.5);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Roboto',sans-serif;">Project</label>
+        <select name="project_id"
+                style="padding:7px 10px;border:1px solid #D8D2D2;border-radius:7px;font-size:13px;font-family:'Roboto',sans-serif;outline:none;background:#fff;max-width:180px;">
+          <option value="">All Projects</option>
+          {% for p in projects %}
+          <option value="{{ p.id }}" {% if filter_project_id == p.id|string %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:500;color:rgba(46,46,46,0.5);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Roboto',sans-serif;">From</label>
+        <input type="date" name="date_from" value="{{ filter_date_from }}"
+               style="padding:7px 10px;border:1px solid #D8D2D2;border-radius:7px;font-size:13px;font-family:'Roboto',sans-serif;outline:none;background:#fff;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;font-weight:500;color:rgba(46,46,46,0.5);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Roboto',sans-serif;">To</label>
+        <input type="date" name="date_to" value="{{ filter_date_to }}"
+               style="padding:7px 10px;border:1px solid #D8D2D2;border-radius:7px;font-size:13px;font-family:'Roboto',sans-serif;outline:none;background:#fff;" />
+      </div>
+      <button type="submit"
+              style="padding:8px 16px;border-radius:7px;border:none;background:#B17457;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'Roboto',sans-serif;">Filter</button>
+      {% if filter_color or filter_type or filter_project_id or filter_date_from or filter_date_to %}
+      <a href="/yarn/history"
+         style="padding:8px 12px;border-radius:7px;border:1px solid #D8D2D2;font-size:13px;color:#666;text-decoration:none;font-family:'Roboto',sans-serif;">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- Table -->
+  <div style="background:#fff;border:1px solid #E5E0DC;border-radius:10px;overflow:hidden;">
+    <div style="padding:12px 16px;border-bottom:1px solid #f0ece8;font-size:12px;color:rgba(46,46,46,0.5);font-family:'Roboto',sans-serif;">
+      {{ transactions|length }} transaction{% if transactions|length != 1 %}s{% endif %}
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-family:'Roboto',sans-serif;font-size:13px;">
+      <thead>
+        <tr style="background:#f7f5f2;border-bottom:1px solid #E5E0DC;">
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Date</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Color</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Type</th>
+          <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Qty</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Project</th>
+          <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;">Notes</th>
+          <th style="padding:10px 16px;text-align:center;font-size:11px;font-weight:600;color:rgba(46,46,46,0.5);text-transform:uppercase;letter-spacing:0.1em;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tx in transactions %}
+        <tr style="border-bottom:1px solid #f0ece8;"
+            onmouseover="this.style.background='#fdf8f5';"
+            onmouseout="this.style.background='';">
+          <td style="padding:10px 16px;color:rgba(46,46,46,0.7);">{{ tx.date.strftime('%d %b %Y') }}</td>
+          <td style="padding:10px 16px;font-weight:500;color:#2E2E2E;">{{ tx.color.color_code }}</td>
+          <td style="padding:10px 16px;">
+            {% if tx.transaction_type == 'in' %}
+            <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#dcfce7;color:#15803d;font-weight:600;">IN</span>
+            {% else %}
+            <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#fee2e2;color:#be123c;font-weight:600;">OUT</span>
+            {% endif %}
+          </td>
+          <td style="padding:10px 16px;text-align:right;font-weight:500;
+              {% if tx.transaction_type == 'in' %}color:#15803d;{% else %}color:#be123c;{% endif %}">
+            {% if tx.transaction_type == 'in' %}+{% else %}-{% endif %}{{ tx.quantity | int }}
+          </td>
+          <td style="padding:10px 16px;color:rgba(46,46,46,0.7);">
+            {% if tx.project %}
+            <a href="/projects/{{ tx.project.id }}" style="color:#B17457;text-decoration:none;"
+               onmouseover="this.style.textDecoration='underline';"
+               onmouseout="this.style.textDecoration='none';">{{ tx.project.name }}</a>
+            {% else %}
+            <span style="color:rgba(46,46,46,0.3);">—</span>
+            {% endif %}
+          </td>
+          <td style="padding:10px 16px;color:rgba(46,46,46,0.5);">{{ tx.notes or '—' }}</td>
+          <td style="padding:10px 16px;text-align:center;">
+            <form method="post" action="/yarn/transactions/{{ tx.id }}/delete"
+                  onsubmit="return confirm('Delete this transaction?');" style="display:inline;">
+              <button type="submit"
+                      style="font-size:12px;padding:3px 8px;border-radius:5px;border:1px solid #fca5a5;color:#be123c;background:transparent;cursor:pointer;font-family:'Roboto',sans-serif;"
+                      onmouseover="this.style.background='#fee2e2';"
+                      onmouseout="this.style.background='transparent';">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="padding:32px;text-align:center;color:rgba(46,46,46,0.4);font-family:'Roboto',sans-serif;font-size:13px;">No transactions found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
