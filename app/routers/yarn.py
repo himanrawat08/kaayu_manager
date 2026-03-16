@@ -3,8 +3,9 @@ from datetime import date
 from typing import List
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -17,13 +18,38 @@ router = APIRouter(prefix="/yarn")
 templates = Jinja2Templates(directory="app/templates")
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Single aggregated query — replaces N+1 lazy loads ────────────────────────
 
-def _compute_totals(color: YarnColor) -> tuple[float, float, float]:
-    """Return (total_in, total_out, balance)."""
-    total_in  = sum(t.quantity for t in color.transactions if t.transaction_type == "in")
-    total_out = sum(t.quantity for t in color.transactions if t.transaction_type == "out")
-    return total_in, total_out, color.opening_stock + total_in - total_out
+def _color_stats(db: Session, color_code: str | None = None):
+    """
+    Return rows with (id, color_code, opening_stock, total_in, total_out).
+    One SQL query regardless of how many colors exist.
+    """
+    q = (
+        db.query(
+            YarnColor.id,
+            YarnColor.color_code,
+            YarnColor.opening_stock,
+            func.coalesce(
+                func.sum(case(
+                    (YarnTransaction.transaction_type == "in", YarnTransaction.quantity),
+                    else_=0,
+                )), 0
+            ).label("total_in"),
+            func.coalesce(
+                func.sum(case(
+                    (YarnTransaction.transaction_type == "out", YarnTransaction.quantity),
+                    else_=0,
+                )), 0
+            ).label("total_out"),
+        )
+        .outerjoin(YarnTransaction, YarnColor.id == YarnTransaction.color_id)
+        .group_by(YarnColor.id, YarnColor.color_code, YarnColor.opening_stock)
+        .order_by(YarnColor.color_code)
+    )
+    if color_code:
+        q = q.filter(YarnColor.color_code == color_code)
+    return q.all()
 
 
 def _parse_date(s: str) -> date:
@@ -33,37 +59,31 @@ def _parse_date(s: str) -> date:
         return now_ist().date()
 
 
-def _stats(colors: list[YarnColor]) -> tuple[int, int, int]:
-    """Return (total, low_stock_count, out_of_stock_count)."""
-    low = out = 0
-    for c in colors:
-        _, _, bal = _compute_totals(c)
-        if bal <= 0:
-            out += 1
-        elif bal < LOW_STOCK_THRESHOLD:
-            low += 1
-    return len(colors), low, out
-
-
 # ── Inventory (main page) ─────────────────────────────────────────────────────
 
 @router.get("", response_class=HTMLResponse)
 def yarn_inventory(request: Request, db: Session = Depends(get_db)):
-    colors   = db.query(YarnColor).order_by(YarnColor.color_code).all()
-    projects = db.query(Project).order_by(Project.name).all()
-    total, low, out = _stats(colors)
+    stats     = _color_stats(db)                         # 1 query
+    projects  = db.query(Project).order_by(Project.name).all()
 
-    # Build balance map for client-side Check Stock and chip modals
+    low = out = 0
     balance_map: dict[str, int] = {}
-    for c in colors:
-        _, _, bal = _compute_totals(c)
-        balance_map[c.color_code] = int(bal)
+    for r in stats:
+        bal = int(r.opening_stock + r.total_in - r.total_out)
+        balance_map[r.color_code] = bal
+        if bal <= 0:
+            out += 1
+        elif bal < LOW_STOCK_THRESHOLD:
+            low += 1
+
+    # colors list is only needed for the datalist (id + code, no transactions)
+    colors = db.query(YarnColor.id, YarnColor.color_code).order_by(YarnColor.color_code).all()
 
     return templates.TemplateResponse("yarn/inventory.html", {
         "request": request,
         "colors": colors,
         "projects": projects,
-        "total_colors": total,
+        "total_colors": len(stats),
         "low_stock_count": low,
         "out_of_stock_count": out,
         "low_stock_threshold": LOW_STOCK_THRESHOLD,
@@ -80,26 +100,32 @@ def yarn_master(
     search: str = "",
     db: Session = Depends(get_db),
 ):
-    colors = db.query(YarnColor).order_by(YarnColor.color_code).all()
+    stats = _color_stats(db)   # 1 query
+
+    low = out = 0
     rows = []
-    for c in colors:
-        if search and search.lower() not in c.color_code.lower():
+    for r in stats:
+        if search and search.lower() not in r.color_code.lower():
             continue
-        total_in, total_out, balance = _compute_totals(c)
+        bal = r.opening_stock + r.total_in - r.total_out
         rows.append({
-            "id": c.id,
-            "color_code": c.color_code,
-            "opening_stock": c.opening_stock,
-            "total_in": total_in,
-            "total_out": total_out,
-            "balance": balance,
+            "id": r.id,
+            "color_code": r.color_code,
+            "opening_stock": r.opening_stock,
+            "total_in": r.total_in,
+            "total_out": r.total_out,
+            "balance": bal,
         })
-    total, low, out = _stats(colors)
+        if bal <= 0:
+            out += 1
+        elif bal < LOW_STOCK_THRESHOLD:
+            low += 1
+
     return templates.TemplateResponse("yarn/master.html", {
         "request": request,
         "rows": rows,
         "search": search,
-        "total_colors": total,
+        "total_colors": len(stats),
         "low_stock_count": low,
         "out_of_stock_count": out,
         "low_stock_threshold": LOW_STOCK_THRESHOLD,
@@ -167,22 +193,20 @@ def yarn_stock_in(
 ):
     parsed_date = _parse_date(tx_date)
     saved_notes = notes.strip() or None
+
+    # Pre-load all needed colors in one query
+    needed = [cid for cid, qty in zip(color_id, quantity) if qty > 0]
+    color_map = {c.id: c for c in db.query(YarnColor).filter(YarnColor.id.in_(needed)).all()}
+
     codes = []
     for cid, qty in zip(color_id, quantity):
-        if qty <= 0:
-            continue
-        color = db.query(YarnColor).filter(YarnColor.id == cid).first()
-        if not color:
+        if qty <= 0 or cid not in color_map:
             continue
         db.add(YarnTransaction(
-            color_id=cid,
-            transaction_type="in",
-            quantity=qty,
-            date=parsed_date,
-            project_id=None,
-            notes=saved_notes,
+            color_id=cid, transaction_type="in", quantity=qty,
+            date=parsed_date, project_id=None, notes=saved_notes,
         ))
-        codes.append(f"{color.color_code}+{int(qty)}")
+        codes.append(f"{color_map[cid].color_code}+{int(qty)}")
     db.commit()
     if codes:
         log_activity(db, request.session.get("user_name"), "Yarn bulk stock-in",
@@ -208,50 +232,46 @@ def yarn_stock_out(
 
     parsed_date = _parse_date(tx_date)
     saved_notes = notes.strip() or None
+
+    # Pre-load all needed colors in one query
+    needed = [cid for cid, qty in zip(color_id, quantity) if qty > 0]
+    color_map = {c.id: c for c in db.query(YarnColor).filter(YarnColor.id.in_(needed)).all()}
+
     codes = []
     for cid, qty in zip(color_id, quantity):
-        if qty <= 0:
-            continue
-        color = db.query(YarnColor).filter(YarnColor.id == cid).first()
-        if not color:
+        if qty <= 0 or cid not in color_map:
             continue
         db.add(YarnTransaction(
-            color_id=cid,
-            transaction_type="out",
-            quantity=qty,
-            date=parsed_date,
-            project_id=project_id,
-            notes=saved_notes,
+            color_id=cid, transaction_type="out", quantity=qty,
+            date=parsed_date, project_id=project_id, notes=saved_notes,
         ))
-        codes.append(f"{color.color_code}-{int(qty)}")
+        codes.append(f"{color_map[cid].color_code}-{int(qty)}")
     db.commit()
     if codes:
         log_activity(db, request.session.get("user_name"), "Yarn bulk stock-out",
-                     entity_type="yarn",
-                     detail=f"{', '.join(codes)} → {project.name}")
+                     entity_type="yarn", detail=f"{', '.join(codes)} → {project.name}")
     return RedirectResponse(url="/yarn", status_code=303)
 
 
-# ── Quick balance API (used by dashboard lookup) ─────────────────────────────
+# ── Quick balance API ─────────────────────────────────────────────────────────
 
 @router.get("/api/colors")
 def yarn_colors_api(db: Session = Depends(get_db)):
-    from fastapi.responses import JSONResponse
-    codes = [c.color_code for c in db.query(YarnColor.color_code).order_by(YarnColor.color_code).all()]
+    codes = [r[0] for r in db.query(YarnColor.color_code).order_by(YarnColor.color_code).all()]
     return JSONResponse(codes)
 
 
 @router.get("/api/balance/{color_code}")
 def yarn_balance_api(color_code: str, db: Session = Depends(get_db)):
-    from fastapi.responses import JSONResponse
-    color = db.query(YarnColor).filter(YarnColor.color_code == color_code).first()
-    if not color:
+    rows = _color_stats(db, color_code=color_code)
+    if not rows:
         return JSONResponse({"found": False}, status_code=404)
-    _, _, bal = _compute_totals(color)
+    r = rows[0]
+    bal = int(r.opening_stock + r.total_in - r.total_out)
     return JSONResponse({
         "found": True,
-        "color_code": color.color_code,
-        "balance": int(bal),
+        "color_code": r.color_code,
+        "balance": bal,
         "low": 0 < bal < LOW_STOCK_THRESHOLD,
         "out": bal <= 0,
     })
