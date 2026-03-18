@@ -220,14 +220,16 @@ def projects_delete(request: Request, project_id: int, db: Session = Depends(get
     project = db.query(Project).filter(Project.id == project_id).first()
     if project:
         name = project.name
-        # Clean up uploaded files from disk
-        _upload_base = Path(__file__).resolve().parent.parent.parent / "uploads"
-        for subdir in ("briefs", "design", "production"):
-            d = _upload_base / subdir / str(project_id)
-            if d.exists():
-                shutil.rmtree(d, ignore_errors=True)
+        # Clean up uploaded files from Supabase Storage
+        all_stored_paths = (
+            [f.stored_filename for f in project.brief_files]
+            + [f.stored_filename for f in project.design_files]
+            + [f.stored_filename for f in project.production_files]
+        )
         db.delete(project)
         db.commit()
+        for path in all_stored_paths:
+            storage.delete(path)
         log_activity(db, request.session.get("user_name"), "Deleted project",
                      entity_type="project", detail=name)
     return RedirectResponse(url="/projects?success=Project+deleted", status_code=303)

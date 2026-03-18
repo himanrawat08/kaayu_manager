@@ -60,7 +60,7 @@ class Quotation(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist, onupdate=now_ist)
 
-    project: Mapped["Project"] = relationship("Project")  # noqa: F821
+    project: Mapped["Project"] = relationship("Project", back_populates="quotations")  # noqa: F821
     items: Mapped[list["QuoteItem"]] = relationship(
         "QuoteItem", back_populates="quotation",
         cascade="all, delete-orphan", order_by="QuoteItem.sort_order",

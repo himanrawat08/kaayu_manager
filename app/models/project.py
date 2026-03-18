@@ -63,6 +63,9 @@ class Project(Base):
         "ProjectActivity", back_populates="project", cascade="all, delete-orphan",
         order_by="ProjectActivity.created_at"
     )
+    quotations: Mapped[list["Quotation"]] = relationship(  # noqa: F821
+        "Quotation", back_populates="project", cascade="all, delete-orphan",
+    )
 
 
 class StageLog(Base):
