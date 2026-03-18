@@ -23,7 +23,7 @@ def _headers() -> dict:
 def upload(path: str, data: bytes, filename: str) -> None:
     """Upload bytes to Supabase Storage at the given path within the bucket."""
     content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
-    url = f"{settings.SUPABASE_URL}/storage/v1/object/{settings.SUPABASE_BUCKET}/{path}"
+    url = f"{settings.SUPABASE_URL.strip()}/storage/v1/object/{settings.SUPABASE_BUCKET.strip()}/{path}"
     logger.info("Uploading to: %s", url)
     resp = httpx.post(
         url,
@@ -37,7 +37,7 @@ def upload(path: str, data: bytes, filename: str) -> None:
 
 def delete(path: str) -> None:
     """Delete a file from Supabase Storage."""
-    url = f"{settings.SUPABASE_URL}/storage/v1/object/{settings.SUPABASE_BUCKET}"
+    url = f"{settings.SUPABASE_URL.strip()}/storage/v1/object/{settings.SUPABASE_BUCKET.strip()}"
     try:
         resp = httpx.delete(url, json={"prefixes": [path]}, headers=_headers())
         resp.raise_for_status()
@@ -47,4 +47,4 @@ def delete(path: str) -> None:
 
 def public_url(path: str) -> str:
     """Return the public URL for a file stored in the bucket."""
-    return f"{settings.SUPABASE_URL}/storage/v1/object/public/{settings.SUPABASE_BUCKET}/{path}"
+    return f"{settings.SUPABASE_URL.strip()}/storage/v1/object/public/{settings.SUPABASE_BUCKET.strip()}/{path}"
