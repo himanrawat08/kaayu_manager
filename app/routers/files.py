@@ -1,11 +1,16 @@
+import logging
 import uuid
 from pathlib import Path
+
+import httpx
 
 from app.utils.time import now_ist
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.database import get_db
 from app.models.project import Project
@@ -76,7 +81,22 @@ def upload_brief_file(
             status_code=303,
         )
 
-    stored, original, size = _save(file, "briefs", project_id)
+    try:
+        stored, original, size = _save(file, "briefs", project_id)
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        logger.exception("Storage timeout uploading brief file for project %s", project_id)
+        return RedirectResponse(
+            url=f"/projects/{project_id}?error=Upload+timed+out.+Try+a+smaller+file+or+try+again.",
+            status_code=303,
+        )
+    except Exception:
+        logger.exception("Storage error uploading brief file for project %s", project_id)
+        return RedirectResponse(
+            url=f"/projects/{project_id}?error=File+upload+failed.+Please+try+again.",
+            status_code=303,
+        )
     db.add(ProjectBriefFile(
         project_id=project_id,
         original_filename=original,
@@ -113,7 +133,22 @@ def upload_design_file(
     if not project:
         return RedirectResponse(url="/projects", status_code=303)
 
-    stored, original, size = _save(file, "design", project_id)
+    try:
+        stored, original, size = _save(file, "design", project_id)
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        logger.exception("Storage timeout uploading design file for project %s", project_id)
+        return RedirectResponse(
+            url=f"/projects/{project_id}?error=Upload+timed+out.+Try+a+smaller+file+or+try+again.",
+            status_code=303,
+        )
+    except Exception:
+        logger.exception("Storage error uploading design file for project %s", project_id)
+        return RedirectResponse(
+            url=f"/projects/{project_id}?error=File+upload+failed.+Please+try+again.",
+            status_code=303,
+        )
     db.add(DesignFile(
         project_id=project_id,
         original_filename=original,
@@ -254,7 +289,22 @@ def upload_production_file(
     if file_category not in PRODUCTION_FILE_CATEGORIES:
         return RedirectResponse(url=f"/projects/{project_id}?error=Invalid+file+category", status_code=303)
 
-    stored, original, size = _save(file, "production", project_id)
+    try:
+        stored, original, size = _save(file, "production", project_id)
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        logger.exception("Storage timeout uploading production file for project %s", project_id)
+        return RedirectResponse(
+            url=f"/projects/{project_id}?tab=production&error=Upload+timed+out.+Try+a+smaller+file+or+try+again.",
+            status_code=303,
+        )
+    except Exception:
+        logger.exception("Storage error uploading production file for project %s", project_id)
+        return RedirectResponse(
+            url=f"/projects/{project_id}?tab=production&error=File+upload+failed.+Please+try+again.",
+            status_code=303,
+        )
     db.add(ProductionFile(
         project_id=project_id,
         file_category=file_category,

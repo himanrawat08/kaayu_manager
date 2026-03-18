@@ -25,7 +25,12 @@ def upload(path: str, data: bytes, filename: str) -> None:
     content_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
     url = f"{settings.SUPABASE_URL}/storage/v1/object/{settings.SUPABASE_BUCKET}/{path}"
     logger.info("Uploading to: %s", url)
-    resp = httpx.post(url, content=data, headers={**_headers(), "Content-Type": content_type})
+    resp = httpx.post(
+        url,
+        content=data,
+        headers={**_headers(), "Content-Type": content_type},
+        timeout=120.0,  # 2-minute timeout for large file uploads
+    )
     logger.info("Upload response: %s %s", resp.status_code, resp.text)
     resp.raise_for_status()
 
