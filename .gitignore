@@ -34,3 +34,11 @@ reset_password.py
 
 # Yarn Excel source (data lives in Supabase after migration)
 "SK  - Yarn Tracker.xlsx"
+
+# Loose root-level working files (PDFs, images, docs, previews)
+*.pdf
+*.png
+*.jpg
+*.xlsx
+*.docx
+*.xls
