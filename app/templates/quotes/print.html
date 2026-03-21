@@ -21,9 +21,18 @@
       margin: 0 auto;
     }
     @media print {
-      body { padding: 0; }
       .no-print { display: none !important; }
-      @page { margin: 14mm 16mm; size: A4; }
+      @page {
+        margin: 0;
+        size: A4;
+      }
+      html, body {
+        margin: 0;
+        padding: 12mm 14mm;
+        background: #F0EBE0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
 
     /* ── Header ── */
