@@ -9,7 +9,7 @@
 
 /* ── Sidebar ────────────────────────────────────────────────────────────── */
 #sidebar {
-  width: 220px;
+  width: 240px;
   background: #2E2E2E;
   min-height: 100vh;
   display: flex;
@@ -70,7 +70,7 @@
 
 /* Content area */
 .content-area {
-  margin-left: 220px;
+  margin-left: 240px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -79,7 +79,7 @@
 /* ── RESPONSIVE: tablet / mobile (<768px) ───────────────────────────────── */
 @media (max-width: 767px) {
   #sidebar {
-    transform: translateX(-220px);
+    transform: translateX(-240px);
   }
   #sidebar.sidebar-open {
     transform: translateX(0);
