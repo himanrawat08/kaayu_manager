@@ -34,56 +34,17 @@
       margin-bottom: 28px;
     }
 
-    /* Logo — tint black logo to terracotta via screen blend */
+    /* Logo — multiply blend removes white background against cream page */
     .logo-wrapper {
-      position: relative;
       display: inline-block;
+      background: #F0EBE0;
       line-height: 0;
     }
     .logo-img {
-      height: 44px;
+      height: 64px;
       width: auto;
       display: block;
-    }
-    .logo-wrapper::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: #B37659;
-      mix-blend-mode: screen;
-      pointer-events: none;
-    }
-
-    /* Decorative accent bars (top-right, matching letterhead) */
-    .accent-zone {
-      position: relative;
-      width: 270px;
-      height: 56px;
-      flex-shrink: 0;
-    }
-    .accent-v {
-      position: absolute;
-      right: -44px; /* bleeds to page edge */
-      top: -36px;
-      width: 20px;
-      height: 90px;
-      background: #231F21;
-    }
-    .accent-h1 {
-      position: absolute;
-      right: -20px;
-      top: 16px;
-      width: 120px;
-      height: 24px;
-      background: #231F21;
-    }
-    .accent-h2 {
-      position: absolute;
-      right: 104px;
-      top: 16px;
-      width: 120px;
-      height: 24px;
-      background: #231F21;
+      mix-blend-mode: multiply;
     }
 
     /* ── Client info + Quote meta ── */
@@ -113,7 +74,7 @@
     }
     .client-meta .lbl {
       display: inline-block;
-      width: 18px;
+      width: 58px;
       color: #B37659;
       font-weight: 700;
     }
@@ -268,11 +229,6 @@
   <div class="logo-wrapper">
     <img src="/static/img/logo.png" class="logo-img" alt="Kaayu Studio" />
   </div>
-  <div class="accent-zone">
-    <div class="accent-v"></div>
-    <div class="accent-h1"></div>
-    <div class="accent-h2"></div>
-  </div>
 </div>
 
 <!-- ── Client Info + Quote Meta ── -->
@@ -282,16 +238,16 @@
     <div class="client-name">{{ q.client_name or (q.project.client.name if q.project and q.project.client else '—') }}</div>
     <div class="client-meta">
       {% if q.project %}
-      <div><span class="lbl">P</span>{{ q.project.name }}</div>
+      <div><span class="lbl">Project</span>{{ q.project.name }}</div>
       {% endif %}
       {% if q.contact_name %}
-      <div><span class="lbl">C</span>{{ q.contact_name }}</div>
+      <div><span class="lbl">Contact</span>{{ q.contact_name }}</div>
       {% endif %}
       {% if q.contact_number %}
-      <div><span class="lbl">M</span>{{ q.contact_number }}</div>
+      <div><span class="lbl">Mobile</span>{{ q.contact_number }}</div>
       {% endif %}
       {% if q.client_address %}
-      <div><span class="lbl">A</span>{{ q.client_address }}</div>
+      <div><span class="lbl">Address</span>{{ q.client_address }}</div>
       {% endif %}
     </div>
   </div>
@@ -402,7 +358,7 @@
 {% if q.payment_terms %}
 <div class="payment-terms-section">
   <div class="footer-heading">Payment Terms</div>
-  <div class="footer-content">{{ q.payment_terms }}</div>
+  <div class="footer-content" style="white-space: pre-line;">{{ q.payment_terms }}</div>
 </div>
 {% endif %}
 
