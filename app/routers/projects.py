@@ -25,6 +25,19 @@ templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["storage_url"] = storage.public_url
 
 
+def _next_order_number(db: Session) -> str:
+    """Generate the next sequential order number in KS/NNNN format."""
+    projects = db.query(Project).filter(Project.order_number.isnot(None)).all()
+    max_num = 0
+    for p in projects:
+        try:
+            num = int(p.order_number.split("/")[-1])
+            max_num = max(max_num, num)
+        except (ValueError, AttributeError):
+            pass
+    return f"KS/{max_num + 1:04d}"
+
+
 # ── List ──────────────────────────────────────────────────────────────────────
 
 @router.get("", response_class=HTMLResponse)
@@ -91,6 +104,7 @@ def projects_create(
         project_contact_phone=project_contact_phone.strip() or None,
         current_stage="design",
         status="active",
+        order_number=_next_order_number(db),
     )
     db.add(project)
     db.flush()

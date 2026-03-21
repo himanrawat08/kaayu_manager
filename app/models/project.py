@@ -34,6 +34,9 @@ class Project(Base):
     project_contact_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     project_contact_phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
+    # Order number (auto-assigned, e.g. KS/0001)
+    order_number: Mapped[str | None] = mapped_column(String(20), nullable=True, unique=True)
+
     # Production sheet details
     prod_design_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     prod_size: Mapped[str | None] = mapped_column(String(100), nullable=True)

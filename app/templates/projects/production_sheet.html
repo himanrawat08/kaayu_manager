@@ -174,7 +174,7 @@
       <td class="val">{{ project.name }}</td>
       <td style="width:20px;"></td>
       <td class="lbl">Order No.</td><td class="sep">—</td>
-      <td class="val blank">____________</td>
+      <td class="val">{{ project.order_number or '—' }}</td>
     </tr>
     <tr>
       <td class="lbl">Client</td><td class="sep">—</td>

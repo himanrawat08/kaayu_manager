@@ -88,6 +88,7 @@ def _migrate_schema():
         "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS payment_bank_name VARCHAR(200)",
         "ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS material TEXT",
         "ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS gst_percent FLOAT NOT NULL DEFAULT 0.0",
+        "ALTER TABLE projects ADD COLUMN IF NOT EXISTS order_number VARCHAR(20)",
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prod_design_name TEXT",
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prod_size VARCHAR(100)",
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prod_polish_stain VARCHAR(255)",
