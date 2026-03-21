@@ -19,6 +19,9 @@
       padding: 28px 36px 24px;
       max-width: 720px;
       margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: calc(297mm - 52px);
     }
     @media print {
       .no-print { display: none !important; }
@@ -29,6 +32,7 @@
         background: #F0EBE0;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        height: calc(297mm - 20mm);
       }
     }
 
@@ -49,11 +53,12 @@
       padding-bottom: 12px;
       border-bottom: 1.5px solid #C8C0B0;
       margin-bottom: 14px;
+      flex-shrink: 0;
     }
     .logo-wrapper { display: inline-block; background: #F0EBE0; line-height: 0; }
-    .logo-img { height: 44px; width: auto; display: block; mix-blend-mode: multiply; }
+    .logo-img { height: 72px; width: auto; display: block; mix-blend-mode: multiply; }
 
-    /* Meta grid: 3 rows × 2 cols (label — value) */
+    /* Meta table */
     .meta-table { border-collapse: collapse; font-size: 10.5px; }
     .meta-table td { padding: 2px 6px; vertical-align: middle; }
     .meta-table td.lbl {
@@ -62,26 +67,28 @@
       white-space: nowrap; text-align: right;
     }
     .meta-table td.sep { color: #C8C0B0; padding: 2px 4px; }
-    .meta-table td.val {
-      font-weight: 700; color: #231F21; min-width: 120px;
-    }
-    .meta-table td.val.blank {
-      border-bottom: 1px solid #B0A898; color: transparent;
-    }
+    .meta-table td.val { font-weight: 700; color: #231F21; min-width: 120px; }
+    .meta-table td.val.blank { border-bottom: 1px solid #B0A898; color: transparent; }
 
-    /* ── Body: two columns ── */
+    /* ── Body: two columns — fills remaining page height ── */
     .body-cols {
+      flex: 1;
       display: flex;
       gap: 16px;
-      align-items: flex-start;
+      align-items: stretch;
+      min-height: 0;
       margin-bottom: 14px;
     }
 
-    /* Left: design image */
-    .design-col { flex: 0 0 42%; }
+    /* Left: design image — full height */
+    .design-col {
+      flex: 0 0 42%;
+      display: flex;
+      flex-direction: column;
+    }
     .design-img-box {
+      flex: 1;
       width: 100%;
-      aspect-ratio: 3/4;
       background: #E4DDD3;
       border: 1px solid #C8C0B0;
       border-radius: 3px;
@@ -95,7 +102,7 @@
       color: #8C8070; font-size: 10px; text-align: center; padding: 16px; line-height: 1.6;
     }
     .design-caption {
-      font-size: 9px; color: #8C8070; margin-top: 4px; text-align: center;
+      font-size: 9px; color: #8C8070; margin-top: 4px; text-align: center; flex-shrink: 0;
     }
 
     /* Right: specs + QC */
@@ -106,14 +113,14 @@
       font-size: 9.5px; font-weight: 700; color: #B37659;
       text-transform: uppercase; letter-spacing: 0.06em;
       border-bottom: 1px solid #C8C0B0;
-      padding-bottom: 3px; margin-bottom: 6px; margin-top: 10px;
+      padding-bottom: 3px; margin-bottom: 6px; margin-top: 12px;
     }
     .section-hdg:first-child { margin-top: 0; }
 
     /* Spec table */
     .spec-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
     .spec-table td {
-      padding: 4px 7px; border: 1px solid #C8C0B0; font-size: 10.5px; vertical-align: middle;
+      padding: 5px 7px; border: 1px solid #C8C0B0; font-size: 10.5px; vertical-align: middle;
     }
     .spec-table td.lbl {
       width: 90px; color: #8C8070; font-weight: 600;
@@ -126,7 +133,7 @@
     .qc-list { list-style: none; }
     .qc-list li {
       display: flex; align-items: center; gap: 7px;
-      padding: 3px 0; font-size: 10.5px; color: #3A3028;
+      padding: 4px 0; font-size: 10.5px; color: #3A3028;
       border-bottom: 1px dotted #D8D0C4;
     }
     .qc-list li:last-child { border-bottom: none; }
@@ -139,6 +146,7 @@
     .signoff-row {
       display: flex; gap: 16px;
       padding-top: 10px; border-top: 1.5px solid #C8C0B0;
+      flex-shrink: 0;
     }
     .signoff-item { flex: 1; }
     .signoff-label {
@@ -194,7 +202,7 @@
 <!-- ── Body columns ── -->
 <div class="body-cols">
 
-  <!-- Left: design image -->
+  <!-- Left: design image (fills full remaining height) -->
   <div class="design-col">
     <div class="design-img-box">
       {% if final_design_is_pdf %}
