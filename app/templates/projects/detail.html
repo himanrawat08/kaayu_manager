@@ -31,6 +31,8 @@
     {% endif %}
   </div>
   <div class="flex gap-2 shrink-0">
+    <a href="/projects/{{ project.id }}/production-sheet" target="_blank"
+       class="bg-amber-50 text-amber-700 px-4 py-2 rounded hover:bg-amber-100 transition text-sm border border-amber-200">&#128438; Production Sheet</a>
     <a href="/projects/{{ project.id }}/edit"
        class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition text-sm">Edit</a>
     <form method="post" action="/projects/{{ project.id }}/delete"

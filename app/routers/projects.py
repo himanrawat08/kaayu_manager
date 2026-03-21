@@ -356,6 +356,31 @@ def project_revert_activity(project_id: int, activity_id: int, db: Session = Dep
     return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
 
 
+@router.get("/{project_id}/production-sheet", response_class=HTMLResponse)
+def production_sheet(request: Request, project_id: int, db: Session = Depends(get_db)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        return RedirectResponse(url="/projects", status_code=303)
+
+    production_log = (
+        db.query(StageLog)
+        .filter(StageLog.project_id == project_id, StageLog.stage == "production")
+        .order_by(StageLog.created_at.asc())
+        .first()
+    )
+    final_design = next((f for f in project.design_files if f.is_final), None)
+
+    return templates.TemplateResponse(
+        "projects/production_sheet.html",
+        {
+            "request": request,
+            "project": project,
+            "production_log": production_log,
+            "final_design": final_design,
+        },
+    )
+
+
 @router.post("/{project_id}/activities/{activity_id}/delete")
 def project_delete_activity(project_id: int, activity_id: int, db: Session = Depends(get_db)):
     act = db.query(ProjectActivity).filter(
