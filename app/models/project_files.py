@@ -8,9 +8,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 PRODUCTION_FILE_CATEGORIES = {
-    "laser_cutting": "Laser Cutting File",
-    "stitch": "Stitch File",
-    "colour": "Colour File",
+    "laser_cutting": "Laser Cutting",
+    "colour": "Colour",
 }
 
 
