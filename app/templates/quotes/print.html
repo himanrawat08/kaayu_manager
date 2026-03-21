@@ -131,13 +131,7 @@
     .item-name { font-weight: 600; color: #231F21; }
     .item-desc { font-size: 10.5px; color: #8C8070; margin-top: 2px; }
 
-    /* ── Note + Totals row ── */
-    .summary-row {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 22px;
-    }
-    .summary-left { flex: 1; padding-right: 16px; }
+    /* ── Note ── */
     .note-box {
       font-size: 11px;
       color: #5C5546;
@@ -296,22 +290,23 @@
 </table>
 {% endif %}
 
-<!-- ── Note + Totals ── -->
-<div class="summary-row">
-  <div class="summary-left">
-    {% if q.notes %}
-    <p class="note-box"><strong>Note:</strong> {{ q.notes }}</p>
-    {% endif %}
-  </div>
+<!-- ── Note (full width, above totals) ── -->
+{% if q.notes %}
+<p class="note-box" style="margin-bottom:14px;"><strong>Note:</strong> {{ q.notes }}</p>
+{% endif %}
+
+<!-- ── Totals (right-aligned) ── -->
+<div style="display:flex; justify-content:flex-end; margin-bottom:22px;">
   <table class="totals-table">
     {% set items_sub = q.items | sum(attribute='amount') %}
     <tr>
-      <td>Subtotal</td>
+      <td>Total</td>
       <td>Rs. {{ "%.0f"|format(items_sub) }}</td>
     </tr>
     {% if q.igst_amount %}
+    {% set gst_pct = q.items[0].gst_percent if q.items else 0 %}
     <tr>
-      <td>GST</td>
+      <td>GST {{ gst_pct | int if gst_pct == gst_pct | int else gst_pct }}%</td>
       <td>Rs. {{ "%.0f"|format(q.igst_amount) }}</td>
     </tr>
     {% endif %}
