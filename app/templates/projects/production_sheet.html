@@ -14,15 +14,15 @@
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 12px;
+      font-size: 11px;
       color: #404041;
-      padding: 32px 40px 28px;
-      max-width: 900px;
+      padding: 28px 36px 24px;
+      max-width: 720px;
       margin: 0 auto;
     }
     @media print {
       .no-print { display: none !important; }
-      @page { margin: 0; size: A4 landscape; }
+      @page { margin: 0; size: A4 portrait; }
       html, body {
         margin: 0;
         padding: 10mm 12mm;
@@ -36,183 +36,118 @@
     .print-btn {
       position: fixed; top: 20px; right: 20px;
       background: #B37659; color: #fff; border: none; border-radius: 6px;
-      padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+      padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
       box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     }
     .print-btn:hover { opacity: 0.9; }
 
-    /* ── Top header: logo left, project meta right ── */
+    /* ── Header ── */
     .doc-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 20px;
+      align-items: center;
+      padding-bottom: 12px;
       border-bottom: 1.5px solid #C8C0B0;
-      padding-bottom: 16px;
+      margin-bottom: 14px;
     }
     .logo-wrapper { display: inline-block; background: #F0EBE0; line-height: 0; }
-    .logo-img { height: 52px; width: auto; display: block; mix-blend-mode: multiply; }
+    .logo-img { height: 44px; width: auto; display: block; mix-blend-mode: multiply; }
 
-    .meta-grid {
-      display: grid;
-      grid-template-columns: repeat(3, auto);
-      gap: 4px 28px;
-      text-align: right;
+    /* Meta grid: 3 rows × 2 cols (label — value) */
+    .meta-table { border-collapse: collapse; font-size: 10.5px; }
+    .meta-table td { padding: 2px 6px; vertical-align: middle; }
+    .meta-table td.lbl {
+      color: #8C8070; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      white-space: nowrap; text-align: right;
     }
-    .meta-item { display: contents; }
-    .meta-label {
-      font-size: 10px;
-      color: #8C8070;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-weight: 600;
-      text-align: left;
+    .meta-table td.sep { color: #C8C0B0; padding: 2px 4px; }
+    .meta-table td.val {
+      font-weight: 700; color: #231F21; min-width: 120px;
     }
-    .meta-sep { color: #C8C0B0; font-size: 10px; }
-    .meta-value {
-      font-size: 12px;
-      font-weight: 700;
-      color: #231F21;
-      min-width: 110px;
-    }
-    .meta-value.blank {
-      border-bottom: 1px solid #C8C0B0;
-      min-width: 110px;
-      display: inline-block;
-      height: 16px;
+    .meta-table td.val.blank {
+      border-bottom: 1px solid #B0A898; color: transparent;
     }
 
     /* ── Body: two columns ── */
     .body-cols {
       display: flex;
-      gap: 24px;
+      gap: 16px;
       align-items: flex-start;
+      margin-bottom: 14px;
     }
 
     /* Left: design image */
-    .design-col {
-      flex: 0 0 45%;
-      max-width: 45%;
-    }
+    .design-col { flex: 0 0 42%; }
     .design-img-box {
       width: 100%;
       aspect-ratio: 3/4;
       background: #E4DDD3;
       border: 1px solid #C8C0B0;
-      border-radius: 4px;
+      border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
     }
-    .design-img-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
+    .design-img-box img { width: 100%; height: 100%; object-fit: contain; }
     .design-img-placeholder {
-      color: #8C8070;
-      font-size: 11px;
-      text-align: center;
-      padding: 20px;
-      line-height: 1.6;
+      color: #8C8070; font-size: 10px; text-align: center; padding: 16px; line-height: 1.6;
     }
-    .design-file-name {
-      font-size: 10px;
-      color: #8C8070;
-      margin-top: 5px;
-      text-align: center;
+    .design-caption {
+      font-size: 9px; color: #8C8070; margin-top: 4px; text-align: center;
     }
 
     /* Right: specs + QC */
-    .info-col {
-      flex: 1;
-    }
+    .info-col { flex: 1; }
 
-    /* ── Section heading ── */
-    .section-heading {
-      font-size: 10px;
-      font-weight: 700;
-      color: #B37659;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+    /* Section heading */
+    .section-hdg {
+      font-size: 9.5px; font-weight: 700; color: #B37659;
+      text-transform: uppercase; letter-spacing: 0.06em;
       border-bottom: 1px solid #C8C0B0;
-      padding-bottom: 4px;
-      margin-bottom: 8px;
-      margin-top: 14px;
+      padding-bottom: 3px; margin-bottom: 6px; margin-top: 10px;
     }
-    .section-heading:first-child { margin-top: 0; }
+    .section-hdg:first-child { margin-top: 0; }
 
-    /* ── Spec table ── */
-    .spec-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    /* Spec table */
+    .spec-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
     .spec-table td {
-      padding: 5px 8px;
-      border: 1px solid #C8C0B0;
-      font-size: 11px;
-      vertical-align: middle;
+      padding: 4px 7px; border: 1px solid #C8C0B0; font-size: 10.5px; vertical-align: middle;
     }
-    .spec-table td:first-child {
-      width: 110px;
-      color: #8C8070;
-      font-weight: 600;
-      background: #E8E2D8;
-      white-space: nowrap;
+    .spec-table td.lbl {
+      width: 90px; color: #8C8070; font-weight: 600;
+      background: #E8E2D8; white-space: nowrap;
     }
-    .spec-table td:last-child {
-      color: #231F21;
-      font-weight: 600;
-    }
-    .spec-table td.blank-cell {
-      color: transparent;
-      user-select: none;
-    }
+    .spec-table td.val { font-weight: 600; color: #231F21; }
+    .spec-table td.val.blank { color: transparent; }
 
-    /* ── QC checklist ── */
-    .qc-list { list-style: none; margin-bottom: 6px; }
+    /* QC checklist */
+    .qc-list { list-style: none; }
     .qc-list li {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 0;
-      font-size: 11px;
-      color: #3A3028;
+      display: flex; align-items: center; gap: 7px;
+      padding: 3px 0; font-size: 10.5px; color: #3A3028;
       border-bottom: 1px dotted #D8D0C4;
     }
     .qc-list li:last-child { border-bottom: none; }
     .checkbox {
-      width: 13px; height: 13px;
-      border: 1.5px solid #8C8070;
-      border-radius: 2px;
-      flex-shrink: 0;
-      display: inline-block;
+      width: 11px; height: 11px;
+      border: 1.5px solid #8C8070; border-radius: 2px; flex-shrink: 0;
     }
 
     /* ── Sign-off ── */
     .signoff-row {
-      display: flex;
-      gap: 20px;
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid #C8C0B0;
+      display: flex; gap: 16px;
+      padding-top: 10px; border-top: 1.5px solid #C8C0B0;
     }
     .signoff-item { flex: 1; }
     .signoff-label {
-      font-size: 10px;
-      color: #8C8070;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 18px;
-      font-weight: 600;
+      font-size: 9px; color: #8C8070;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      font-weight: 600; margin-bottom: 16px;
     }
-    .signoff-line {
-      border-bottom: 1px solid #8C8070;
-      width: 100%;
-    }
-    .signoff-name-label {
-      font-size: 9px;
-      color: #B0A898;
-      margin-top: 3px;
-    }
+    .signoff-line { border-bottom: 1px solid #8C8070; }
+    .signoff-sub { font-size: 8.5px; color: #B0A898; margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -225,43 +160,35 @@
     <img src="/static/img/logo.png" class="logo-img" alt="Kaayu Studio" />
   </div>
 
-  <div class="meta-grid">
-    <span class="meta-label">Project</span>
-    <span class="meta-sep">—</span>
-    <span class="meta-value">{{ project.name }}</span>
-
-    <span class="meta-label">Client</span>
-    <span class="meta-sep">—</span>
-    <span class="meta-value">{{ project.client.name }}</span>
-
-    <span class="meta-label">Order No.</span>
-    <span class="meta-sep">—</span>
-    <span class="meta-value"><span class="blank"></span></span>
-
-    <span class="meta-label">Order Type</span>
-    <span class="meta-sep">—</span>
-    <span class="meta-value"><span class="blank"></span></span>
-
-    <span class="meta-label">Prod Start</span>
-    <span class="meta-sep">—</span>
-    <span class="meta-value">
-      {% if production_log %}
-        {{ production_log.started_at.strftime('%-d %b %Y') }}
-      {% else %}
-        <span class="blank"></span>
-      {% endif %}
-    </span>
-
-    <span class="meta-label">Prod End</span>
-    <span class="meta-sep">—</span>
-    <span class="meta-value">
-      {% if project.completion_date %}
-        {{ project.completion_date.strftime('%-d %b %Y') }}
-      {% else %}
-        <span class="blank"></span>
-      {% endif %}
-    </span>
-  </div>
+  <table class="meta-table">
+    <tr>
+      <td class="lbl">Project</td><td class="sep">—</td>
+      <td class="val">{{ project.name }}</td>
+      <td style="width:20px;"></td>
+      <td class="lbl">Order No.</td><td class="sep">—</td>
+      <td class="val blank">____________</td>
+    </tr>
+    <tr>
+      <td class="lbl">Client</td><td class="sep">—</td>
+      <td class="val">{{ project.client.name }}</td>
+      <td></td>
+      <td class="lbl">Order Type</td><td class="sep">—</td>
+      <td class="val blank">____________</td>
+    </tr>
+    <tr>
+      <td class="lbl">Prod Start</td><td class="sep">—</td>
+      <td class="val">
+        {% if production_log %}{{ production_log.started_at.strftime('%-d %b %Y') }}
+        {% else %}<span style="color:transparent;">__________</span>{% endif %}
+      </td>
+      <td></td>
+      <td class="lbl">Prod End</td><td class="sep">—</td>
+      <td class="val">
+        {% if project.completion_date %}{{ project.completion_date.strftime('%-d %b %Y') }}
+        {% else %}<span style="color:transparent;">__________</span>{% endif %}
+      </td>
+    </tr>
+  </table>
 </div>
 
 <!-- ── Body columns ── -->
@@ -270,43 +197,53 @@
   <!-- Left: design image -->
   <div class="design-col">
     <div class="design-img-box">
-      {% if final_design %}
+      {% if final_design_is_pdf %}
+        <img src="/projects/{{ project.id }}/design-preview.png?page={{ project.prod_design_page or 1 }}"
+             alt="Design Preview" />
+      {% elif final_design %}
         {% set ext = final_design.original_filename.rsplit('.', 1)[-1].lower() %}
         {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'] %}
           <img src="{{ storage_url(final_design.stored_filename) }}" alt="{{ final_design.original_filename }}" />
         {% else %}
-          <div class="design-img-placeholder">
-            &#128196; {{ final_design.original_filename }}<br/>
-            <span style="font-size:9px;">(attach print of design file)</span>
-          </div>
+          <div class="design-img-placeholder">&#128196; {{ final_design.original_filename }}<br/><span style="font-size:9px;">(attach print)</span></div>
         {% endif %}
       {% else %}
-        <div class="design-img-placeholder">
-          No final design file<br/>
-          <span style="font-size:9px;">(attach print of design file)</span>
-        </div>
+        <div class="design-img-placeholder">No final design file<br/><span style="font-size:9px;">(attach print of design)</span></div>
       {% endif %}
     </div>
     {% if final_design %}
-    <div class="design-file-name">{{ final_design.description or final_design.original_filename }}</div>
+    <div class="design-caption">{{ project.prod_design_name or final_design.description or final_design.original_filename }}</div>
     {% endif %}
   </div>
 
   <!-- Right: specs + QC -->
   <div class="info-col">
 
-    <!-- Specification -->
-    <div class="section-heading">Specification</div>
+    <div class="section-hdg">Specification</div>
     <table class="spec-table">
-      <tr><td>Size (W × H)</td><td class="blank-cell">—</td></tr>
-      <tr><td>Polish Stain</td><td class="blank-cell">—</td></tr>
-      <tr><td>Polish Type</td><td class="blank-cell">—</td></tr>
-      <tr><td>Veneer Type</td><td class="blank-cell">—</td></tr>
-      <tr><td>Design Name</td><td>{{ project.name }}</td></tr>
+      <tr>
+        <td class="lbl">Design Name</td>
+        <td class="val {% if not project.prod_design_name %}blank{% endif %}">{{ project.prod_design_name or '—' }}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Size (W × H)</td>
+        <td class="val {% if not project.prod_size %}blank{% endif %}">{{ project.prod_size or '—' }}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Polish Stain</td>
+        <td class="val {% if not project.prod_polish_stain %}blank{% endif %}">{{ project.prod_polish_stain or '—' }}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Polish Type</td>
+        <td class="val {% if not project.prod_polish_type %}blank{% endif %}">{{ project.prod_polish_type or '—' }}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Veneer Type</td>
+        <td class="val {% if not project.prod_veneer_type %}blank{% endif %}">{{ project.prod_veneer_type or '—' }}</td>
+      </tr>
     </table>
 
-    <!-- Pre-Production QC -->
-    <div class="section-heading">Pre-Production QC List</div>
+    <div class="section-hdg">Pre-Production QC</div>
     <ul class="qc-list">
       <li><span class="checkbox"></span> Polish Match</li>
       <li><span class="checkbox"></span> No Laser Cutting Issues</li>
@@ -316,8 +253,7 @@
       <li><span class="checkbox"></span> No Holes Missed</li>
     </ul>
 
-    <!-- Post-Production QC -->
-    <div class="section-heading">Post-Production QC List</div>
+    <div class="section-hdg">Post-Production QC</div>
     <ul class="qc-list">
       <li><span class="checkbox"></span> Colours Correct</li>
       <li><span class="checkbox"></span> No Material Damage</li>
@@ -325,25 +261,25 @@
       <li><span class="checkbox"></span> Facia Coating Done?</li>
     </ul>
 
-    <!-- Sign-off -->
-    <div class="signoff-row">
-      <div class="signoff-item">
-        <div class="signoff-label">Production Incharge</div>
-        <div class="signoff-line"></div>
-        <div class="signoff-name-label">Name &amp; Signature</div>
-      </div>
-      <div class="signoff-item">
-        <div class="signoff-label">Pre-prod QC by</div>
-        <div class="signoff-line"></div>
-        <div class="signoff-name-label">Name &amp; Signature</div>
-      </div>
-      <div class="signoff-item">
-        <div class="signoff-label">Post-prod QC by</div>
-        <div class="signoff-line"></div>
-        <div class="signoff-name-label">Name &amp; Signature</div>
-      </div>
-    </div>
+  </div>
+</div>
 
+<!-- ── Sign-off ── -->
+<div class="signoff-row">
+  <div class="signoff-item">
+    <div class="signoff-label">Production Incharge</div>
+    <div class="signoff-line"></div>
+    <div class="signoff-sub">Name &amp; Signature</div>
+  </div>
+  <div class="signoff-item">
+    <div class="signoff-label">Pre-prod QC by</div>
+    <div class="signoff-line"></div>
+    <div class="signoff-sub">Name &amp; Signature</div>
+  </div>
+  <div class="signoff-item">
+    <div class="signoff-label">Post-prod QC by</div>
+    <div class="signoff-line"></div>
+    <div class="signoff-sub">Name &amp; Signature</div>
   </div>
 </div>
 

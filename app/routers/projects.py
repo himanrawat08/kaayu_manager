@@ -4,8 +4,11 @@ from datetime import date, datetime
 from app.utils.time import now_ist
 from pathlib import Path
 
+import httpx
+import fitz  # PyMuPDF
+
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
@@ -369,6 +372,9 @@ def production_sheet(request: Request, project_id: int, db: Session = Depends(ge
         .first()
     )
     final_design = next((f for f in project.design_files if f.is_final), None)
+    final_design_is_pdf = (
+        final_design and final_design.original_filename.lower().endswith(".pdf")
+    )
 
     return templates.TemplateResponse(
         "projects/production_sheet.html",
@@ -377,8 +383,54 @@ def production_sheet(request: Request, project_id: int, db: Session = Depends(ge
             "project": project,
             "production_log": production_log,
             "final_design": final_design,
+            "final_design_is_pdf": final_design_is_pdf,
         },
     )
+
+
+@router.post("/{project_id}/production-details")
+def save_production_details(
+    project_id: int,
+    prod_design_name: str = Form(""),
+    prod_size: str = Form(""),
+    prod_polish_stain: str = Form(""),
+    prod_polish_type: str = Form(""),
+    prod_veneer_type: str = Form(""),
+    prod_design_page: int = Form(1),
+    db: Session = Depends(get_db),
+):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        return RedirectResponse(url="/projects", status_code=303)
+    project.prod_design_name = prod_design_name.strip() or None
+    project.prod_size = prod_size.strip() or None
+    project.prod_polish_stain = prod_polish_stain.strip() or None
+    project.prod_polish_type = prod_polish_type.strip() or None
+    project.prod_veneer_type = prod_veneer_type.strip() or None
+    project.prod_design_page = max(1, prod_design_page)
+    db.commit()
+    return RedirectResponse(url=f"/projects/{project_id}?success=Production+details+saved", status_code=303)
+
+
+@router.get("/{project_id}/design-preview.png")
+def design_preview_png(project_id: int, page: int = 1, db: Session = Depends(get_db)):
+    """Render a page of the final design PDF as PNG for use in the production sheet."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        return Response(status_code=404)
+    final_design = next((f for f in project.design_files if f.is_final), None)
+    if not final_design or not final_design.original_filename.lower().endswith(".pdf"):
+        return Response(status_code=404)
+    try:
+        url = storage.public_url(final_design.stored_filename)
+        pdf_bytes = httpx.get(url, timeout=30).content
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        page_idx = min(max(page - 1, 0), doc.page_count - 1)
+        mat = fitz.Matrix(2, 2)
+        pix = doc[page_idx].get_pixmap(matrix=mat)
+        return Response(content=pix.tobytes("png"), media_type="image/png")
+    except Exception:
+        return Response(status_code=500)
 
 
 @router.post("/{project_id}/activities/{activity_id}/delete")

@@ -31,8 +31,6 @@
     {% endif %}
   </div>
   <div class="flex gap-2 shrink-0">
-    <a href="/projects/{{ project.id }}/production-sheet" target="_blank"
-       class="bg-amber-50 text-amber-700 px-4 py-2 rounded hover:bg-amber-100 transition text-sm border border-amber-200">&#128438; Production Sheet</a>
     <a href="/projects/{{ project.id }}/edit"
        class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition text-sm">Edit</a>
     <form method="post" action="/projects/{{ project.id }}/delete"
@@ -361,7 +359,73 @@
 </div>
 {% endif %}
 
-{# ── 6. Production Files ────────────────────────────────────────────────────── #}
+{# ── 6. Production Sheet Details ─────────────────────────────────────────────── #}
+{% if show_design_section %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+  <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center justify-between">
+    <h2 class="text-lg font-semibold">Production Sheet Details</h2>
+    <a href="/projects/{{ project.id }}/production-sheet" target="_blank"
+       class="text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded transition">
+      &#128438; Print Sheet
+    </a>
+  </div>
+  <div class="p-6">
+    <form method="post" action="/projects/{{ project.id }}/production-details"
+          class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Design Name</label>
+        <input type="text" name="prod_design_name" value="{{ project.prod_design_name or '' }}"
+          placeholder="e.g. Threaded Being"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Size (W × H)</label>
+        <input type="text" name="prod_size" value="{{ project.prod_size or '' }}"
+          placeholder='e.g. 89" × 40"'
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Polish Stain</label>
+        <input type="text" name="prod_polish_stain" value="{{ project.prod_polish_stain or '' }}"
+          placeholder="e.g. As per Sample"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Polish Type</label>
+        <input type="text" name="prod_polish_type" value="{{ project.prod_polish_type or '' }}"
+          placeholder="e.g. Matte + Glossy Melamine"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Veneer Type</label>
+        <input type="text" name="prod_veneer_type" value="{{ project.prod_veneer_type or '' }}"
+          placeholder="e.g. Composite Veneer (Client)"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+      </div>
+      {% set final_design = project.design_files | selectattr('is_final') | first | default(None) %}
+      {% if final_design and final_design.original_filename.lower().endswith('.pdf') %}
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Design PDF — Page to Show</label>
+        <input type="number" name="prod_design_page" min="1"
+          value="{{ project.prod_design_page or 1 }}"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        <p class="text-xs text-gray-400 mt-1">Which page of the PDF to show in the production sheet</p>
+      </div>
+      {% else %}
+      <input type="hidden" name="prod_design_page" value="{{ project.prod_design_page or 1 }}" />
+      {% endif %}
+      <div class="col-span-2 flex justify-end">
+        <button type="submit"
+          class="bg-amber-600 text-white px-5 py-2 rounded text-sm hover:bg-amber-700 transition">
+          Save Details
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+{# ── 7. Production Files ────────────────────────────────────────────────────── #}
 {% if show_design_section %}
 <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
   <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center gap-3">

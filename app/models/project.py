@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 from app.utils.time import now_ist
 
-from sqlalchemy import Date, DateTime, ForeignKey, String, Text
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -33,6 +33,14 @@ class Project(Base):
     completion_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     project_contact_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     project_contact_phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # Production sheet details
+    prod_design_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    prod_size: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    prod_polish_stain: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    prod_polish_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    prod_veneer_type: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    prod_design_page: Mapped[int | None] = mapped_column(Integer, nullable=True, default=1)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
     updated_at: Mapped[datetime] = mapped_column(
