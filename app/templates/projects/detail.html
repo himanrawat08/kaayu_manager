@@ -3,7 +3,7 @@
 
 {% block content %}
 
-{# ── 1. Header ──────────────────────────────────────────────────────────────── #}
+{# ── Header ────────────────────────────────────────────────────────────────── #}
 <div class="mb-5 flex items-start justify-between gap-4">
   <div class="flex-1 min-w-0">
     <a href="/projects" class="text-sm text-indigo-600 hover:underline">&larr; All Projects</a>
@@ -14,7 +14,7 @@
     </h1>
     <div class="flex flex-wrap items-center gap-3 mt-1 text-sm">
       <span class="text-gray-500">
-        Contact: <a href="/contacts/{{ project.client.id }}" class="text-indigo-600 hover:underline">{{ project.client.name }}</a>
+        <a href="/contacts/{{ project.client.id }}" class="text-indigo-600 hover:underline">{{ project.client.name }}</a>
       </span>
       <span class="badge badge-{{ project.status }}">{{ project.status.replace('_',' ').title() }}</span>
       {% if project.completion_date %}
@@ -22,16 +22,12 @@
         Due: {{ project.completion_date.strftime('%d %b %Y') }}
       </span>
       {% endif %}
+      {% if project.project_contact_name %}
+      <span class="text-xs text-gray-400">{{ project.project_contact_name }}{% if project.project_contact_phone %} &middot; {{ project.project_contact_phone }}{% endif %}</span>
+      {% endif %}
     </div>
-    {% if project.project_contact_name or project.project_contact_phone %}
-    <div class="mt-1 text-xs text-gray-500">
-      Project Contact:
-      {% if project.project_contact_name %}<span class="font-medium text-gray-700">{{ project.project_contact_name }}</span>{% endif %}
-      {% if project.project_contact_phone %} &middot; {{ project.project_contact_phone }}{% endif %}
-    </div>
-    {% endif %}
     {% if project.description %}
-    <p class="mt-2 text-sm text-gray-500 max-w-2xl">{{ project.description }}</p>
+    <p class="mt-1.5 text-sm text-gray-500 max-w-2xl">{{ project.description }}</p>
     {% endif %}
   </div>
   <div class="flex gap-2 shrink-0">
@@ -45,705 +41,764 @@
   </div>
 </div>
 
-{# ── 2. Stage Pipeline ──────────────────────────────────────────────────────── #}
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-  <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">Production Pipeline</h2>
-  <div class="flex items-start justify-between">
-    {% for stage in stages %}
-    {% set idx = loop.index0 %}
-    {% set cur_idx = stages.index(project.current_stage) %}
-    {% set done = idx < cur_idx %}
-    {% set active = stage == project.current_stage %}
-    <div class="stage-step {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
-      <div class="stage-icon {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
-        {% if done %}
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-          </svg>
-        {% else %}{{ loop.index }}{% endif %}
-      </div>
-      <div class="stage-label {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
-        {{ stage_labels[stage] }}
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+{# Flash messages #}
+{% if success %}
+<div class="mb-4 bg-green-50 border border-green-200 text-green-700 rounded px-4 py-2 text-sm">{{ success }}</div>
+{% endif %}
+{% if error_msg %}
+<div class="mb-4 bg-red-50 border border-red-200 text-red-700 rounded px-4 py-2 text-sm">{{ error_msg }}</div>
+{% endif %}
+
+{# ── Tab Navigation ─────────────────────────────────────────────────────────── #}
+<div class="flex border-b border-gray-200 mb-6 gap-0">
+  <button onclick="switchTab('overview')" id="tab-overview"
+    class="tab-btn px-5 py-3 text-sm font-medium border-b-2 transition-colors -mb-px">Overview</button>
+  <button onclick="switchTab('design')" id="tab-design"
+    class="tab-btn px-5 py-3 text-sm font-medium border-b-2 transition-colors -mb-px">Design</button>
+  <button onclick="switchTab('production')" id="tab-production"
+    class="tab-btn px-5 py-3 text-sm font-medium border-b-2 transition-colors -mb-px">Production</button>
 </div>
 
-{# ── 3. Current Stage Panel ─────────────────────────────────────────────────── #}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
-  <h2 class="text-lg font-semibold mb-4">Current Stage: {{ stage_labels[project.current_stage] }}</h2>
+{# ════════════════════════════════════════════════════════════
+   OVERVIEW TAB
+   ════════════════════════════════════════════════════════════ #}
+<div id="pane-overview" class="tab-pane">
 
-  {% if current_log %}
-  <form method="post" action="/projects/{{ project.id }}/stage-notes" class="mb-4">
-    <label class="block text-sm font-medium text-gray-700 mb-1">Stage Notes</label>
-    <textarea name="notes" rows="2" placeholder="Add notes for this stage..."
-      class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ current_log.notes or '' }}</textarea>
-    <button type="submit"
-      class="mt-2 bg-gray-100 text-gray-700 px-4 py-1.5 rounded text-sm hover:bg-gray-200 transition">Save Notes</button>
-  </form>
-  {% endif %}
-
-  <div class="flex flex-wrap gap-3 mt-3">
-    {% if project.current_stage != 'completed' %}
-    {% set next_idx = stages.index(project.current_stage) + 1 %}
-    {% if next_idx < stages | length %}
-    <form method="post" action="/projects/{{ project.id }}/advance-stage">
-      <button type="submit"
-        class="bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">
-        Advance to {{ stage_labels[stages[next_idx]] }} &rarr;
-      </button>
-    </form>
-    {% endif %}
-    {% endif %}
-
-    <div class="relative">
-      <button type="button" onclick="this.nextElementSibling.classList.toggle('hidden')"
-        class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition text-sm">
-        Change Stage &#9660;
-      </button>
-      <div class="hidden absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-max">
-        {% for stage in stages %}
-        {% if stage != project.current_stage %}
-        <form method="post" action="/projects/{{ project.id }}/set-stage">
-          <input type="hidden" name="stage" value="{{ stage }}" />
-          <button type="submit"
-            class="w-full text-left px-4 py-2 text-sm hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition">
-            {{ stage_labels[stage] }}
-          </button>
-        </form>
-        {% endif %}
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-</div>
-
-{# ── 4. Quick link to Quotes ─────────────────────────────────────────────────── #}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6 flex items-center justify-between">
-  <span class="text-sm text-gray-500">Quotes for this project are managed in the <strong>Quotes</strong> section.</span>
-  <a href="/quotes/new?project_id={{ project.id }}"
-     class="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm hover:bg-indigo-700 transition">+ New Quote</a>
-</div>
-
-{# ── 5. Project Brief & Reference Files ─────────────────────────────────────── #}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
-  <h2 class="text-lg font-semibold mb-4">Project Brief &amp; Reference Files</h2>
-
-  {% if project.brief_files %}
-  <div class="overflow-x-auto mb-5">
-    <table class="w-full text-sm">
-      <thead class="bg-gray-50 border-b border-gray-200">
-        <tr class="text-left text-gray-500 text-xs">
-          <th class="px-3 py-2 font-medium">File</th>
-          <th class="px-3 py-2 font-medium">Description</th>
-          <th class="px-3 py-2 font-medium">Size</th>
-          <th class="px-3 py-2 font-medium">Uploaded</th>
-          <th class="px-3 py-2"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for f in project.brief_files %}
-        <tr class="border-b last:border-0 hover:bg-gray-50">
-          <td class="px-3 py-2.5">
-            <a href="{{ storage_url(f.stored_filename) }}" target="_blank"
-               class="text-indigo-600 hover:underline flex items-center gap-1.5 text-xs font-medium">
-              &#128196; {{ f.original_filename }}
-            </a>
-          </td>
-          <td class="px-3 py-2.5 text-gray-500 text-xs">{{ f.description or '—' }}</td>
-          <td class="px-3 py-2.5 text-gray-400 text-xs">{{ f.file_size | filesizeformat }}</td>
-          <td class="px-3 py-2.5 text-gray-400 text-xs">{{ f.uploaded_at.strftime('%d %b %Y') }}</td>
-          <td class="px-3 py-2.5">
-            <form method="post" action="/projects/{{ project.id }}/brief-files/{{ f.id }}/delete"
-                  onsubmit="return confirm('Delete this file?')">
-              <button type="submit" class="text-gray-300 hover:text-red-500 text-xs transition">&times; Delete</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% endif %}
-
-  {% if project.current_stage == 'design' %}
-  <form method="post" action="/projects/{{ project.id }}/brief-files/upload"
-        enctype="multipart/form-data" class="flex flex-wrap gap-3 items-end">
-    <div class="flex-1 min-w-48">
-      <label class="block text-xs text-gray-500 mb-1">File <span class="text-red-400">*</span></label>
-      <input type="file" name="file" required
-        class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-gray-600
-               file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs
-               file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
-    </div>
-    <div class="flex-1 min-w-48">
-      <label class="block text-xs text-gray-500 mb-1">Description</label>
-      <input type="text" name="description" placeholder="e.g. Floor plan — Ground floor"
-        class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-    </div>
-    <button type="submit"
-      class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 transition">Upload</button>
-  </form>
-  {% else %}
-  <p class="text-xs text-gray-400 italic">Brief file uploads are only available during the Design stage.</p>
-  {% endif %}
-</div>
-
-{# ── 5. Design Files ────────────────────────────────────────────────────────── #}
-{% if show_design_section %}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
-  <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center gap-3">
-    <h2 class="text-lg font-semibold">Design Files</h2>
-    {% if project.design_files %}
-    <span class="bg-indigo-100 text-indigo-700 text-xs rounded-full px-2 py-0.5">{{ project.design_files | length }}</span>
-    {% endif %}
-  </div>
-
-  <div class="p-6">
-    <p class="text-xs text-gray-400 mb-5">
-      Upload design files, mark them as <strong>Sent</strong> (records the send date), then mark as <strong>Final</strong> to unlock production file uploads.
-    </p>
-
-    {% if project.design_files %}
-    <div class="grid gap-4 mb-6">
-      {% for f in project.design_files %}
-      <div class="border rounded-xl p-4 shadow-sm {% if f.is_final %}border-green-300 bg-green-50{% else %}border-gray-200 bg-white{% endif %}">
-
-        {# — File header — #}
-        <div class="flex items-start justify-between gap-3 mb-3">
-          <div class="flex-1 min-w-0">
-            <a href="{{ storage_url(f.stored_filename) }}" target="_blank"
-               class="text-indigo-600 hover:underline font-medium text-sm flex items-center gap-1.5 truncate">
-              &#128196; {{ f.original_filename }}
-            </a>
-            <div class="flex flex-wrap items-center gap-2 mt-1">
-              <span class="text-xs text-gray-400">{{ f.file_size | filesizeformat }}</span>
-              <span class="text-xs text-gray-300">&middot;</span>
-              <span class="text-xs text-gray-400">Uploaded {{ f.uploaded_at.strftime('%d %b %Y') }}</span>
-              {% if f.is_final %}
-              <span class="text-xs bg-green-100 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">&#9733; Final</span>
-              {% endif %}
-              {% if f.sent_at %}
-              <span class="text-xs bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full">&#10003; Sent {{ f.sent_at.strftime('%d %b') }}</span>
-              {% endif %}
-            </div>
-          </div>
-          <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/delete"
-                onsubmit="return confirm('Delete this file?')" class="shrink-0">
-            <button type="submit" class="text-gray-300 hover:text-red-500 text-lg leading-none transition">&times;</button>
-          </form>
+  {# ── Pipeline + Stage Controls (merged) ── #}
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">Production Pipeline</h2>
+    <div class="flex items-start justify-between mb-5">
+      {% for stage in stages %}
+      {% set idx = loop.index0 %}
+      {% set cur_idx = stages.index(project.current_stage) %}
+      {% set done = idx < cur_idx %}
+      {% set active = stage == project.current_stage %}
+      <div class="stage-step {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
+        <div class="stage-icon {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
+          {% if done %}
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          {% else %}{{ loop.index }}{% endif %}
         </div>
-
-        {# — Description — #}
-        <div class="mb-3">
-          <div id="desc-view-{{ f.id }}" class="flex items-center gap-2">
-            <span class="text-xs text-gray-500 flex-1">{{ f.description or '' }}</span>
-            <button type="button" onclick="toggleDescEdit({{ f.id }})"
-              class="text-xs text-indigo-400 hover:text-indigo-600 underline shrink-0">
-              {% if f.description %}edit desc{% else %}+ add description{% endif %}
-            </button>
-          </div>
-          <div id="desc-edit-{{ f.id }}" class="hidden mt-1">
-            <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/edit"
-                  class="flex gap-2">
-              <input type="text" name="description" value="{{ f.description or '' }}"
-                placeholder="Description..."
-                class="flex-1 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
-              <button type="submit" class="text-xs bg-indigo-600 text-white px-2 py-1 rounded shrink-0">Save</button>
-              <button type="button" onclick="toggleDescEdit({{ f.id }})"
-                class="text-xs text-gray-400 shrink-0">✕</button>
-            </form>
-          </div>
+        <div class="stage-label {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
+          {{ stage_labels[stage] }}
         </div>
-
-        {# — Actions: Sent + Final — #}
-        <div class="flex flex-wrap gap-2 mb-4 pb-3 border-b border-gray-100">
-          {% if not f.sent_at %}
-          <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/mark-sent">
-            <button type="submit"
-              class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-3 py-1 rounded-full transition">
-              Mark Sent
-            </button>
-          </form>
-          {% endif %}
-          <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/mark-final">
-            {% if f.is_final %}
-            <button type="submit"
-              class="text-xs bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 px-3 py-1 rounded-full transition">
-              Unmark Final
-            </button>
-            {% else %}
-            <button type="submit"
-              class="text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 px-3 py-1 rounded-full transition">
-              Mark Final
-            </button>
-            {% endif %}
-          </form>
-        </div>
-
-        {# — Feedback — #}
-        <div class="mb-4">
-          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Feedback</div>
-          {% if f.feedback_entries %}
-          <ul class="space-y-1.5 mb-2">
-            {% for fb in f.feedback_entries %}
-            <li class="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-              <span class="flex-1 text-xs text-amber-800 leading-relaxed">{{ fb.note }}</span>
-              <form method="post"
-                    action="/projects/{{ project.id }}/design-files/{{ f.id }}/feedback/{{ fb.id }}/delete"
-                    class="shrink-0">
-                <button type="submit"
-                  class="text-amber-300 hover:text-red-500 text-sm leading-none transition">&times;</button>
-              </form>
-            </li>
-            {% endfor %}
-          </ul>
-          {% else %}
-          <p class="text-xs text-gray-300 italic mb-2">No feedback yet.</p>
-          {% endif %}
-          {% if not f.is_final %}
-          <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/feedback/add"
-                class="flex gap-2">
-            <input type="text" name="note" placeholder="Add feedback note..."
-              class="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white" />
-            <button type="submit"
-              class="shrink-0 text-xs bg-amber-500 text-white hover:bg-amber-600 px-3 py-1.5 rounded-lg transition">
-              Add
-            </button>
-          </form>
-          {% endif %}
-        </div>
-
-        {% if not f.is_final %}
-        {# — Next revision date — #}
-        <div class="pt-3 border-t border-gray-100">
-          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Expected Next Revision</div>
-          <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/revision-date"
-                class="flex items-center gap-2">
-            <input type="date" name="next_revision_date"
-              value="{{ f.next_revision_date.isoformat() if f.next_revision_date else '' }}"
-              class="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white" />
-            <button type="submit"
-              class="text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded transition">
-              Save
-            </button>
-            {% if f.next_revision_date %}
-            <span class="text-xs text-indigo-600 font-medium">{{ f.next_revision_date.strftime('%d %b %Y') }}</span>
-            {% endif %}
-          </form>
-        </div>
-        {% endif %}
-
       </div>
       {% endfor %}
     </div>
-    {% else %}
-    <p class="text-sm text-gray-400 mb-5">No design files yet.</p>
-    {% endif %}
 
-    <form method="post" action="/projects/{{ project.id }}/design-files/upload"
-          enctype="multipart/form-data" class="border-t pt-4 flex flex-wrap gap-3 items-end">
-      <div class="flex-1 min-w-48">
-        <label class="block text-xs text-gray-500 mb-1">Design File <span class="text-red-400">*</span></label>
-        <input type="file" name="file" required
-          class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-gray-600
-                 file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs
-                 file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
-      </div>
-      <div class="flex-1 min-w-48">
-        <label class="block text-xs text-gray-500 mb-1">Description</label>
-        <input type="text" name="description" placeholder="e.g. Living room — v2"
-          class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-      </div>
-      <button type="submit"
-        class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 transition">Upload</button>
-    </form>
-  </div>
-</div>
-{% endif %}
-
-{# ── 6. Production Sheet Details ─────────────────────────────────────────────── #}
-{% if show_design_section %}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
-  <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center justify-between">
-    <h2 class="text-lg font-semibold">Production Sheet Details</h2>
-    <a href="/projects/{{ project.id }}/production-sheet" target="_blank"
-       class="text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded transition">
-      &#128438; Print Sheet
-    </a>
-  </div>
-  <div class="p-6">
-    <form method="post" action="/projects/{{ project.id }}/production-details"
-          class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Design Name</label>
-        <input type="text" name="prod_design_name" value="{{ project.prod_design_name or '' }}"
-          placeholder="e.g. Threaded Being"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Size (W × H)</label>
-        <input type="text" name="prod_size" value="{{ project.prod_size or '' }}"
-          placeholder='e.g. 89" × 40"'
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Polish Stain</label>
-        <input type="text" name="prod_polish_stain" value="{{ project.prod_polish_stain or '' }}"
-          placeholder="e.g. As per Sample"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Polish Type</label>
-        <input type="text" name="prod_polish_type" value="{{ project.prod_polish_type or '' }}"
-          placeholder="e.g. Matte + Glossy Melamine"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Veneer Type</label>
-        <input type="text" name="prod_veneer_type" value="{{ project.prod_veneer_type or '' }}"
-          placeholder="e.g. Composite Veneer (Client)"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-      </div>
-      {% set final_design = project.design_files | selectattr('is_final') | first | default(None) %}
-      {% if final_design and final_design.original_filename.lower().endswith('.pdf') %}
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Design PDF — Page to Show</label>
-        <input type="number" name="prod_design_page" min="1"
-          value="{{ project.prod_design_page or 1 }}"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-        <p class="text-xs text-gray-400 mt-1">Which page of the PDF to show in the production sheet</p>
-      </div>
-      {% else %}
-      <input type="hidden" name="prod_design_page" value="{{ project.prod_design_page or 1 }}" />
+    <div class="border-t border-gray-100 pt-4 flex flex-wrap gap-3 items-end">
+      {% if current_log %}
+      <form method="post" action="/projects/{{ project.id }}/stage-notes" class="flex-1 min-w-60">
+        <div class="flex gap-2 items-center">
+          <input type="text" name="notes" value="{{ current_log.notes or '' }}"
+            placeholder="Stage notes..."
+            class="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+          <button type="submit"
+            class="shrink-0 bg-gray-100 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-200 transition">Save</button>
+        </div>
+      </form>
       {% endif %}
-      <div class="col-span-2 flex justify-end">
-        <button type="submit"
-          class="bg-amber-600 text-white px-5 py-2 rounded text-sm hover:bg-amber-700 transition">
-          Save Details
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-{% endif %}
-
-{# ── 7. Production Files ────────────────────────────────────────────────────── #}
-{% if show_design_section %}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
-  <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center gap-3">
-    <h2 class="text-lg font-semibold">Production Files</h2>
-    {% if project.production_files %}
-    <span class="bg-green-100 text-green-700 text-xs rounded-full px-2 py-0.5">{{ project.production_files | length }}</span>
-    {% endif %}
-    {% if not has_final_design %}
-    <span class="ml-auto flex items-center gap-1 text-xs text-amber-600">
-      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-      </svg>
-      Locked
-    </span>
-    {% endif %}
-  </div>
-
-  <div class="p-6">
-    {% if not has_final_design %}
-    <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-      <svg class="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-      </svg>
-      <p class="text-sm text-amber-700">
-        Production files are locked. Mark at least one design file as <strong>Final</strong> to unlock.
-      </p>
-    </div>
-    {% else %}
-    <p class="text-xs text-gray-400 mb-5">Upload production-ready files. Mark as <strong>Sent</strong> to record the delivery date.</p>
-
-    {% set categories = [
-      ('laser_cutting', 'Laser Cutting', '&#9913;'),
-      ('colour', 'Colour', '&#127912;'),
-    ] %}
-
-    {% for cat_key, cat_label, cat_icon in categories %}
-    {% set cat_files = project.production_files | selectattr('file_category', 'equalto', cat_key) | list %}
-    <div class="mb-7 last:mb-0">
-      <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-        <span>{{ cat_icon | safe }}</span> {{ cat_label }}
-        {% if cat_files %}
-        <span class="text-xs bg-gray-100 text-gray-500 rounded-full px-2">{{ cat_files | length }}</span>
+      <div class="flex gap-2 flex-wrap">
+        {% if project.current_stage != 'completed' %}
+        {% set next_idx = stages.index(project.current_stage) + 1 %}
+        {% if next_idx < stages | length %}
+        <form method="post" action="/projects/{{ project.id }}/advance-stage">
+          <button type="submit"
+            class="bg-indigo-600 text-white px-4 py-1.5 rounded hover:bg-indigo-700 transition text-sm font-medium">
+            Advance to {{ stage_labels[stages[next_idx]] }} &rarr;
+          </button>
+        </form>
         {% endif %}
-      </h3>
+        {% endif %}
+        <div class="relative">
+          <button type="button" onclick="this.nextElementSibling.classList.toggle('hidden')"
+            class="bg-gray-100 text-gray-700 px-4 py-1.5 rounded hover:bg-gray-200 transition text-sm">
+            Change Stage &#9660;
+          </button>
+          <div class="hidden absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-max">
+            {% for stage in stages %}
+            {% if stage != project.current_stage %}
+            <form method="post" action="/projects/{{ project.id }}/set-stage">
+              <input type="hidden" name="stage" value="{{ stage }}" />
+              <button type="submit"
+                class="w-full text-left px-4 py-2 text-sm hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 transition">
+                {{ stage_labels[stage] }}
+              </button>
+            </form>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      {% if cat_files %}
-      <table class="w-full text-sm mb-3">
-        <thead class="bg-gray-50 border-b border-gray-200">
-          <tr class="text-left text-gray-400 text-xs">
-            <th class="px-3 py-2 font-medium">File</th>
-            <th class="px-3 py-2 font-medium">Description</th>
-            <th class="px-3 py-2 font-medium">Sent</th>
-            <th class="px-3 py-2 font-medium">Uploaded</th>
-            <th class="px-3 py-2"></th>
+  {# ── Inline Quotes ── #}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center gap-3">
+      <h2 class="text-lg font-semibold">Quotations</h2>
+      {% if project.quotations %}
+      <span class="bg-indigo-100 text-indigo-700 text-xs rounded-full px-2 py-0.5">{{ project.quotations | length }}</span>
+      {% endif %}
+      <a href="/quotes/new?project_id={{ project.id }}"
+         class="ml-auto bg-indigo-600 text-white px-3 py-1.5 rounded text-xs hover:bg-indigo-700 transition font-medium">
+        + New Quote
+      </a>
+    </div>
+    <div class="px-6 py-4">
+      {% if project.quotations %}
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+            <th class="pb-2 font-medium">Quote No.</th>
+            <th class="pb-2 font-medium">Status</th>
+            <th class="pb-2 font-medium text-right">Amount</th>
+            <th class="pb-2 font-medium">Date</th>
+            <th class="pb-2"></th>
           </tr>
         </thead>
         <tbody>
-          {% for f in cat_files %}
+          {% for q in project.quotations | sort(attribute='created_at', reverse=True) %}
           <tr class="border-b last:border-0 hover:bg-gray-50">
-            <td class="px-3 py-2.5">
-              <a href="{{ storage_url(f.stored_filename) }}" target="_blank"
-                 class="text-indigo-600 hover:underline text-xs font-medium flex items-center gap-1">
-                &#128196; {{ f.original_filename }}
-              </a>
-              <span class="text-xs text-gray-400">{{ f.file_size | filesizeformat }}</span>
+            <td class="py-2.5 font-medium text-gray-800 text-xs">{{ q.quote_number or '—' }}</td>
+            <td class="py-2.5">
+              <span class="text-xs px-2 py-0.5 rounded-full
+                {% if q.status == 'approved' %}bg-green-100 text-green-700
+                {% elif q.status == 'sent' %}bg-blue-100 text-blue-700
+                {% elif q.status == 'rejected' %}bg-red-100 text-red-700
+                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                {{ q.status.title() }}
+              </span>
             </td>
-            <td class="px-3 py-2.5 text-xs text-gray-500">
-              <div id="pdesc-view-{{ f.id }}">
-                {{ f.description or '—' }}
-                <button type="button" onclick="toggleProdDescEdit({{ f.id }})"
-                  class="ml-1 text-indigo-400 hover:text-indigo-600 text-xs">edit</button>
-              </div>
-              <div id="pdesc-edit-{{ f.id }}" class="hidden">
-                <form method="post" action="/projects/{{ project.id }}/production-files/{{ f.id }}/edit"
-                      class="flex gap-1">
-                  <input type="text" name="description" value="{{ f.description or '' }}"
-                    class="border border-gray-300 rounded px-2 py-1 text-xs flex-1 focus:outline-none" />
-                  <button type="submit" class="text-xs bg-indigo-600 text-white px-2 py-1 rounded">Save</button>
-                  <button type="button" onclick="toggleProdDescEdit({{ f.id }})"
-                    class="text-xs text-gray-400">✕</button>
-                </form>
-              </div>
+            <td class="py-2.5 text-right text-xs text-gray-700 font-medium">
+              Rs. {{ "%.0f"|format(q.total_amount or 0) }}
             </td>
-            <td class="px-3 py-2.5">
-              {% if f.sent_at %}
-              <div class="text-xs text-blue-600 font-medium">&#10003; Sent</div>
-              <div class="text-xs text-gray-400">{{ f.sent_at.strftime('%d %b %Y') }}</div>
-              {% else %}
-              <form method="post" action="/projects/{{ project.id }}/production-files/{{ f.id }}/mark-sent">
-                <button type="submit"
-                  class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded transition">
-                  Mark Sent
-                </button>
-              </form>
-              {% endif %}
-            </td>
-            <td class="px-3 py-2.5 text-xs text-gray-400">{{ f.uploaded_at.strftime('%d %b %Y') }}</td>
-            <td class="px-3 py-2.5">
-              <form method="post" action="/projects/{{ project.id }}/production-files/{{ f.id }}/delete"
-                    onsubmit="return confirm('Delete this file?')">
-                <button type="submit" class="text-gray-300 hover:text-red-500 text-xs">&times;</button>
-              </form>
+            <td class="py-2.5 text-xs text-gray-400">{{ q.created_at.strftime('%d %b %Y') }}</td>
+            <td class="py-2.5 text-right">
+              <a href="/quotes/{{ q.id }}/edit" class="text-xs text-indigo-500 hover:underline">Edit</a>
+              &nbsp;
+              <a href="/quotes/{{ q.id }}/print" target="_blank" class="text-xs text-gray-400 hover:underline">PDF</a>
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
+      {% else %}
+      <p class="text-sm text-gray-400">No quotes yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Activity Log (compressed) ── #}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-sm font-semibold text-gray-700">Activity</h2>
+      <button onclick="document.getElementById('activity-form').classList.toggle('hidden')"
+        class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">+ Log</button>
+    </div>
+
+    <div id="activity-form" class="hidden px-6 py-4 border-b border-gray-100 bg-gray-50">
+      <form method="post" action="/projects/{{ project.id }}/activities">
+        <div class="flex flex-wrap gap-2 items-center">
+          <select id="project-activity-type" name="activity_type" onchange="toggleProjectSchedule(this)"
+            class="border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white">
+            {% for value, label in activity_types.items() %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+          <input type="text" name="note" placeholder="Note..."
+            class="flex-1 min-w-48 border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+          <input type="datetime-local" id="project-scheduled-input" name="scheduled_at"
+            class="border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+          <button type="submit"
+            class="bg-indigo-600 text-white px-4 py-1.5 rounded text-xs hover:bg-indigo-700 transition font-medium">
+            Add
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="divide-y divide-gray-50">
+      {% if recent_project_activities %}
+      {% for act in recent_project_activities %}
+      <div class="flex items-center gap-3 px-6 py-2.5 hover:bg-gray-50">
+        <span class="text-base shrink-0">
+          {% if act.activity_type == 'call' %}&#128222;
+          {% elif act.activity_type == 'site_visit' %}&#127968;
+          {% elif act.activity_type == 'email_sent' %}&#9993;
+          {% elif act.activity_type == 'send' %}&#9992;
+          {% elif act.activity_type == 'follow_up' %}&#8635;
+          {% elif act.activity_type == 'meeting' %}&#128197;
+          {% else %}&#128203;{% endif %}
+        </span>
+        <span class="text-xs font-medium text-gray-600 shrink-0 w-20 truncate">
+          {{ activity_types.get(act.activity_type, act.activity_type) }}
+        </span>
+        <span class="text-xs text-gray-500 flex-1 truncate">{{ act.note or '' }}</span>
+        {% if act.scheduled_at and not act.is_completed %}
+        <span class="text-xs text-orange-500 shrink-0">
+          {% if act.scheduled_at.hour == 0 and act.scheduled_at.minute == 0 %}
+            {{ act.scheduled_at.strftime('%d %b') }}
+          {% else %}
+            {{ act.scheduled_at.strftime('%d %b %H:%M') }}
+          {% endif %}
+        </span>
+        {% endif %}
+        {% if act.is_completed %}
+        <span class="text-xs text-green-600 shrink-0">&#10003;</span>
+        {% endif %}
+        <span class="text-xs text-gray-300 shrink-0">{{ act.created_at.strftime('%d %b') }}</span>
+        <div class="flex gap-1 shrink-0">
+          {% if not act.is_completed %}
+          <form method="post" action="/projects/{{ project.id }}/activities/{{ act.id }}/complete">
+            <button type="submit" class="text-xs text-green-600 hover:text-green-800 px-1">Done</button>
+          </form>
+          {% else %}
+          <form method="post" action="/projects/{{ project.id }}/activities/{{ act.id }}/revert">
+            <button type="submit" class="text-xs text-amber-500 hover:text-amber-700 px-1">Undo</button>
+          </form>
+          {% endif %}
+          <form method="post" action="/projects/{{ project.id }}/activities/{{ act.id }}/delete"
+                onsubmit="return confirm('Delete?')">
+            <button type="submit" class="text-gray-300 hover:text-red-500 text-xs px-1">&times;</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p class="px-6 py-4 text-xs text-gray-400">No activity logged yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Stage History (compact) ── #}
+  {% if project.stage_logs %}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <button onclick="this.nextElementSibling.classList.toggle('hidden')"
+      class="w-full flex items-center justify-between px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-widest hover:bg-gray-50 transition">
+      <span>Stage History</span>
+      <span>&#9660;</span>
+    </button>
+    <div class="hidden divide-y divide-gray-50">
+      {% for log in project.stage_logs %}
+      <div class="flex items-center gap-4 px-6 py-2.5">
+        <span class="text-xs font-medium w-36 shrink-0 {% if log.stage == project.current_stage %}text-indigo-600{% else %}text-gray-600{% endif %}">
+          {{ stage_labels[log.stage] }}
+        </span>
+        <span class="text-xs text-gray-400">{{ log.started_at.strftime('%d %b %Y') }}</span>
+        {% if log.notes %}<span class="text-xs text-gray-500 flex-1 truncate">{{ log.notes }}</span>{% endif %}
+        {% if log.completed_at %}
+        <span class="text-xs text-gray-300 ml-auto">→ {{ log.completed_at.strftime('%d %b %Y') }}</span>
+        {% else %}
+        <span class="text-xs text-indigo-500 font-medium ml-auto">Current</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── Quick Email ── #}
+  {% if project.client.email %}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <button onclick="this.nextElementSibling.classList.toggle('hidden')"
+      class="w-full flex items-center justify-between px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-widest hover:bg-gray-50 transition">
+      <span>Quick Email to Client</span>
+      <span>&#9660;</span>
+    </button>
+    <div class="hidden px-6 pb-5">
+      {% if sent == '1' %}
+      <div class="bg-green-50 border border-green-200 text-green-700 rounded px-3 py-2 text-sm mb-3">Email sent successfully.</div>
+      {% endif %}
+      <form method="post" action="/projects/{{ project.id }}/send-email" class="space-y-3 max-w-xl">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">To</label>
+            <input type="text" value="{{ project.client.name }} &lt;{{ project.client.email }}&gt;" readonly
+              class="w-full border border-gray-200 rounded px-2 py-1.5 text-xs bg-gray-50 text-gray-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Subject</label>
+            <input type="text" name="subject" required placeholder="Email subject"
+              value="Update on {{ project.name }}"
+              class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Message</label>
+          <textarea name="body" rows="4" required placeholder="Write your message..."
+            class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
+        </div>
+        <button type="submit"
+          class="bg-indigo-600 text-white px-5 py-2 rounded text-sm hover:bg-indigo-700 transition">Send Email</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+</div>{# /pane-overview #}
+
+
+{# ════════════════════════════════════════════════════════════
+   DESIGN TAB
+   ════════════════════════════════════════════════════════════ #}
+<div id="pane-design" class="tab-pane hidden">
+
+  {# ── Brief & Reference Files (compact) ── #}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center gap-3">
+      <h2 class="text-lg font-semibold">Brief &amp; Reference Files</h2>
+      {% if project.brief_files %}
+      <span class="bg-gray-100 text-gray-600 text-xs rounded-full px-2 py-0.5">{{ project.brief_files | length }}</span>
+      {% endif %}
+    </div>
+    <div class="px-6 py-4">
+      {% if project.brief_files %}
+      <div class="flex flex-wrap gap-2 mb-4">
+        {% for f in project.brief_files %}
+        <div class="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
+          <a href="{{ storage_url(f.stored_filename) }}" target="_blank"
+             class="text-xs text-indigo-600 hover:underline font-medium">&#128196; {{ f.original_filename }}</a>
+          {% if f.description %}
+          <span class="text-xs text-gray-400">— {{ f.description }}</span>
+          {% endif %}
+          <span class="text-xs text-gray-300">{{ f.uploaded_at.strftime('%d %b') }}</span>
+          <form method="post" action="/projects/{{ project.id }}/brief-files/{{ f.id }}/delete"
+                onsubmit="return confirm('Delete?')" class="inline">
+            <button type="submit" class="text-gray-300 hover:text-red-500 text-sm leading-none ml-1">&times;</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if project.current_stage == 'design' %}
+      <form method="post" action="/projects/{{ project.id }}/brief-files/upload"
+            enctype="multipart/form-data" class="flex flex-wrap gap-2 items-center">
+        <input type="file" name="file" required
+          class="text-xs text-gray-600 border border-gray-300 rounded px-2 py-1.5
+                 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0
+                 file:text-xs file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+        <input type="text" name="description" placeholder="Description (optional)"
+          class="flex-1 min-w-40 border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+        <button type="submit"
+          class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs hover:bg-indigo-700 transition">Upload</button>
+      </form>
+      {% else %}
+      <p class="text-xs text-gray-400 italic">Brief uploads available during Design stage only.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Design Files ── #}
+  {% if show_design_section %}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center gap-3">
+      <h2 class="text-lg font-semibold">Design Files</h2>
+      {% if project.design_files %}
+      <span class="bg-indigo-100 text-indigo-700 text-xs rounded-full px-2 py-0.5">{{ project.design_files | length }}</span>
+      {% endif %}
+    </div>
+    <div class="p-6">
+      <p class="text-xs text-gray-400 mb-5">
+        Upload design files, mark them as <strong>Sent</strong>, then <strong>Final</strong> to unlock production uploads.
+      </p>
+
+      {% if project.design_files %}
+      <div class="grid gap-4 mb-6">
+        {% for f in project.design_files %}
+        <div class="border rounded-xl p-4 shadow-sm {% if f.is_final %}border-green-300 bg-green-50{% else %}border-gray-200 bg-white{% endif %}">
+
+          {# — File header — #}
+          <div class="flex items-start justify-between gap-3 mb-2">
+            <a href="{{ storage_url(f.stored_filename) }}" target="_blank"
+               class="text-indigo-600 hover:underline font-medium text-sm flex items-center gap-1.5 truncate flex-1 min-w-0">
+              &#128196; {{ f.original_filename }}
+            </a>
+            <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/delete"
+                  onsubmit="return confirm('Delete this file?')" class="shrink-0">
+              <button type="submit" class="text-gray-300 hover:text-red-500 text-lg leading-none transition">&times;</button>
+            </form>
+          </div>
+
+          {# — Date row — #}
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-xs text-gray-400">
+            <span>Uploaded {{ f.uploaded_at.strftime('%d %b %Y') }}</span>
+            {% if f.sent_at %}
+            <span class="text-gray-300">&middot;</span>
+            <span class="text-blue-500">Sent {{ f.sent_at.strftime('%d %b %Y') }}</span>
+            {% endif %}
+            {% if f.is_final %}
+            <span class="text-gray-300">&middot;</span>
+            <span class="text-green-600 font-medium">&#9733; Final{% if f.finalized_at %} {{ f.finalized_at.strftime('%d %b %Y') }}{% endif %}</span>
+            {% endif %}
+          </div>
+
+          {# — Description — #}
+          <div class="mb-3">
+            <div id="desc-view-{{ f.id }}" class="flex items-center gap-2">
+              <span class="text-xs text-gray-500 flex-1">{{ f.description or '' }}</span>
+              <button type="button" onclick="toggleDescEdit({{ f.id }})"
+                class="text-xs text-indigo-400 hover:text-indigo-600 underline shrink-0">
+                {% if f.description %}edit{% else %}+ add description{% endif %}
+              </button>
+            </div>
+            <div id="desc-edit-{{ f.id }}" class="hidden mt-1">
+              <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/edit"
+                    class="flex gap-2">
+                <input type="text" name="description" value="{{ f.description or '' }}"
+                  placeholder="Description..."
+                  class="flex-1 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+                <button type="submit" class="text-xs bg-indigo-600 text-white px-2 py-1 rounded shrink-0">Save</button>
+                <button type="button" onclick="toggleDescEdit({{ f.id }})"
+                  class="text-xs text-gray-400 shrink-0">✕</button>
+              </form>
+            </div>
+          </div>
+
+          {% if f.is_final %}
+          {# ── Final: just Unmark button ── #}
+          <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/mark-final">
+            <button type="submit"
+              class="text-xs bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 px-3 py-1 rounded-full transition">
+              Unmark Final
+            </button>
+          </form>
+
+          {% else %}
+          {# ── Not final: actions + feedback + revision ── #}
+          <div class="flex flex-wrap gap-2 mb-4 pb-3 border-b border-gray-100">
+            {% if not f.sent_at %}
+            <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/mark-sent">
+              <button type="submit"
+                class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 px-3 py-1 rounded-full transition">
+                Mark Sent
+              </button>
+            </form>
+            {% endif %}
+            <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/mark-final">
+              <button type="submit"
+                class="text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 px-3 py-1 rounded-full transition">
+                Mark Final
+              </button>
+            </form>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Feedback</div>
+            {% if f.feedback_entries %}
+            <ul class="space-y-1.5 mb-2">
+              {% for fb in f.feedback_entries %}
+              <li class="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                <span class="flex-1 text-xs text-amber-800 leading-relaxed">{{ fb.note }}</span>
+                <form method="post"
+                      action="/projects/{{ project.id }}/design-files/{{ f.id }}/feedback/{{ fb.id }}/delete"
+                      class="shrink-0">
+                  <button type="submit"
+                    class="text-amber-300 hover:text-red-500 text-sm leading-none transition">&times;</button>
+                </form>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-xs text-gray-300 italic mb-2">No feedback yet.</p>
+            {% endif %}
+            <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/feedback/add"
+                  class="flex gap-2">
+              <input type="text" name="note" placeholder="Add feedback note..."
+                class="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white" />
+              <button type="submit"
+                class="shrink-0 text-xs bg-amber-500 text-white hover:bg-amber-600 px-3 py-1.5 rounded-lg transition">
+                Add
+              </button>
+            </form>
+          </div>
+
+          <div class="pt-3 border-t border-gray-100">
+            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Expected Next Revision</div>
+            <form method="post" action="/projects/{{ project.id }}/design-files/{{ f.id }}/revision-date"
+                  class="flex items-center gap-2">
+              <input type="date" name="next_revision_date"
+                value="{{ f.next_revision_date.isoformat() if f.next_revision_date else '' }}"
+                class="border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white" />
+              <button type="submit"
+                class="text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1 rounded transition">Save</button>
+              {% if f.next_revision_date %}
+              <span class="text-xs text-indigo-600 font-medium">{{ f.next_revision_date.strftime('%d %b %Y') }}</span>
+              {% endif %}
+            </form>
+          </div>
+          {% endif %}
+
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-sm text-gray-400 mb-5">No design files yet.</p>
       {% endif %}
 
-      <form method="post" action="/projects/{{ project.id }}/production-files/upload"
-            enctype="multipart/form-data"
-            class="flex flex-wrap gap-3 items-end bg-gray-50 rounded-lg p-3 border border-dashed border-gray-200">
-        <input type="hidden" name="file_category" value="{{ cat_key }}" />
-        <div class="flex-1 min-w-44">
-          <label class="block text-xs text-gray-500 mb-1">{{ cat_label }} <span class="text-red-400">*</span></label>
+      <form method="post" action="/projects/{{ project.id }}/design-files/upload"
+            enctype="multipart/form-data" class="border-t pt-4 flex flex-wrap gap-3 items-end">
+        <div class="flex-1 min-w-48">
+          <label class="block text-xs text-gray-500 mb-1">Design File <span class="text-red-400">*</span></label>
           <input type="file" name="file" required
             class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-gray-600
-                   file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0
-                   file:text-xs file:bg-white file:text-gray-600 hover:file:bg-gray-100" />
+                   file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs
+                   file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
         </div>
-        <div class="flex-1 min-w-40">
+        <div class="flex-1 min-w-48">
           <label class="block text-xs text-gray-500 mb-1">Description</label>
-          <input type="text" name="description" placeholder="e.g. Final version"
+          <input type="text" name="description" placeholder="e.g. Living room — v2"
             class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
         </div>
         <button type="submit"
-          class="bg-gray-700 text-white px-3 py-2 rounded text-xs hover:bg-gray-800 transition">Upload</button>
+          class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 transition">Upload</button>
       </form>
     </div>
-    {% endfor %}
-    {% endif %}
-  </div>
-</div>
-{% endif %}
-
-{# ── 7. User Log ─────────────────────────────────────────────────────────────── #}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
-  <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Log Activity</h2>
-
-  <!-- Full log form (always visible) -->
-  <form method="post" action="/projects/{{ project.id }}/activities" class="mb-2">
-    <div class="flex flex-wrap gap-3 items-end">
-      <div class="w-36">
-        <label class="block text-xs text-gray-500 mb-1">Type</label>
-        <select id="project-activity-type" name="activity_type" onchange="toggleProjectSchedule(this)"
-          class="w-full border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-          {% for value, label in activity_types.items() %}
-          <option value="{{ value }}">{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="flex-1 min-w-48">
-        <label class="block text-xs text-gray-500 mb-1">Note</label>
-        <input type="text" name="note" placeholder="e.g. Client approved layout, revisions requested"
-          class="w-full border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-      </div>
-      <div class="w-44">
-        <label class="block text-xs text-gray-500 mb-1"><span id="project-schedule-label">Time (optional)</span></label>
-        <input type="datetime-local" id="project-scheduled-input" name="scheduled_at"
-          class="w-full border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-      </div>
-      <button type="submit"
-        class="bg-indigo-600 text-white px-5 py-2 rounded text-sm hover:bg-indigo-700 transition font-medium">
-        Add Activity
-      </button>
-    </div>
-  </form>
-  <script>
-    const _projectTimeTypes = ['call', 'meeting', 'site_visit'];
-    function toggleProjectSchedule(sel) {
-      const input = document.getElementById('project-scheduled-input');
-      const label = document.getElementById('project-schedule-label');
-      input.value = '';
-      if (_projectTimeTypes.includes(sel.value)) {
-        input.type = 'datetime-local';
-        label.textContent = 'Time (optional)';
-      } else {
-        input.type = 'date';
-        label.textContent = 'Date (optional)';
-      }
-    }
-  </script>
-
-  {% if recent_project_activities %}
-  <div class="mt-3 space-y-1">
-    {% for act in recent_project_activities %}
-    <div class="flex items-start gap-3 py-2.5 border-b last:border-0">
-      <!-- Icon badge -->
-      <div class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm
-        {% if act.activity_type == 'call' %}bg-blue-100 text-blue-600
-        {% elif act.activity_type == 'site_visit' %}bg-green-100 text-green-600
-        {% elif act.activity_type == 'email_sent' %}bg-purple-100 text-purple-600
-        {% elif act.activity_type == 'send' %}bg-indigo-100 text-indigo-600
-        {% elif act.activity_type == 'follow_up' %}bg-orange-100 text-orange-600
-        {% elif act.activity_type == 'meeting' %}bg-teal-100 text-teal-600
-        {% else %}bg-gray-100 text-gray-500{% endif %}">
-        {% if act.activity_type == 'call' %}&#128222;
-        {% elif act.activity_type == 'site_visit' %}&#127968;
-        {% elif act.activity_type == 'email_sent' %}&#9993;
-        {% elif act.activity_type == 'send' %}&#9992;
-        {% elif act.activity_type == 'follow_up' %}&#8635;
-        {% elif act.activity_type == 'meeting' %}&#128197;
-        {% else %}&#128203;{% endif %}
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-sm font-medium text-gray-700">
-            {{ activity_types.get(act.activity_type, act.activity_type) }}
-          </span>
-          {% if act.is_completed %}
-          <span class="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">Done</span>
-          {% endif %}
-          {% if act.scheduled_at and not act.is_completed %}
-          <span class="text-xs bg-orange-50 text-orange-500 px-2 py-0.5 rounded-full">
-            &#9201; {% if act.scheduled_at.hour == 0 and act.scheduled_at.minute == 0 %}{{ act.scheduled_at.strftime('%d %b %Y') }}{% else %}{{ act.scheduled_at.strftime('%d %b, %H:%M') }}{% endif %}
-          </span>
-          {% endif %}
-        </div>
-        {% if act.note %}
-        <p class="text-sm text-gray-500 mt-0.5 break-words">{{ act.note }}</p>
-        {% endif %}
-        <span class="text-xs text-gray-300">{{ act.created_at.strftime('%d %b %Y, %H:%M') }}{% if act.logged_by_name %} &middot; {{ act.logged_by_name }}{% endif %}</span>
-      </div>
-      <div class="flex gap-1 shrink-0">
-        {% if not act.is_completed %}
-        <form method="post" action="/projects/{{ project.id }}/activities/{{ act.id }}/complete">
-          <button type="submit"
-            class="text-xs text-green-600 bg-green-50 hover:bg-green-100 px-2 py-1 rounded transition">Done</button>
-        </form>
-        {% else %}
-        <form method="post" action="/projects/{{ project.id }}/activities/{{ act.id }}/revert">
-          <button type="submit"
-            class="text-xs text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded transition">Undo</button>
-        </form>
-        {% endif %}
-        <form method="post" action="/projects/{{ project.id }}/activities/{{ act.id }}/delete"
-              onsubmit="return confirm('Delete this log entry?')">
-          <button type="submit"
-            class="text-xs text-gray-300 hover:text-red-500 px-1.5 py-1 rounded transition">&times;</button>
-        </form>
-      </div>
-    </div>
-    {% endfor %}
   </div>
   {% endif %}
-</div>
 
-{# ── 9. Stage History ───────────────────────────────────────────────────────── #}
-{% if project.stage_logs %}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
-  <h2 class="text-lg font-semibold mb-4">Stage History</h2>
-  <div class="space-y-2">
-    {% for log in project.stage_logs %}
-    <div class="flex items-start gap-4 py-2 border-b last:border-0">
-      <div class="shrink-0 w-36">
-        <div class="text-sm font-medium {% if log.stage == project.current_stage %}text-indigo-600{% else %}text-gray-600{% endif %}">
-          {{ stage_labels[log.stage] }}
+  {# ── Production Sheet Details ── #}
+  {% if show_design_section %}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-lg font-semibold">Production Sheet Details</h2>
+      <a href="/projects/{{ project.id }}/production-sheet" target="_blank"
+         class="text-xs bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded transition">
+        &#128438; Print Sheet
+      </a>
+    </div>
+    <div class="p-6">
+      <form method="post" action="/projects/{{ project.id }}/production-details"
+            class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Design Name</label>
+          <input type="text" name="prod_design_name" value="{{ project.prod_design_name or '' }}"
+            placeholder="e.g. Threaded Being"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
         </div>
-        <div class="text-xs text-gray-400">{{ log.started_at.strftime('%d %b %Y %H:%M') }}</div>
-      </div>
-      <div class="flex-1">
-        {% if log.notes %}<p class="text-sm text-gray-600">{{ log.notes }}</p>{% endif %}
-        {% if log.completed_at %}
-        <p class="text-xs text-gray-400">Completed: {{ log.completed_at.strftime('%d %b %Y %H:%M') }}</p>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Size (W × H)</label>
+          <input type="text" name="prod_size" value="{{ project.prod_size or '' }}"
+            placeholder='e.g. 89" × 40"'
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Polish Stain</label>
+          <input type="text" name="prod_polish_stain" value="{{ project.prod_polish_stain or '' }}"
+            placeholder="e.g. As per Sample"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Polish Type</label>
+          <input type="text" name="prod_polish_type" value="{{ project.prod_polish_type or '' }}"
+            placeholder="e.g. Matte + Glossy Melamine"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Veneer Type</label>
+          <input type="text" name="prod_veneer_type" value="{{ project.prod_veneer_type or '' }}"
+            placeholder="e.g. Composite Veneer (Client)"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        </div>
+        {% set final_design = project.design_files | selectattr('is_final') | first | default(None) %}
+        {% if final_design and final_design.original_filename.lower().endswith('.pdf') %}
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Design PDF — Page to Show</label>
+          <input type="number" name="prod_design_page" min="1"
+            value="{{ project.prod_design_page or 1 }}"
+            class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+          <p class="text-xs text-gray-400 mt-1">Which page of the PDF to show in the production sheet</p>
+        </div>
         {% else %}
-        <span class="text-xs text-indigo-500 font-medium">Current</span>
+        <input type="hidden" name="prod_design_page" value="{{ project.prod_design_page or 1 }}" />
         {% endif %}
-      </div>
+        <div class="col-span-2 flex justify-end">
+          <button type="submit"
+            class="bg-amber-600 text-white px-5 py-2 rounded text-sm hover:bg-amber-700 transition">
+            Save Details
+          </button>
+        </div>
+      </form>
     </div>
-    {% endfor %}
   </div>
-</div>
-{% endif %}
-
-{# ── 10. Quick Email ────────────────────────────────────────────────────────── #}
-{% if project.client.email %}
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
-  <h2 class="text-lg font-semibold mb-4">Quick Email to Client</h2>
-  {% if sent == '1' %}
-  <div class="bg-green-50 border border-green-200 text-green-700 rounded px-3 py-2 text-sm mb-3">Email sent successfully.</div>
-  {% elif error_msg %}
-  <div class="bg-red-50 border border-red-200 text-red-700 rounded px-3 py-2 text-sm mb-3">{{ error_msg }}</div>
   {% endif %}
-  <form method="post" action="/projects/{{ project.id }}/send-email" class="space-y-3 max-w-xl">
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">To</label>
-        <input type="text" value="{{ project.client.name }} &lt;{{ project.client.email }}&gt;" readonly
-          class="w-full border border-gray-200 rounded px-2 py-1.5 text-xs bg-gray-50 text-gray-500" />
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Subject</label>
-        <input type="text" name="subject" required placeholder="Email subject"
-          value="Update on {{ project.name }}"
-          class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-      </div>
+
+</div>{# /pane-design #}
+
+
+{# ════════════════════════════════════════════════════════════
+   PRODUCTION TAB
+   ════════════════════════════════════════════════════════════ #}
+<div id="pane-production" class="tab-pane hidden">
+
+  {% if show_design_section %}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
+    <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center gap-3">
+      <h2 class="text-lg font-semibold">Production Files</h2>
+      {% if project.production_files %}
+      <span class="bg-green-100 text-green-700 text-xs rounded-full px-2 py-0.5">{{ project.production_files | length }}</span>
+      {% endif %}
+      {% if not has_final_design %}
+      <span class="ml-auto flex items-center gap-1 text-xs text-amber-600">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        Locked
+      </span>
+      {% endif %}
     </div>
-    <div>
-      <label class="block text-xs text-gray-500 mb-1">Message</label>
-      <textarea name="body" rows="4" required placeholder="Write your message..."
-        class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
+
+    <div class="p-6">
+      {% if not has_final_design %}
+      <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+        <svg class="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        <p class="text-sm text-amber-700">
+          Production files are locked. Mark at least one design file as <strong>Final</strong> to unlock.
+        </p>
+      </div>
+      {% else %}
+      <p class="text-xs text-gray-400 mb-5">Upload production-ready files. Mark as <strong>Sent</strong> to record the delivery date.</p>
+
+      {% set categories = [
+        ('laser_cutting', 'Laser Cutting', '&#9913;'),
+        ('colour', 'Colour', '&#127912;'),
+      ] %}
+
+      {% for cat_key, cat_label, cat_icon in categories %}
+      {% set cat_files = project.production_files | selectattr('file_category', 'equalto', cat_key) | list %}
+      <div class="mb-7 last:mb-0">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <span>{{ cat_icon | safe }}</span> {{ cat_label }}
+          {% if cat_files %}
+          <span class="text-xs bg-gray-100 text-gray-500 rounded-full px-2">{{ cat_files | length }}</span>
+          {% endif %}
+        </h3>
+
+        {% if cat_files %}
+        <table class="w-full text-sm mb-3">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr class="text-left text-gray-400 text-xs">
+              <th class="px-3 py-2 font-medium">File</th>
+              <th class="px-3 py-2 font-medium">Description</th>
+              <th class="px-3 py-2 font-medium">Sent</th>
+              <th class="px-3 py-2 font-medium">Uploaded</th>
+              <th class="px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in cat_files %}
+            <tr class="border-b last:border-0 hover:bg-gray-50">
+              <td class="px-3 py-2.5">
+                <a href="{{ storage_url(f.stored_filename) }}" target="_blank"
+                   class="text-indigo-600 hover:underline text-xs font-medium flex items-center gap-1">
+                  &#128196; {{ f.original_filename }}
+                </a>
+                <span class="text-xs text-gray-400">{{ f.file_size | filesizeformat }}</span>
+              </td>
+              <td class="px-3 py-2.5 text-xs text-gray-500">
+                <div id="pdesc-view-{{ f.id }}">
+                  {{ f.description or '—' }}
+                  <button type="button" onclick="toggleProdDescEdit({{ f.id }})"
+                    class="ml-1 text-indigo-400 hover:text-indigo-600 text-xs">edit</button>
+                </div>
+                <div id="pdesc-edit-{{ f.id }}" class="hidden">
+                  <form method="post" action="/projects/{{ project.id }}/production-files/{{ f.id }}/edit"
+                        class="flex gap-1">
+                    <input type="text" name="description" value="{{ f.description or '' }}"
+                      class="border border-gray-300 rounded px-2 py-1 text-xs flex-1 focus:outline-none" />
+                    <button type="submit" class="text-xs bg-indigo-600 text-white px-2 py-1 rounded">Save</button>
+                    <button type="button" onclick="toggleProdDescEdit({{ f.id }})"
+                      class="text-xs text-gray-400">✕</button>
+                  </form>
+                </div>
+              </td>
+              <td class="px-3 py-2.5">
+                {% if f.sent_at %}
+                <div class="text-xs text-blue-600 font-medium">&#10003; Sent</div>
+                <div class="text-xs text-gray-400">{{ f.sent_at.strftime('%d %b %Y') }}</div>
+                {% else %}
+                <form method="post" action="/projects/{{ project.id }}/production-files/{{ f.id }}/mark-sent">
+                  <button type="submit"
+                    class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded transition">
+                    Mark Sent
+                  </button>
+                </form>
+                {% endif %}
+              </td>
+              <td class="px-3 py-2.5 text-xs text-gray-400">{{ f.uploaded_at.strftime('%d %b %Y') }}</td>
+              <td class="px-3 py-2.5">
+                <form method="post" action="/projects/{{ project.id }}/production-files/{{ f.id }}/delete"
+                      onsubmit="return confirm('Delete this file?')">
+                  <button type="submit" class="text-gray-300 hover:text-red-500 text-xs">&times;</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+
+        <form method="post" action="/projects/{{ project.id }}/production-files/upload"
+              enctype="multipart/form-data"
+              class="flex flex-wrap gap-3 items-end bg-gray-50 rounded-lg p-3 border border-dashed border-gray-200">
+          <input type="hidden" name="file_category" value="{{ cat_key }}" />
+          <div class="flex-1 min-w-44">
+            <label class="block text-xs text-gray-500 mb-1">{{ cat_label }} <span class="text-red-400">*</span></label>
+            <input type="file" name="file" required
+              class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-gray-600
+                     file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0
+                     file:text-xs file:bg-white file:text-gray-600 hover:file:bg-gray-100" />
+          </div>
+          <div class="flex-1 min-w-40">
+            <label class="block text-xs text-gray-500 mb-1">Description</label>
+            <input type="text" name="description" placeholder="e.g. Final version"
+              class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+          </div>
+          <button type="submit"
+            class="bg-gray-700 text-white px-3 py-2 rounded text-xs hover:bg-gray-800 transition">Upload</button>
+        </form>
+      </div>
+      {% endfor %}
+      {% endif %}
     </div>
-    <button type="submit"
-      class="bg-indigo-600 text-white px-5 py-2 rounded text-sm hover:bg-indigo-700 transition">Send Email</button>
-  </form>
-</div>
-{% endif %}
+  </div>
+  {% else %}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 text-center text-gray-400 text-sm">
+    Production files become available once design files are uploaded.
+  </div>
+  {% endif %}
+
+</div>{# /pane-production #}
 
 {% endblock %}
 
 {% block scripts %}
 <script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('border-indigo-600', 'text-indigo-600');
+    b.classList.add('border-transparent', 'text-gray-500');
+  });
+  document.getElementById('pane-' + name).classList.remove('hidden');
+  const btn = document.getElementById('tab-' + name);
+  btn.classList.add('border-indigo-600', 'text-indigo-600');
+  btn.classList.remove('border-transparent', 'text-gray-500');
+  sessionStorage.setItem('project-tab-{{ project.id }}', name);
+}
+
+// Restore last active tab on load
+(function() {
+  const saved = sessionStorage.getItem('project-tab-{{ project.id }}') || '{{ active_tab }}';
+  switchTab(saved);
+})();
+
 function toggleDescEdit(id) {
   document.getElementById('desc-view-' + id).classList.toggle('hidden');
   document.getElementById('desc-edit-' + id).classList.toggle('hidden');
@@ -754,5 +809,11 @@ function toggleProdDescEdit(id) {
   document.getElementById('pdesc-edit-' + id).classList.toggle('hidden');
 }
 
+const _projectTimeTypes = ['call', 'meeting', 'site_visit'];
+function toggleProjectSchedule(sel) {
+  const input = document.getElementById('project-scheduled-input');
+  input.value = '';
+  input.type = _projectTimeTypes.includes(sel.value) ? 'datetime-local' : 'date';
+}
 </script>
 {% endblock %}

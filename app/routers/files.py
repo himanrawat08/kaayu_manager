@@ -250,6 +250,7 @@ def mark_design_final(project_id: int, file_id: int, db: Session = Depends(get_d
     ).first()
     if f:
         f.is_final = not f.is_final  # toggle
+        f.finalized_at = now_ist() if f.is_final else None
         if f.is_final:
             project = db.query(Project).filter(Project.id == project_id).first()
             if project and not project.order_number:

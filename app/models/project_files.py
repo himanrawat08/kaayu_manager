@@ -50,6 +50,7 @@ class DesignFile(Base):
     feedback: Mapped[str | None] = mapped_column(Text, nullable=True)  # legacy
     next_revision_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     is_final: Mapped[bool] = mapped_column(Boolean, default=False)
+    finalized_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
