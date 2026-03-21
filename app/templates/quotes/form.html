@@ -223,9 +223,33 @@
         class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ quote.notes or '' if quote else '' }}</textarea>
     </div>
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Terms &amp; Conditions</label>
-      <textarea name="terms_conditions" rows="4" placeholder="1. Cost is indicative and might change based on the design&#10;2. Panel will be dispatched within 30 days of design finalization&#10;3. Transport will be charged on actuals"
-        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ quote.terms_conditions or '' if quote else '' }}</textarea>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Terms &amp; Conditions</label>
+      <!-- Hidden textarea — populated by JS on submit, restored on load -->
+      <textarea id="tcHidden" name="terms_conditions" class="hidden">{{ quote.terms_conditions or '' if quote else '' }}</textarea>
+      <!-- Preset terms as checkboxes -->
+      <div id="tcList" class="space-y-2 mb-3">
+        {% set _presets = [
+          "GST Extra as applicable",
+          "Prices are Ex-Factory. Transport to site will be charged on actuals",
+          "Kaayu Studio provides finished panels. Installation is not a part of the scope",
+          "Order will be designed after 45 days of design confirmation",
+          "Order will be designed after 60 days of design confirmation",
+          "Order will be designed after 70 days of design confirmation",
+          "Order will be designed after 90 days of design confirmation",
+          "Cost is indicative and might change based on the design",
+          "All orders are shipped in ply boxes to ensure safety of the pieces"
+        ] %}
+        {% for term in _presets %}
+        <label class="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+          <input type="checkbox" class="tc-preset mt-0.5 rounded" value="{{ term }}">
+          <span>{{ term }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <!-- Custom terms added inline -->
+      <div id="tcCustom" class="space-y-1.5 mb-2"></div>
+      <button type="button" onclick="addCustomTc()"
+        class="text-xs text-indigo-600 hover:text-indigo-800 hover:underline">+ Add custom term</button>
     </div>
   </div>
 
@@ -430,6 +454,45 @@ if (projectSelect) {
   if (projectSelect.value) autofillClient(projectSelect.value);
   {% endif %}
 }
+
+// ── Terms & Conditions ────────────────────────────────────────────────────────
+function addCustomTc(value) {
+  var div = document.createElement('div');
+  div.className = 'flex items-center gap-2';
+  div.innerHTML = '<input type="text" class="tc-custom-input flex-1 border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-300" placeholder="Enter custom term...">'
+    + '<button type="button" onclick="this.parentElement.remove()" class="text-gray-300 hover:text-red-500 text-lg leading-none">&times;</button>';
+  document.getElementById('tcCustom').appendChild(div);
+  var inp = div.querySelector('input');
+  if (value) inp.value = value;
+  inp.focus();
+}
+
+(function initTc() {
+  var raw = document.getElementById('tcHidden').value.trim();
+  if (!raw) return;
+  var lines = raw.split('\n').map(function(l) {
+    return l.replace(/^\d+[\.\)]\s*/, '').trim();
+  }).filter(Boolean);
+  var presetValues = Array.from(document.querySelectorAll('.tc-preset')).map(function(cb) { return cb.value; });
+  lines.forEach(function(line) {
+    var cb = document.querySelector('.tc-preset[value="' + line.replace(/"/g, '\\"') + '"]');
+    if (cb) { cb.checked = true; }
+    else { addCustomTc(line); }
+  });
+})();
+
+document.getElementById('quoteForm').addEventListener('submit', function() {
+  var lines = [];
+  var i = 1;
+  document.querySelectorAll('.tc-preset:checked').forEach(function(cb) {
+    lines.push(i++ + '. ' + cb.value);
+  });
+  document.querySelectorAll('.tc-custom-input').forEach(function(inp) {
+    var v = inp.value.trim();
+    if (v) lines.push(i++ + '. ' + v);
+  });
+  document.getElementById('tcHidden').value = lines.join('\n');
+});
 
 // Bind existing rows (edit mode) and run initial calc
 document.querySelectorAll('.item-row').forEach(bindItemRow);
