@@ -1,3 +1,4 @@
+import json
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from typing import List
@@ -30,25 +31,31 @@ def _generate_quote_number(db: Session) -> str:
 
 
 def _recalculate(q: Quotation) -> None:
-    """Recalculate all totals using Decimal arithmetic to avoid float rounding errors."""
+    """Recalculate all totals using Decimal arithmetic to avoid float rounding errors.
+
+    GST is calculated per line item (item.gst_percent). Sundries are not taxed.
+    subtotal    = sum of item amounts (before GST, excluding sundries)
+    igst_amount = total GST from per-item rates
+    total_amount = subtotal + gst + sundries
+    """
     D = Decimal
     items_sub    = sum(D(str(item.amount)) for item in q.items)
-    sundries_sub = sum(D(str(s.amount))    for s in q.sundries)
-    subtotal     = (items_sub + sundries_sub).quantize(D("1"), rounding=ROUND_HALF_UP)
-    taxable      = subtotal
-    cgst  = (taxable * D(str(q.cgst_percent or 0)) / 100).quantize(D("0.01"), rounding=ROUND_HALF_UP)
-    sgst  = (taxable * D(str(q.sgst_percent or 0)) / 100).quantize(D("0.01"), rounding=ROUND_HALF_UP)
-    igst  = (taxable * D(str(q.igst_percent or 0)) / 100).quantize(D("0.01"), rounding=ROUND_HALF_UP)
-    total = (taxable + cgst + sgst + igst).quantize(D("1"), rounding=ROUND_HALF_UP)
+    items_gst    = sum(
+        (D(str(item.amount)) * D(str(item.gst_percent or 0)) / 100).quantize(D("0.01"), rounding=ROUND_HALF_UP)
+        for item in q.items
+    )
+    sundries_sub = sum(D(str(s.amount)) for s in q.sundries)
+    subtotal     = items_sub.quantize(D("1"), rounding=ROUND_HALF_UP)
+    total        = (items_sub + items_gst + sundries_sub).quantize(D("1"), rounding=ROUND_HALF_UP)
 
     q.subtotal        = float(subtotal)
     q.discount_type   = None
     q.discount_value  = 0.0
     q.discount_amount = 0.0
     q.taxable_amount  = float(subtotal)
-    q.cgst_amount     = float(cgst)
-    q.sgst_amount     = float(sgst)
-    q.igst_amount     = float(igst)
+    q.cgst_amount     = 0.0
+    q.sgst_amount     = 0.0
+    q.igst_amount     = float(items_gst)   # repurposed: stores total per-item GST
     q.total_amount    = float(total)
 
 
@@ -63,6 +70,33 @@ def _clamp_percent(s: str) -> float:
     """Parse a tax percentage and clamp to [0, 100]."""
     v = _parse_float(s)
     return max(0.0, min(100.0, v))
+
+
+def _project_client_data(projects: list) -> str:
+    """Build a JSON string {project_id: {client fields}} for JS auto-fill."""
+    data = {}
+    for p in projects:
+        if not p.client:
+            continue
+        c = p.client
+        contact_name   = str(p.project_contact_name or "")
+        contact_number = str(p.project_contact_phone or "")
+        if not contact_name and c.principal_architects_list:
+            contact_name = str(c.principal_architects_list[0].get("name", "") or "")
+            numbers = c.principal_architects_list[0].get("numbers", [])
+            if numbers and not contact_number:
+                contact_number = str(numbers[0] or "")
+        if not contact_name:
+            contact_name = str(c.contact_person_name or "")
+        if not contact_number:
+            contact_number = str(c.contact_person_number or "")
+        data[str(p.id)] = {
+            "client_name":    str(c.name or ""),
+            "client_address": str(c.city or c.address or ""),
+            "contact_name":   contact_name,
+            "contact_number": contact_number,
+        }
+    return json.dumps(data)
 
 
 def _parse_date(s: str) -> date | None:
@@ -99,6 +133,35 @@ def quotes_list(
     })
 
 
+# ── API: project client info ──────────────────────────────────────────────────
+
+from fastapi.responses import JSONResponse
+
+@router.get("/api/project-client", response_class=JSONResponse)
+def api_project_client(project_id: int, db: Session = Depends(get_db)):
+    p = db.query(Project).filter(Project.id == project_id).first()
+    if not p or not p.client:
+        return JSONResponse({})
+    c = p.client
+    contact_name   = p.project_contact_name or ""
+    contact_number = p.project_contact_phone or ""
+    if not contact_name and c.principal_architects_list:
+        contact_name = c.principal_architects_list[0].get("name", "")
+        numbers = c.principal_architects_list[0].get("numbers", [])
+        if numbers and not contact_number:
+            contact_number = numbers[0]
+    if not contact_name:
+        contact_name = c.contact_person_name or ""
+    if not contact_number:
+        contact_number = c.contact_person_number or ""
+    return JSONResponse({
+        "client_name":    c.name or "",
+        "client_address": c.city or c.address or "",
+        "contact_name":   contact_name,
+        "contact_number": contact_number,
+    })
+
+
 # ── Create ────────────────────────────────────────────────────────────────────
 
 @router.get("/new", response_class=HTMLResponse)
@@ -120,15 +183,23 @@ def quotes_create(
     valid_until: str = Form(""),
     notes: str = Form(""),
     terms_conditions: str = Form(""),
-    cgst_percent: str = Form("9"),
-    sgst_percent: str = Form("9"),
-    igst_percent: str = Form("0"),
+    client_name: str = Form(""),
+    client_address: str = Form(""),
+    contact_name: str = Form(""),
+    contact_number: str = Form(""),
+    payment_terms: str = Form(""),
+    payment_account_name: str = Form(""),
+    payment_account_no: str = Form(""),
+    payment_ifsc: str = Form(""),
+    payment_bank_name: str = Form(""),
     item_name: List[str] = Form(default=[]),
     size: List[str] = Form(default=[]),
+    material: List[str] = Form(default=[]),
     description: List[str] = Form(default=[]),
     qty: List[str] = Form(default=[]),
     unit: List[str] = Form(default=[]),
     unit_price: List[str] = Form(default=[]),
+    gst_percent: List[str] = Form(default=[]),
     sundry_particular: List[str] = Form(default=[]),
     sundry_amount: List[str] = Form(default=[]),
     db: Session = Depends(get_db),
@@ -149,9 +220,18 @@ def quotes_create(
         valid_until=_parse_date(valid_until),
         notes=notes.strip() or None,
         terms_conditions=terms_conditions.strip() or None,
-        cgst_percent=_clamp_percent(cgst_percent),
-        sgst_percent=_clamp_percent(sgst_percent),
-        igst_percent=_clamp_percent(igst_percent),
+        cgst_percent=0.0,
+        sgst_percent=0.0,
+        igst_percent=0.0,
+        client_name=client_name.strip() or None,
+        client_address=client_address.strip() or None,
+        contact_name=contact_name.strip() or None,
+        contact_number=contact_number.strip() or None,
+        payment_terms=payment_terms.strip() or None,
+        payment_account_name=payment_account_name.strip() or None,
+        payment_account_no=payment_account_no.strip() or None,
+        payment_ifsc=payment_ifsc.strip() or None,
+        payment_bank_name=payment_bank_name.strip() or None,
     )
     db.add(q)
     db.flush()
@@ -162,15 +242,18 @@ def quotes_create(
             continue
         q_qty   = _parse_float(qty[i] if i < len(qty) else "1") or 1
         q_price = _parse_float(unit_price[i] if i < len(unit_price) else "0")
+        q_gst   = _clamp_percent(gst_percent[i] if i < len(gst_percent) else "0")
         db.add(QuoteItem(
             quote_id=q.id,
             sort_order=i,
             size=(size[i].strip() if i < len(size) else "") or None,
             item_name=name,
+            material=(material[i].strip() if i < len(material) else "") or None,
             description=(description[i].strip() if i < len(description) else "") or None,
             qty=q_qty,
             unit=(unit[i].strip() if i < len(unit) else "") or "pcs",
             unit_price=q_price,
+            gst_percent=q_gst,
             amount=round(q_qty * q_price, 2),
         ))
 
@@ -258,15 +341,23 @@ def quotes_update(
     valid_until: str = Form(""),
     notes: str = Form(""),
     terms_conditions: str = Form(""),
-    cgst_percent: str = Form("9"),
-    sgst_percent: str = Form("9"),
-    igst_percent: str = Form("0"),
+    client_name: str = Form(""),
+    client_address: str = Form(""),
+    contact_name: str = Form(""),
+    contact_number: str = Form(""),
+    payment_terms: str = Form(""),
+    payment_account_name: str = Form(""),
+    payment_account_no: str = Form(""),
+    payment_ifsc: str = Form(""),
+    payment_bank_name: str = Form(""),
     item_name: List[str] = Form(default=[]),
     size: List[str] = Form(default=[]),
+    material: List[str] = Form(default=[]),
     description: List[str] = Form(default=[]),
     qty: List[str] = Form(default=[]),
     unit: List[str] = Form(default=[]),
     unit_price: List[str] = Form(default=[]),
+    gst_percent: List[str] = Form(default=[]),
     sundry_particular: List[str] = Form(default=[]),
     sundry_amount: List[str] = Form(default=[]),
     db: Session = Depends(get_db),
@@ -275,12 +366,21 @@ def quotes_update(
     if not q:
         return RedirectResponse(url="/quotes", status_code=303)
 
-    q.valid_until      = _parse_date(valid_until)
-    q.notes            = notes.strip() or None
-    q.terms_conditions = terms_conditions.strip() or None
-    q.cgst_percent     = _clamp_percent(cgst_percent)
-    q.sgst_percent     = _clamp_percent(sgst_percent)
-    q.igst_percent     = _clamp_percent(igst_percent)
+    q.valid_until           = _parse_date(valid_until)
+    q.notes                 = notes.strip() or None
+    q.terms_conditions      = terms_conditions.strip() or None
+    q.cgst_percent          = 0.0
+    q.sgst_percent          = 0.0
+    q.igst_percent          = 0.0
+    q.client_name           = client_name.strip() or None
+    q.client_address        = client_address.strip() or None
+    q.contact_name          = contact_name.strip() or None
+    q.contact_number        = contact_number.strip() or None
+    q.payment_terms         = payment_terms.strip() or None
+    q.payment_account_name  = payment_account_name.strip() or None
+    q.payment_account_no    = payment_account_no.strip() or None
+    q.payment_ifsc          = payment_ifsc.strip() or None
+    q.payment_bank_name     = payment_bank_name.strip() or None
 
     # Replace all items
     for existing in list(q.items):
@@ -295,15 +395,18 @@ def quotes_update(
             continue
         q_qty   = _parse_float(qty[i] if i < len(qty) else "1") or 1
         q_price = _parse_float(unit_price[i] if i < len(unit_price) else "0")
+        q_gst   = _clamp_percent(gst_percent[i] if i < len(gst_percent) else "0")
         db.add(QuoteItem(
             quote_id=q.id,
             sort_order=i,
             size=(size[i].strip() if i < len(size) else "") or None,
             item_name=name,
+            material=(material[i].strip() if i < len(material) else "") or None,
             description=(description[i].strip() if i < len(description) else "") or None,
             qty=q_qty,
             unit=(unit[i].strip() if i < len(unit) else "") or "pcs",
             unit_price=q_price,
+            gst_percent=q_gst,
             amount=round(q_qty * q_price, 2),
         ))
 
@@ -401,9 +504,18 @@ def quotes_new_version(request: Request, quote_id: int, db: Session = Depends(ge
         valid_until=original.valid_until,
         notes=original.notes,
         terms_conditions=original.terms_conditions,
-        cgst_percent=original.cgst_percent,
-        sgst_percent=original.sgst_percent,
-        igst_percent=original.igst_percent,
+        cgst_percent=0.0,
+        sgst_percent=0.0,
+        igst_percent=0.0,
+        client_name=original.client_name,
+        client_address=original.client_address,
+        contact_name=original.contact_name,
+        contact_number=original.contact_number,
+        payment_terms=original.payment_terms,
+        payment_account_name=original.payment_account_name,
+        payment_account_no=original.payment_account_no,
+        payment_ifsc=original.payment_ifsc,
+        payment_bank_name=original.payment_bank_name,
     )
     db.add(new_q)
     db.flush()
@@ -414,10 +526,12 @@ def quotes_new_version(request: Request, quote_id: int, db: Session = Depends(ge
             sort_order=item.sort_order,
             size=item.size,
             item_name=item.item_name,
+            material=item.material,
             description=item.description,
             qty=item.qty,
             unit=item.unit,
             unit_price=item.unit_price,
+            gst_percent=item.gst_percent,
             amount=item.amount,
         ))
 

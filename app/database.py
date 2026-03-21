@@ -74,9 +74,34 @@ def _create_indexes():
                 pass
 
 
+def _migrate_schema():
+    """Add new columns to existing tables without dropping data. Safe to run multiple times."""
+    migrations = [
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS client_name VARCHAR(200)",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS client_address TEXT",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS contact_name VARCHAR(200)",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS contact_number VARCHAR(50)",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS payment_terms TEXT",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS payment_account_name VARCHAR(200)",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS payment_account_no VARCHAR(100)",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS payment_ifsc VARCHAR(20)",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS payment_bank_name VARCHAR(200)",
+        "ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS material TEXT",
+        "ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS gst_percent FLOAT NOT NULL DEFAULT 0.0",
+    ]
+    with engine.connect() as conn:
+        for sql in migrations:
+            try:
+                conn.execute(text(sql))
+                conn.commit()
+            except Exception:
+                pass
+
+
 def init_db():
     from app.models import client, project, design, activity, project_files, task, social_post, quotation, user, system_log, lead, yarn  # noqa: F401
     from app.models.quotation import QuoteSundry  # noqa: F401 — ensure table is created
     Base.metadata.create_all(bind=engine)
+    _migrate_schema()
     _create_indexes()
     _create_system_log_trigger()

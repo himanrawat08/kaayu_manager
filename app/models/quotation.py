@@ -38,6 +38,19 @@ class Quotation(Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     terms_conditions: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Client & contact info (quote-specific, may differ from project client)
+    client_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    client_address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    contact_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    contact_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    # Payment details
+    payment_terms: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payment_account_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    payment_account_no: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    payment_ifsc: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    payment_bank_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
     discount_type: Mapped[str | None] = mapped_column(String(10), nullable=True)  # 'percent' or 'flat'
     discount_value: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
 
@@ -79,10 +92,12 @@ class QuoteItem(Base):
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     size: Mapped[str | None] = mapped_column(Text, nullable=True)
     item_name: Mapped[str] = mapped_column(Text, nullable=False)
+    material: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     qty: Mapped[float] = mapped_column(Float, default=1.0)
     unit: Mapped[str] = mapped_column(String(20), default="pcs")
     unit_price: Mapped[float] = mapped_column(Float, default=0.0)
+    gst_percent: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     amount: Mapped[float] = mapped_column(Float, default=0.0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
 
