@@ -104,7 +104,6 @@ def projects_create(
         project_contact_phone=project_contact_phone.strip() or None,
         current_stage="design",
         status="active",
-        order_number=_next_order_number(db),
     )
     db.add(project)
     db.flush()
@@ -275,6 +274,8 @@ def advance_stage(request: Request, project_id: int, db: Session = Depends(get_d
 
     next_stage = STAGES[current_idx + 1]
     project.current_stage = next_stage
+    if next_stage == "production" and not project.order_number:
+        project.order_number = _next_order_number(db)
     db.add(StageLog(project_id=project_id, stage=next_stage, started_at=now_ist()))
     db.commit()
 
@@ -290,6 +291,8 @@ def set_stage(project_id: int, stage: str = Form(...), db: Session = Depends(get
         return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
 
     project.current_stage = stage
+    if stage == "production" and not project.order_number:
+        project.order_number = _next_order_number(db)
     db.add(StageLog(project_id=project_id, stage=stage, started_at=now_ist()))
     db.commit()
     return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
