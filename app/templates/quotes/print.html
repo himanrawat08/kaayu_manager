@@ -6,175 +6,255 @@
   <title>{{ q.quote_number }} — Quotation</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: #F0EBE0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 12px;
-      color: #1a1a1a;
-      background: #fff;
-      padding: 32px;
+      color: #404041;
+      padding: 36px 44px 28px;
       max-width: 860px;
       margin: 0 auto;
     }
     @media print {
       body { padding: 0; }
       .no-print { display: none !important; }
-      @page { margin: 18mm 16mm; size: A4; }
+      @page { margin: 14mm 16mm; size: A4; }
     }
 
     /* ── Header ── */
     .doc-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
+      align-items: flex-start;
+      margin-bottom: 28px;
     }
-    .logo-cell {
-      padding: 12px 20px;
-      border-right: 1px solid #ccc;
+
+    /* Logo — tint black logo to terracotta via screen blend */
+    .logo-wrapper {
+      position: relative;
+      display: inline-block;
+      line-height: 0;
     }
-    .logo-cell img {
-      height: 48px;
+    .logo-img {
+      height: 44px;
       width: auto;
       display: block;
     }
-    .doc-title {
-      flex: 1;
-      text-align: center;
-      font-size: 26px;
-      font-weight: 700;
-      color: #B17457;
-      letter-spacing: 0.04em;
-    }
-    .doc-date {
-      padding: 12px 16px;
-      border-left: 1px solid #ccc;
-      font-size: 11px;
-      color: #555;
-      text-align: right;
-      white-space: nowrap;
+    .logo-wrapper::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: #B37659;
+      mix-blend-mode: screen;
+      pointer-events: none;
     }
 
-    /* ── Client info table ── */
-    .client-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
+    /* Decorative accent bars (top-right, matching letterhead) */
+    .accent-zone {
+      position: relative;
+      width: 270px;
+      height: 56px;
+      flex-shrink: 0;
     }
-    .client-table td {
-      padding: 5px 10px;
-      border: 1px solid #ccc;
-      font-size: 12px;
-      vertical-align: middle;
+    .accent-v {
+      position: absolute;
+      right: -44px; /* bleeds to page edge */
+      top: -36px;
+      width: 20px;
+      height: 90px;
+      background: #231F21;
     }
-    .client-table td.label {
-      font-weight: 700;
-      background: #fafafa;
+    .accent-h1 {
+      position: absolute;
+      right: -20px;
+      top: 16px;
       width: 120px;
-      color: #333;
+      height: 24px;
+      background: #231F21;
     }
-    .client-table td.value { color: #1a1a1a; }
-    .client-table td.project-label {
+    .accent-h2 {
+      position: absolute;
+      right: 104px;
+      top: 16px;
+      width: 120px;
+      height: 24px;
+      background: #231F21;
+    }
+
+    /* ── Client info + Quote meta ── */
+    .info-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 22px;
+    }
+    .to-label {
+      font-size: 11px;
+      color: #8C8070;
+      margin-bottom: 4px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .client-name {
+      font-size: 15px;
       font-weight: 700;
-      background: #fafafa;
-      width: 60px;
-      color: #333;
+      color: #B37659;
+      margin-bottom: 6px;
+    }
+    .client-meta {
+      font-size: 11px;
+      color: #5C5546;
+      line-height: 1.9;
+    }
+    .client-meta .lbl {
+      display: inline-block;
+      width: 18px;
+      color: #B37659;
+      font-weight: 700;
+    }
+    .quote-meta {
+      text-align: right;
+    }
+    .quote-number {
+      font-size: 20px;
+      font-weight: 700;
+      color: #B37659;
+      margin-bottom: 4px;
+      letter-spacing: 0.03em;
+    }
+    .quote-meta-line {
+      font-size: 11px;
+      color: #5C5546;
+      line-height: 1.8;
+    }
+
+    /* ── Divider ── */
+    hr.divider {
+      border: none;
+      border-top: 1.5px solid #C8C0B0;
+      margin-bottom: 18px;
     }
 
     /* ── Items table ── */
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
     .items-table thead th {
-      background: #f9f5f1;
-      border: 1px solid #d9cfc7;
+      background: #E4DDD3;
+      border: 1px solid #C8C0B0;
       padding: 6px 8px;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       text-align: center;
-      color: #4a3728;
+      color: #4A3728;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
     .items-table thead th.left { text-align: left; }
     .items-table tbody td {
-      border: 1px solid #ddd;
-      padding: 8px 8px;
+      border: 1px solid #C8C0B0;
+      padding: 8px;
       vertical-align: middle;
       font-size: 12px;
     }
+    .items-table tbody tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
     .items-table tbody td.center { text-align: center; }
     .items-table tbody td.right  { text-align: right; }
-    .item-name { font-weight: 600; color: #1a1a1a; }
+    .item-name { font-weight: 600; color: #231F21; }
+    .item-desc { font-size: 10.5px; color: #8C8070; margin-top: 2px; }
 
-    /* ── Note box ── */
-    .note-box {
-      font-size: 11px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 10px;
-      font-style: italic;
-    }
-
-    /* ── Bottom layout: note+totals, then T&C+payment ── */
+    /* ── Note + Totals row ── */
     .summary-row {
       display: flex;
-      gap: 0;
-      margin-bottom: 20px;
       align-items: flex-start;
+      margin-bottom: 22px;
     }
-    .summary-row .left-col { flex: 1; padding-right: 16px; }
+    .summary-left { flex: 1; padding-right: 16px; }
+    .note-box {
+      font-size: 11px;
+      color: #5C5546;
+      font-style: italic;
+      line-height: 1.6;
+    }
 
     .totals-table {
-      width: 260px;
-      border-collapse: collapse;
+      width: 240px;
       flex-shrink: 0;
+      border-collapse: collapse;
     }
     .totals-table td {
       padding: 5px 10px;
-      border: 1px solid #ccc;
+      border: 1px solid #C8C0B0;
       font-size: 12px;
     }
-    .totals-table td:first-child { font-weight: 600; color: #333; }
-    .totals-table td:last-child { text-align: right; font-weight: 600; }
+    .totals-table td:first-child { color: #5C5546; font-weight: 600; }
+    .totals-table td:last-child  { text-align: right; font-weight: 600; color: #404041; }
     .totals-table tr.grand-total td {
-      background: #f9f5f1;
+      background: #E4DDD3;
       font-weight: 700;
       font-size: 13px;
-      color: #B17457;
+      color: #B37659;
     }
 
-    /* ── Footer two-column section ── */
+    /* ── T&C + Payment (two-column) ── */
     .footer-row {
       display: flex;
-      gap: 20px;
-      margin-top: 8px;
+      gap: 24px;
+      margin-bottom: 16px;
     }
     .footer-col { flex: 1; }
     .footer-heading {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
-      color: #B17457;
+      color: #B37659;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       margin-bottom: 6px;
     }
-    .footer-list {
-      font-size: 11px;
-      color: #333;
-      line-height: 1.7;
-      white-space: pre-line;
+    .footer-content {
+      font-size: 10.5px;
+      color: #5C5546;
+      line-height: 1.8;
     }
-    .footer-list li { list-style: none; }
+    .footer-content li {
+      list-style: none;
+      padding-left: 0;
+      margin-bottom: 1px;
+    }
+    .payment-terms-section { margin-top: 12px; }
 
-    /* ── Payment terms (below footer row) ── */
-    .payment-terms-section { margin-top: 16px; }
+    /* ── Page footer ── */
+    .page-footer {
+      margin-top: 28px;
+      padding-top: 10px;
+      border-top: 1px solid #C8C0B0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      font-size: 10.5px;
+      color: #404041;
+      font-weight: 600;
+    }
+    .page-footer .sep {
+      margin: 0 10px;
+      color: #B37659;
+      font-weight: 700;
+    }
 
-    /* ── Print button (screen only) ── */
+    /* ── Print button ── */
     .print-btn {
       position: fixed; top: 20px; right: 20px;
-      background: #B17457; color: #fff; border: none; border-radius: 6px;
+      background: #B37659; color: #fff; border: none; border-radius: 6px;
       padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     }
     .print-btn:hover { opacity: 0.9; }
   </style>
@@ -183,68 +263,86 @@
 
 <button class="print-btn no-print" onclick="window.print()">&#128438; Print / Save PDF</button>
 
-<!-- ── Header: Logo + Title + Date ── -->
+<!-- ── Header ── -->
 <div class="doc-header">
-  <div class="logo-cell">
-    <img src="/static/img/logo.png" alt="Kaayu Studio" />
+  <div class="logo-wrapper">
+    <img src="/static/img/logo.png" class="logo-img" alt="Kaayu Studio" />
   </div>
-  <div class="doc-title">Quotation</div>
-  <div class="doc-date">{{ q.created_at.strftime('%-d %b %Y') if q.created_at else '' }}</div>
+  <div class="accent-zone">
+    <div class="accent-v"></div>
+    <div class="accent-h1"></div>
+    <div class="accent-h2"></div>
+  </div>
 </div>
 
-<!-- ── Client Info Table ── -->
-<table class="client-table">
-  <tr>
-    <td class="label">Client Name</td>
-    <td class="value" colspan="3">{{ q.client_name or (q.project.client.name if q.project.client else '') }}</td>
-  </tr>
-  <tr>
-    <td class="label">Client Address</td>
-    <td class="value">{{ q.client_address or '' }}</td>
-    <td class="project-label">Project</td>
-    <td class="value">{{ q.project.name }}</td>
-  </tr>
-  <tr>
-    <td class="label">Contact Name</td>
-    <td class="value" colspan="3">{{ q.contact_name or '' }}</td>
-  </tr>
-  <tr>
-    <td class="label">Contact Number</td>
-    <td class="value" colspan="3">{{ q.contact_number or '' }}</td>
-  </tr>
-</table>
+<!-- ── Client Info + Quote Meta ── -->
+<div class="info-section">
+  <div class="to-block">
+    <div class="to-label">To</div>
+    <div class="client-name">{{ q.client_name or (q.project.client.name if q.project and q.project.client else '—') }}</div>
+    <div class="client-meta">
+      {% if q.project %}
+      <div><span class="lbl">P</span>{{ q.project.name }}</div>
+      {% endif %}
+      {% if q.contact_name %}
+      <div><span class="lbl">C</span>{{ q.contact_name }}</div>
+      {% endif %}
+      {% if q.contact_number %}
+      <div><span class="lbl">M</span>{{ q.contact_number }}</div>
+      {% endif %}
+      {% if q.client_address %}
+      <div><span class="lbl">A</span>{{ q.client_address }}</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="quote-meta">
+    <div class="quote-number">{{ q.quote_number }}</div>
+    {% if q.version > 1 %}
+    <div class="quote-meta-line">Version {{ q.version }}</div>
+    {% endif %}
+    <div class="quote-meta-line">{{ q.created_at.strftime('%-d %b %Y') if q.created_at else '' }}</div>
+    {% if q.valid_until %}
+    <div class="quote-meta-line">Valid until {{ q.valid_until.strftime('%-d %b %Y') }}</div>
+    {% endif %}
+  </div>
+</div>
 
-<!-- ── Line Items Table ── -->
+<hr class="divider" />
+
+<!-- ── Line Items ── -->
 {% if q.items %}
 <table class="items-table">
   <thead>
     <tr>
       <th class="left">Product Name</th>
       <th class="left">Material</th>
-      <th style="width:45px;">Qty</th>
-      <th style="width:110px;">Rate</th>
-      <th style="width:50px;">GST</th>
-      <th style="width:110px;">Amount</th>
+      <th style="width:48px;">Qty</th>
+      <th style="width:100px;">Rate</th>
+      <th style="width:46px;">GST</th>
+      <th style="width:100px;">Amount</th>
     </tr>
   </thead>
   <tbody>
     {% for item in q.items %}
     <tr>
-      <td><span class="item-name">{{ item.item_name }}</span>{% if item.description %}<br><span style="font-size:11px;color:#666;">{{ item.description }}</span>{% endif %}</td>
-      <td style="color:#555;font-size:11px;">{{ item.material or '' }}</td>
+      <td>
+        <span class="item-name">{{ item.item_name }}</span>
+        {% if item.description %}<div class="item-desc">{{ item.description }}</div>{% endif %}
+      </td>
+      <td style="color:#5C5546; font-size:11px;">{{ item.material or '' }}</td>
       <td class="center">{{ item.qty | int if item.qty == item.qty | int else item.qty }} {{ item.unit }}</td>
       <td class="right">Rs. {{ "%.0f"|format(item.unit_price) }} /{{ item.unit }}</td>
       <td class="center">{{ item.gst_percent | int if item.gst_percent == item.gst_percent | int else item.gst_percent }}%</td>
-      <td class="right"><strong>Rs. {{ "%.0f"|format(item.amount) }} /{{ item.unit }}</strong></td>
+      <td class="right"><strong>Rs. {{ "%.0f"|format(item.amount) }}</strong></td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 {% endif %}
 
-<!-- ── Note + Totals side by side ── -->
+<!-- ── Note + Totals ── -->
 <div class="summary-row">
-  <div class="left-col">
+  <div class="summary-left">
     {% if q.notes %}
     <p class="note-box"><strong>Note:</strong> {{ q.notes }}</p>
     {% endif %}
@@ -252,12 +350,12 @@
   <table class="totals-table">
     {% set items_sub = q.items | sum(attribute='amount') %}
     <tr>
-      <td>Total</td>
+      <td>Subtotal</td>
       <td>Rs. {{ "%.0f"|format(items_sub) }}</td>
     </tr>
     {% if q.igst_amount %}
     <tr>
-      <td>GST{% if q.items and q.items[0].gst_percent %} {{ q.items[0].gst_percent | int if q.items[0].gst_percent == q.items[0].gst_percent | int else q.items[0].gst_percent }}%{% endif %}</td>
+      <td>GST</td>
       <td>Rs. {{ "%.0f"|format(q.igst_amount) }}</td>
     </tr>
     {% endif %}
@@ -274,34 +372,48 @@
   </table>
 </div>
 
-<!-- ── Terms & Conditions + Payment Details ── -->
+<!-- ── T&C + Payment Details ── -->
 {% if q.terms_conditions or q.payment_account_name or q.payment_account_no %}
 <div class="footer-row">
   {% if q.terms_conditions %}
   <div class="footer-col">
-    <div class="footer-heading">Terms and Conditions:</div>
-    <div class="footer-list">{{ q.terms_conditions }}</div>
+    <div class="footer-heading">Terms &amp; Conditions</div>
+    <div class="footer-content">
+      {% for line in q.terms_conditions.split('\n') if line.strip() %}
+      <li>{{ line.strip() }}</li>
+      {% endfor %}
+    </div>
   </div>
   {% endif %}
   {% if q.payment_account_name or q.payment_account_no %}
   <div class="footer-col">
-    <div class="footer-heading">Payment Details:</div>
-    <div class="footer-list">{% if q.payment_account_name %}Account Name: {{ q.payment_account_name }}
-{% endif %}{% if q.payment_account_no %}Account No: {{ q.payment_account_no }}
-{% endif %}{% if q.payment_ifsc %}IFSC Code: {{ q.payment_ifsc }}
-{% endif %}{% if q.payment_bank_name %}Bank Name: {{ q.payment_bank_name }}{% endif %}</div>
+    <div class="footer-heading">Payment Details</div>
+    <div class="footer-content">
+      {% if q.payment_account_name %}<li><strong>Account Name:</strong> {{ q.payment_account_name }}</li>{% endif %}
+      {% if q.payment_account_no %}<li><strong>Account No:</strong> {{ q.payment_account_no }}</li>{% endif %}
+      {% if q.payment_ifsc %}<li><strong>IFSC Code:</strong> {{ q.payment_ifsc }}</li>{% endif %}
+      {% if q.payment_bank_name %}<li><strong>Bank Name:</strong> {{ q.payment_bank_name }}</li>{% endif %}
+    </div>
   </div>
   {% endif %}
 </div>
 {% endif %}
 
-<!-- ── Payment Terms ── -->
 {% if q.payment_terms %}
 <div class="payment-terms-section">
-  <div class="footer-heading">Payment Terms:</div>
-  <div class="footer-list">{{ q.payment_terms }}</div>
+  <div class="footer-heading">Payment Terms</div>
+  <div class="footer-content">{{ q.payment_terms }}</div>
 </div>
 {% endif %}
+
+<!-- ── Page Footer ── -->
+<div class="page-footer">
+  <span>+91-8600016978</span>
+  <span class="sep">—</span>
+  <span>www.kaayu.in</span>
+  <span class="sep">—</span>
+  <span>Kaayu Studio, Herambh Residency, Canada Corner, Nasik - 422002</span>
+</div>
 
 </body>
 </html>
