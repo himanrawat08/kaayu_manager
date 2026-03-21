@@ -103,6 +103,45 @@ def _migrate_schema():
                 conn.commit()
             except Exception:
                 pass
+    _backfill_order_numbers()
+
+
+def _backfill_order_numbers():
+    """Assign order numbers to existing projects that have a final design but no order number.
+    Projects are ordered by creation date so earlier projects get lower numbers."""
+    with engine.connect() as conn:
+        try:
+            # Find projects with a final design file but no order number, ordered by creation date
+            rows = conn.execute(text("""
+                SELECT DISTINCT p.id
+                FROM projects p
+                JOIN design_files df ON df.project_id = p.id AND df.is_final = TRUE
+                WHERE p.order_number IS NULL
+                ORDER BY p.id ASC
+            """)).fetchall()
+
+            if not rows:
+                return
+
+            # Find current max order number
+            max_row = conn.execute(text(
+                "SELECT order_number FROM projects WHERE order_number IS NOT NULL"
+            )).fetchall()
+            max_num = 0
+            for (num_str,) in max_row:
+                try:
+                    max_num = max(max_num, int(num_str.split("/")[-1]))
+                except (ValueError, AttributeError):
+                    pass
+
+            for (project_id,) in rows:
+                max_num += 1
+                conn.execute(text(
+                    "UPDATE projects SET order_number = :num WHERE id = :id"
+                ), {"num": f"KS/{max_num:04d}", "id": project_id})
+            conn.commit()
+        except Exception:
+            pass
 
 
 def init_db():

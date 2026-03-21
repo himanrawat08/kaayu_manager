@@ -250,8 +250,23 @@ def mark_design_final(project_id: int, file_id: int, db: Session = Depends(get_d
     ).first()
     if f:
         f.is_final = not f.is_final  # toggle
+        if f.is_final:
+            project = db.query(Project).filter(Project.id == project_id).first()
+            if project and not project.order_number:
+                project.order_number = _next_order_number(db)
         db.commit()
     return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
+
+
+def _next_order_number(db: Session) -> str:
+    projects = db.query(Project).filter(Project.order_number.isnot(None)).all()
+    max_num = 0
+    for p in projects:
+        try:
+            max_num = max(max_num, int(p.order_number.split("/")[-1]))
+        except (ValueError, AttributeError):
+            pass
+    return f"KS/{max_num + 1:04d}"
 
 
 @router.post("/{project_id}/design-files/{file_id}/delete")

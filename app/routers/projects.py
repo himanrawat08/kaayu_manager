@@ -25,18 +25,6 @@ templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["storage_url"] = storage.public_url
 
 
-def _next_order_number(db: Session) -> str:
-    """Generate the next sequential order number in KS/NNNN format."""
-    projects = db.query(Project).filter(Project.order_number.isnot(None)).all()
-    max_num = 0
-    for p in projects:
-        try:
-            num = int(p.order_number.split("/")[-1])
-            max_num = max(max_num, num)
-        except (ValueError, AttributeError):
-            pass
-    return f"KS/{max_num + 1:04d}"
-
 
 # ── List ──────────────────────────────────────────────────────────────────────
 
@@ -274,8 +262,6 @@ def advance_stage(request: Request, project_id: int, db: Session = Depends(get_d
 
     next_stage = STAGES[current_idx + 1]
     project.current_stage = next_stage
-    if next_stage == "production" and not project.order_number:
-        project.order_number = _next_order_number(db)
     db.add(StageLog(project_id=project_id, stage=next_stage, started_at=now_ist()))
     db.commit()
 
@@ -291,8 +277,6 @@ def set_stage(project_id: int, stage: str = Form(...), db: Session = Depends(get
         return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
 
     project.current_stage = stage
-    if stage == "production" and not project.order_number:
-        project.order_number = _next_order_number(db)
     db.add(StageLog(project_id=project_id, stage=stage, started_at=now_ist()))
     db.commit()
     return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
