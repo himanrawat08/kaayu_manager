@@ -31,7 +31,7 @@
 {% if projects %}
 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
   <div class="overflow-x-auto">
-  <table class="w-full text-sm min-w-[560px]">
+  <table class="w-full text-sm min-w-[700px]">
     <thead class="bg-gray-50 border-b border-gray-200">
       <tr class="text-left text-gray-500">
         <th class="px-4 py-3 font-medium">Project</th>
@@ -48,17 +48,17 @@
         <td class="px-4 py-3">
           <a href="/projects/{{ p.id }}" class="font-medium text-indigo-600 hover:underline">{{ p.name }}</a>
           {% if p.description %}
-          <p class="text-xs text-gray-400 mt-0.5">{{ p.description | truncate(60) }}</p>
+          <p class="text-xs text-gray-400 mt-0.5 hidden sm:block">{{ p.description | truncate(60) }}</p>
           {% endif %}
         </td>
-        <td class="px-4 py-3">
+        <td class="px-4 py-3 whitespace-nowrap">
           <a href="/contacts/{{ p.client_id }}" class="text-gray-600 hover:underline">{{ p.client.name }}</a>
         </td>
-        <td class="px-4 py-3 text-gray-700">{{ stage_labels[p.current_stage] }}</td>
-        <td class="px-4 py-3">
+        <td class="px-4 py-3 text-gray-700 whitespace-nowrap">{{ stage_labels[p.current_stage] }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">
           <span class="badge badge-{{ p.status }}">{{ p.status.replace('_', ' ').title() }}</span>
         </td>
-        <td class="px-4 py-3 text-gray-400">{{ p.updated_at.strftime('%d %b %Y') }}</td>
+        <td class="px-4 py-3 text-gray-400 whitespace-nowrap">{{ p.updated_at.strftime('%d %b %Y') }}</td>
         <td class="px-4 py-3 text-right whitespace-nowrap">
           <a href="/projects/{{ p.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs px-2 py-1 rounded hover:bg-gray-100 transition mr-1">Edit</a>
           <form method="post" action="/projects/{{ p.id }}/delete" class="inline"
