@@ -8,9 +8,9 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import RedirectResponse
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.config import settings
 from app.database import init_db
@@ -70,16 +70,33 @@ app.add_middleware(
 )
 
 # ── Auth guard ────────────────────────────────────────────────────────────────
-class RequireLoginMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        path = request.url.path
-        # Always allow: login/logout, static assets, and health check
+# Pure ASGI middleware (avoids BaseHTTPMiddleware quirks in newer Starlette).
+# Reads scope["session"] directly — guaranteed to run after SessionMiddleware
+# has already populated it.
+class RequireLoginMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path", "")
+        # Always allow: login/logout, static assets, health check
         if path in ("/login", "/logout", "/health") or path.startswith(("/static/", "/uploads/")):
-            return await call_next(request)
-        # Require a valid session
-        user_id = request.session.get("user_id")
+            await self.app(scope, receive, send)
+            return
+
+        # SessionMiddleware (outer) already ran — scope["session"] is ready
+        session = scope.get("session", {})
+        user_id = session.get("user_id")
+
         if not user_id:
-            return RedirectResponse(url="/login", status_code=303)
+            response = RedirectResponse(url="/login", status_code=303)
+            await response(scope, receive, send)
+            return
+
         # Re-validate that the user is still active in the DB
         from app.database import SessionLocal
         from app.models.user import User
@@ -87,15 +104,20 @@ class RequireLoginMiddleware(BaseHTTPMiddleware):
         try:
             user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
             if not user:
-                request.session.clear()
-                return RedirectResponse(url="/login", status_code=303)
+                scope["session"].clear()
+                response = RedirectResponse(url="/login", status_code=303)
+                await response(scope, receive, send)
+                return
+        except Exception:
+            logger.exception("RequireLoginMiddleware: DB check failed for user_id=%s", user_id)
         finally:
             db.close()
-        return await call_next(request)
+
+        await self.app(scope, receive, send)
 
 
-# Middleware order: SessionMiddleware wraps outermost (runs first),
-# then RequireLoginMiddleware can safely read request.session
+# Middleware order: SessionMiddleware added last → outermost → runs first.
+# It populates scope["session"], then RequireLoginMiddleware reads it.
 app.add_middleware(RequireLoginMiddleware)
 app.add_middleware(
     SessionMiddleware,
