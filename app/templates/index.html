@@ -45,19 +45,20 @@
     </div>
     <a href="/yarn" class="text-xs font-medium hover:underline" style="color:#B17457;">View all stock →</a>
   </div>
-  <div class="flex gap-2">
-    <input id="yarn-lookup-input" type="text" placeholder="Enter color code, e.g. 256 or 70A"
+  <div class="flex gap-2" style="max-width:420px;">
+    <input id="yarn-lookup-input" type="text" placeholder="e.g. 256, 70A, 128"
            autocomplete="off" inputmode="text"
-           class="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-base focus:outline-none focus:border-[#B17457] transition"
+           class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#B17457] transition"
            style="min-width:0;" />
     <button onclick="doYarnLookup()"
-            class="px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition"
+            class="px-4 py-2 rounded-lg text-sm font-semibold text-white transition"
             style="background:#B17457;white-space:nowrap;flex-shrink:0;"
             onmouseover="this.style.background='#9a6349';" onmouseout="this.style.background='#B17457';">
       Check
     </button>
   </div>
-  <div id="yarn-lookup-result" class="mt-3 hidden rounded-lg px-4 py-3 text-sm font-medium"></div>
+  <p class="text-xs text-gray-400 mt-1.5">Separate multiple codes with commas</p>
+  <div id="yarn-lookup-results" class="mt-3 hidden"></div>
 </div>
 
 {# ── Tab bar ── #}
@@ -400,41 +401,64 @@
 {% block scripts %}
 <script>
 // ── Yarn quick-lookup ─────────────────────────────────────────────────────────
-const yarnInput  = document.getElementById('yarn-lookup-input');
-const yarnResult = document.getElementById('yarn-lookup-result');
+const yarnInput   = document.getElementById('yarn-lookup-input');
+const yarnResults = document.getElementById('yarn-lookup-results');
+
+function yarnRowHTML(data, query) {
+  if (!data.found) {
+    return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+      <span class="font-mono text-sm font-semibold text-gray-500 w-16 shrink-0">${query}</span>
+      <span class="text-sm text-gray-400 italic">Not found in yarn master</span>
+    </div>`;
+  }
+  if (data.out) {
+    return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200">
+      <span class="font-mono text-sm font-semibold text-red-700 w-16 shrink-0">${data.color_code}</span>
+      <span class="text-sm font-semibold text-red-700">0 units</span>
+      <span class="ml-auto text-xs font-bold px-2 py-0.5 rounded" style="background:#fecdd3;color:#be123c;">OUT OF STOCK</span>
+    </div>`;
+  }
+  if (data.low) {
+    return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
+      <span class="font-mono text-sm font-semibold text-amber-800 w-16 shrink-0">${data.color_code}</span>
+      <span class="text-sm font-semibold text-amber-800">${data.balance} units</span>
+      <span class="ml-auto text-xs font-bold px-2 py-0.5 rounded" style="background:#fde68a;color:#92400e;">LOW STOCK</span>
+    </div>`;
+  }
+  return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-green-50 border border-green-200">
+    <span class="font-mono text-sm font-semibold text-green-800 w-16 shrink-0">${data.color_code}</span>
+    <span class="text-sm font-semibold text-green-800">${data.balance} units</span>
+    <span class="ml-auto text-xs font-bold px-2 py-0.5 rounded" style="background:#bbf7d0;color:#166534;">IN STOCK</span>
+  </div>`;
+}
 
 async function doYarnLookup() {
-  const code = yarnInput.value.trim();
-  if (!code) { yarnResult.classList.add('hidden'); return; }
+  const raw = yarnInput.value.trim();
+  if (!raw) { yarnResults.classList.add('hidden'); return; }
 
-  yarnResult.className = 'mt-3 rounded-lg px-4 py-3 text-sm font-medium bg-gray-50 text-gray-400';
-  yarnResult.textContent = 'Checking…';
-  yarnResult.classList.remove('hidden');
+  const codes = raw.split(',').map(s => s.trim()).filter(Boolean);
+
+  yarnResults.innerHTML = '<div class="text-sm text-gray-400 px-1">Checking…</div>';
+  yarnResults.classList.remove('hidden');
 
   try {
-    const res  = await fetch('/yarn/api/balance/' + encodeURIComponent(code));
-    const data = await res.json();
-    if (!data.found) {
-      yarnResult.className = 'mt-3 rounded-lg px-4 py-3 text-sm font-medium bg-red-50 text-red-500';
-      yarnResult.textContent = `"${code}" not found in yarn master.`;
-    } else if (data.out) {
-      yarnResult.className = 'mt-3 rounded-lg px-4 py-3 text-sm font-medium bg-red-50';
-      yarnResult.innerHTML = `<span style="color:#be123c;">Color <strong>${data.color_code}</strong> — <span style="font-size:1.1em;font-weight:700;">0 units</span> &nbsp;<span style="background:#fecdd3;color:#be123c;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">OUT OF STOCK</span></span>`;
-    } else if (data.low) {
-      yarnResult.className = 'mt-3 rounded-lg px-4 py-3 text-sm font-medium bg-amber-50';
-      yarnResult.innerHTML = `<span style="color:#92400e;">Color <strong>${data.color_code}</strong> — <span style="font-size:1.1em;font-weight:700;">${data.balance} units</span> &nbsp;<span style="background:#fde68a;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">LOW STOCK</span></span>`;
-    } else {
-      yarnResult.className = 'mt-3 rounded-lg px-4 py-3 text-sm font-medium bg-green-50';
-      yarnResult.innerHTML = `<span style="color:#166534;">Color <strong>${data.color_code}</strong> — <span style="font-size:1.1em;font-weight:700;">${data.balance} units</span> in stock</span>`;
-    }
+    const fetches = codes.map(code =>
+      fetch('/yarn/api/balance/' + encodeURIComponent(code))
+        .then(r => r.json())
+        .then(d => ({ ...d, _query: code }))
+        .catch(() => ({ found: false, _query: code, _error: true }))
+    );
+    const results = await Promise.all(fetches);
+    yarnResults.innerHTML = '<div class="space-y-1.5">' +
+      results.map(d => yarnRowHTML(d, d._query)).join('') +
+      '</div>';
   } catch(e) {
-    yarnResult.className = 'mt-3 rounded-lg px-4 py-3 text-sm font-medium bg-red-50 text-red-400';
-    yarnResult.textContent = 'Could not reach server. Try again.';
+    yarnResults.innerHTML = '<div class="text-sm text-red-400 px-1">Could not reach server. Try again.</div>';
   }
 }
 
 yarnInput.addEventListener('keydown', e => { if (e.key === 'Enter') doYarnLookup(); });
-yarnInput.addEventListener('input',   () => { if (!yarnInput.value.trim()) yarnResult.classList.add('hidden'); });
+yarnInput.addEventListener('input',   () => { if (!yarnInput.value.trim()) yarnResults.classList.add('hidden'); });
 
 // ── View / Tab switching ─────────────────────────────────────────────────────
 const VIEWS = ['overview', 'tasks', 'calendar'];
