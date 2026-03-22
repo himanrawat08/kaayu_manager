@@ -17,6 +17,8 @@ from app.models.project import Project, STAGES, STAGE_LABELS
 from app.models.project_files import DesignFile
 from app.models.social_post import SocialPost
 from app.models.task import Task, TASK_PRIORITIES, TASK_PRIORITY_LABELS
+from app.models.yarn import LOW_STOCK_THRESHOLD
+from app.routers.yarn import _color_stats
 from app.services.contact_sync import sync_contact
 from app.services.log_activity import log_activity
 from app.constants import INDIAN_CITIES
@@ -108,6 +110,16 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
             "url": "/social",
         })
 
+    # Yarn balance map — embedded in page so lookups are instant (no API calls)
+    yarn_balance_map = {}
+    for r in _color_stats(db):
+        bal = int(r.opening_stock + r.total_in - r.total_out)
+        yarn_balance_map[r.color_code] = {
+            "balance": bal,
+            "low": 0 < bal < LOW_STOCK_THRESHOLD,
+            "out": bal <= 0,
+        }
+
     return templates.TemplateResponse(
         "index.html",
         {
@@ -132,6 +144,7 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
             "task_priority_labels": TASK_PRIORITY_LABELS,
             "task_priorities": TASK_PRIORITIES,
             "calendar_events_json": json.dumps(cal_events),
+            "yarn_balance_map_json": json.dumps(yarn_balance_map),
         },
     )
 

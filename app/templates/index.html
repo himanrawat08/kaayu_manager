@@ -400,61 +400,46 @@
 
 {% block scripts %}
 <script>
-// ── Yarn quick-lookup ─────────────────────────────────────────────────────────
+// ── Yarn quick-lookup (client-side — no API calls) ────────────────────────────
+const YARN_MAP    = {{ yarn_balance_map_json | safe }};
 const yarnInput   = document.getElementById('yarn-lookup-input');
 const yarnResults = document.getElementById('yarn-lookup-results');
 
-function yarnRowHTML(data, query) {
-  if (!data.found) {
+function yarnRowHTML(code) {
+  const d = YARN_MAP[code];
+  if (!d) {
     return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
-      <span class="font-mono text-sm font-semibold text-gray-500 w-16 shrink-0">${query}</span>
+      <span class="font-mono text-sm font-semibold text-gray-500 w-16 shrink-0">${code}</span>
       <span class="text-sm text-gray-400 italic">Not found in yarn master</span>
     </div>`;
   }
-  if (data.out) {
+  if (d.out) {
     return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-red-50 border border-red-200">
-      <span class="font-mono text-sm font-semibold text-red-700 w-16 shrink-0">${data.color_code}</span>
+      <span class="font-mono text-sm font-semibold text-red-700 w-16 shrink-0">${code}</span>
       <span class="text-sm font-semibold text-red-700">0 units</span>
       <span class="ml-auto text-xs font-bold px-2 py-0.5 rounded" style="background:#fecdd3;color:#be123c;">OUT OF STOCK</span>
     </div>`;
   }
-  if (data.low) {
+  if (d.low) {
     return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
-      <span class="font-mono text-sm font-semibold text-amber-800 w-16 shrink-0">${data.color_code}</span>
-      <span class="text-sm font-semibold text-amber-800">${data.balance} units</span>
+      <span class="font-mono text-sm font-semibold text-amber-800 w-16 shrink-0">${code}</span>
+      <span class="text-sm font-semibold text-amber-800">${d.balance} units</span>
       <span class="ml-auto text-xs font-bold px-2 py-0.5 rounded" style="background:#fde68a;color:#92400e;">LOW STOCK</span>
     </div>`;
   }
   return `<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-green-50 border border-green-200">
-    <span class="font-mono text-sm font-semibold text-green-800 w-16 shrink-0">${data.color_code}</span>
-    <span class="text-sm font-semibold text-green-800">${data.balance} units</span>
+    <span class="font-mono text-sm font-semibold text-green-800 w-16 shrink-0">${code}</span>
+    <span class="text-sm font-semibold text-green-800">${d.balance} units</span>
     <span class="ml-auto text-xs font-bold px-2 py-0.5 rounded" style="background:#bbf7d0;color:#166534;">IN STOCK</span>
   </div>`;
 }
 
-async function doYarnLookup() {
+function doYarnLookup() {
   const raw = yarnInput.value.trim();
   if (!raw) { yarnResults.classList.add('hidden'); return; }
-
   const codes = raw.split(',').map(s => s.trim()).filter(Boolean);
-
-  yarnResults.innerHTML = '<div class="text-sm text-gray-400 px-1">Checking…</div>';
+  yarnResults.innerHTML = '<div class="space-y-1.5">' + codes.map(yarnRowHTML).join('') + '</div>';
   yarnResults.classList.remove('hidden');
-
-  try {
-    const fetches = codes.map(code =>
-      fetch('/yarn/api/balance/' + encodeURIComponent(code))
-        .then(r => r.json())
-        .then(d => ({ ...d, _query: code }))
-        .catch(() => ({ found: false, _query: code, _error: true }))
-    );
-    const results = await Promise.all(fetches);
-    yarnResults.innerHTML = '<div class="space-y-1.5">' +
-      results.map(d => yarnRowHTML(d, d._query)).join('') +
-      '</div>';
-  } catch(e) {
-    yarnResults.innerHTML = '<div class="text-sm text-red-400 px-1">Could not reach server. Try again.</div>';
-  }
 }
 
 yarnInput.addEventListener('keydown', e => { if (e.key === 'Enter') doYarnLookup(); });
