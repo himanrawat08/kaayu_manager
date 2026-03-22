@@ -42,3 +42,8 @@ reset_password.py
 *.xlsx
 *.docx
 *.xls
+
+# But keep static assets
+!static/img/*.png
+!static/img/*.jpg
+!static/img/*.svg
