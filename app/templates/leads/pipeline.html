@@ -11,13 +11,13 @@
 </div>
 
 <!-- Kanban board -->
-<div class="flex gap-4 overflow-x-auto pb-4">
+<div class="flex flex-col sm:flex-row gap-4 overflow-x-auto pb-4">
   {% for stage in stages %}
   {% set leads_in_stage = by_stage[stage] %}
   {% set is_won = stage == 'won' %}
   {% set is_lost = stage == 'lost' %}
 
-  <div class="flex-shrink-0 w-64 bg-gray-100 rounded-lg p-3">
+  <div class="w-full sm:flex-shrink-0 sm:w-64 bg-gray-100 rounded-lg p-3">
     <!-- Column header -->
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">

@@ -61,11 +61,11 @@
         </td>
         <td class="px-4 py-3 text-gray-600">{{ client.city or '—' }}</td>
         <td class="px-4 py-3 text-center text-gray-600">{{ client.projects | length }}</td>
-        <td class="px-4 py-3 text-right">
-          <a href="/contacts/{{ client.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs mr-3">Edit</a>
+        <td class="px-4 py-3 text-right whitespace-nowrap">
+          <a href="/contacts/{{ client.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs px-2 py-1 rounded hover:bg-gray-100 transition mr-1">Edit</a>
           <form method="post" action="/contacts/{{ client.id }}/delete" class="inline"
                 onsubmit="return confirm('Delete {{ client.name }}? All related data will be removed.')">
-            <button type="submit" class="text-gray-400 hover:text-red-600 text-xs">Delete</button>
+            <button type="submit" class="text-gray-400 hover:text-red-600 text-xs px-2 py-1 rounded hover:bg-red-50 transition">Delete</button>
           </form>
         </td>
       </tr>

@@ -61,10 +61,10 @@
         </td>
         <td class="px-4 py-3 text-gray-400">{{ q.created_at.strftime('%d %b %Y') }}</td>
         <td class="px-4 py-3 text-right whitespace-nowrap">
-          <a href="/quotes/{{ q.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs mr-3">Edit</a>
+          <a href="/quotes/{{ q.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs px-2 py-1 rounded hover:bg-gray-100 transition mr-1">Edit</a>
           <form method="post" action="/quotes/{{ q.id }}/delete" class="inline"
                 onsubmit="return confirm('Delete quote {{ q.quote_number }}?')">
-            <button type="submit" class="text-gray-400 hover:text-red-600 text-xs">Delete</button>
+            <button type="submit" class="text-gray-400 hover:text-red-600 text-xs px-2 py-1 rounded hover:bg-red-50 transition">Delete</button>
           </form>
         </td>
       </tr>

@@ -89,10 +89,10 @@
         {# Actions #}
         <td class="px-5 py-4 text-right whitespace-nowrap">
           <a href="/users/{{ u.id }}/edit"
-             class="text-xs text-gray-400 hover:text-indigo-600 transition mr-3">Edit</a>
+             class="text-xs text-gray-400 hover:text-indigo-600 px-2 py-1 rounded hover:bg-gray-100 transition mr-1">Edit</a>
           <form method="post" action="/users/{{ u.id }}/delete" class="inline"
                 onsubmit="return confirm('Delete user {{ u.username }}?')">
-            <button type="submit" class="text-xs text-gray-300 hover:text-red-500 transition">Delete</button>
+            <button type="submit" class="text-xs text-gray-300 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50 transition">Delete</button>
           </form>
         </td>
       </tr>
