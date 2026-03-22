@@ -415,7 +415,7 @@
       {% if project.design_files %}
       <div class="grid gap-4 mb-6">
         {% for f in project.design_files %}
-        <div class="border rounded-xl p-4 shadow-sm {% if f.is_final %}border-green-300 bg-green-50{% else %}border-gray-200 bg-white{% endif %}">
+        <div class="border rounded-xl p-4 shadow-sm min-w-0 overflow-hidden {% if f.is_final %}border-green-300 bg-green-50{% else %}border-gray-200 bg-white{% endif %}">
 
           {# — File header — #}
           <div class="flex items-start justify-between gap-3 mb-2">
