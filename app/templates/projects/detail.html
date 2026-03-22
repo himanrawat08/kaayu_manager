@@ -421,7 +421,7 @@
           <div class="flex items-start justify-between gap-3 mb-2">
             <div class="flex items-center gap-2 flex-1 min-w-0">
               <span class="text-gray-400">&#128196;</span>
-              <span class="font-medium text-sm text-gray-800 truncate">{{ f.original_filename }}</span>
+              <span class="font-medium text-sm text-gray-800 truncate flex-1 min-w-0">{{ f.original_filename }}</span>
               {% set _ext = f.original_filename.rsplit('.',1)[-1].lower() %}
               {% if _ext in ['jpg','jpeg','png','gif','webp','svg','pdf','mp4','webm','mov'] %}
               <button type="button" onclick="previewFile('{{ storage_url(f.stored_filename) }}', '{{ f.original_filename }}')"
