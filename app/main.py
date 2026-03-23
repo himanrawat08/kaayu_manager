@@ -124,7 +124,7 @@ app.add_middleware(
     secret_key=settings.SECRET_KEY,
     same_site="lax",
     https_only=settings.is_production,   # enforce Secure cookie flag in production
-    max_age=7 * 24 * 60 * 60,           # 7 days
+    max_age=None,                        # session cookie — expires when browser closes
 )
 
 # ── Static files ──────────────────────────────────────────────────────────────
