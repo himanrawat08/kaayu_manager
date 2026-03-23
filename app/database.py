@@ -89,6 +89,8 @@ def _migrate_schema():
         "ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS material TEXT",
         "ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS gst_percent FLOAT NOT NULL DEFAULT 0.0",
         "ALTER TABLE design_files ADD COLUMN IF NOT EXISTS finalized_at TIMESTAMP",
+        "ALTER TABLE design_files ADD COLUMN IF NOT EXISTS next_revision_date DATE",
+        "ALTER TABLE design_files ADD COLUMN IF NOT EXISTS sent_at TIMESTAMP",
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS order_number VARCHAR(20)",
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prod_design_name TEXT",
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prod_size VARCHAR(100)",
