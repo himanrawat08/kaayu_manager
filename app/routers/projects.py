@@ -42,6 +42,7 @@ def projects_list(
         query = query.filter(Project.status == status)
     projects = query.order_by(Project.updated_at.desc()).all()
     return templates.TemplateResponse(
+        request,
         "projects/list.html",
         {
             "request": request,
@@ -60,6 +61,7 @@ def projects_new_form(request: Request, client_id: int = None, db: Session = Dep
     clients = db.query(Client).order_by(Client.name).all()
     prefill_client = db.query(Client).filter(Client.id == client_id).first() if client_id else None
     return templates.TemplateResponse(
+        request,
         "projects/form.html",
         {"request": request, "project": None, "clients": clients, "prefill_client": prefill_client},
     )
@@ -146,6 +148,7 @@ def projects_detail(
     )
 
     return templates.TemplateResponse(
+        request,
         "projects/detail.html",
         {
             "request": request,
@@ -175,6 +178,7 @@ def projects_edit_form(request: Request, project_id: int, db: Session = Depends(
         return RedirectResponse(url="/projects", status_code=303)
     clients = db.query(Client).order_by(Client.name).all()
     return templates.TemplateResponse(
+        request,
         "projects/form.html",
         {"request": request, "project": project, "clients": clients, "prefill_client": None},
     )
@@ -378,6 +382,7 @@ def production_sheet(request: Request, project_id: int, db: Session = Depends(ge
     )
 
     return templates.TemplateResponse(
+        request,
         "projects/production_sheet.html",
         {
             "request": request,

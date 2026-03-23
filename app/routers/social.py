@@ -70,6 +70,7 @@ def social_index(
 
     today = date_type.today()
     return templates.TemplateResponse(
+        request,
         "social/index.html",
         {
             "request": request,

@@ -122,7 +122,7 @@ def quotes_list(
         query = query.filter(Quotation.project_id == int(project_id))
     quotes = query.order_by(Quotation.created_at.desc()).all()
     projects = db.query(Project).order_by(Project.name).all()
-    return templates.TemplateResponse("quotes/list.html", {
+    return templates.TemplateResponse(request, "quotes/list.html", {
         "request": request,
         "quotes": quotes,
         "projects": projects,
@@ -167,7 +167,7 @@ def api_project_client(project_id: int, db: Session = Depends(get_db)):
 @router.get("/new", response_class=HTMLResponse)
 def quotes_new_form(request: Request, project_id: str = "", db: Session = Depends(get_db)):
     projects = db.query(Project).order_by(Project.name).all()
-    return templates.TemplateResponse("quotes/form.html", {
+    return templates.TemplateResponse(request, "quotes/form.html", {
         "request": request,
         "quote": None,
         "projects": projects,
@@ -293,7 +293,7 @@ def quotes_detail(
     if not q:
         return RedirectResponse(url="/quotes", status_code=303)
 
-    return templates.TemplateResponse("quotes/detail.html", {
+    return templates.TemplateResponse(request, "quotes/detail.html", {
         "request": request,
         "q": q,
         "status_labels": QUOTE_STATUS_LABELS,
@@ -310,7 +310,7 @@ def quotes_print(request: Request, quote_id: int, db: Session = Depends(get_db))
     q = db.query(Quotation).filter(Quotation.id == quote_id).first()
     if not q:
         return RedirectResponse(url="/quotes", status_code=303)
-    return templates.TemplateResponse("quotes/print.html", {
+    return templates.TemplateResponse(request, "quotes/print.html", {
         "request": request,
         "q": q,
         "status_labels": QUOTE_STATUS_LABELS,
@@ -325,7 +325,7 @@ def quotes_edit_form(request: Request, quote_id: int, db: Session = Depends(get_
     if not q:
         return RedirectResponse(url="/quotes", status_code=303)
     projects = db.query(Project).order_by(Project.name).all()
-    return templates.TemplateResponse("quotes/form.html", {
+    return templates.TemplateResponse(request, "quotes/form.html", {
         "request": request,
         "quote": q,
         "projects": projects,

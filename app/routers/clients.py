@@ -121,6 +121,7 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
         }
 
     return templates.TemplateResponse(
+        request,
         "index.html",
         {
             "request": request,
@@ -164,6 +165,7 @@ def clients_list(request: Request, q: str = "", db: Session = Depends(get_db)):
         )
     clients = query.order_by(Client.name).all()
     return templates.TemplateResponse(
+        request,
         "clients/list.html",
         {"request": request, "clients": clients, "q": q},
     )
@@ -174,6 +176,7 @@ def clients_list(request: Request, q: str = "", db: Session = Depends(get_db)):
 @router.get("/contacts/new", response_class=HTMLResponse)
 def clients_new_form(request: Request):
     return templates.TemplateResponse(
+        request,
         "clients/form.html",
         {"request": request, "client": None, "indian_cities": INDIAN_CITIES},
     )
@@ -271,6 +274,7 @@ def phonebook(request: Request, q: str = "", db: Session = Depends(get_db)):
 
     entries.sort(key=lambda e: e["name"].lower())
     return templates.TemplateResponse(
+        request,
         "phonebook.html",
         {"request": request, "entries": entries, "q": q, "total": len(entries)},
     )
@@ -297,6 +301,7 @@ _SAMPLE_ROWS = [
 @router.get("/contacts/import", response_class=HTMLResponse)
 def clients_import_form(request: Request):
     return templates.TemplateResponse(
+        request,
         "clients/import.html", {"request": request, "results": None}
     )
 
@@ -365,6 +370,7 @@ async def clients_import(
         imported.append({"name": studio_name, "id": client.id})
 
     return templates.TemplateResponse(
+        request,
         "clients/import.html",
         {"request": request, "results": {"imported": imported, "skipped": skipped}},
     )
@@ -394,6 +400,7 @@ def clients_detail(
     )
 
     return templates.TemplateResponse(
+        request,
         "clients/detail.html",
         {
             "request": request,
@@ -416,6 +423,7 @@ def clients_edit_form(request: Request, client_id: int, db: Session = Depends(ge
     if not client:
         return RedirectResponse(url="/contacts", status_code=303)
     return templates.TemplateResponse(
+        request,
         "clients/form.html",
         {"request": request, "client": client, "indian_cities": INDIAN_CITIES},
     )

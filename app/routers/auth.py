@@ -64,7 +64,7 @@ def _is_rate_limited(ip: str) -> bool:
 
 @router.get("/login", response_class=HTMLResponse)
 def login_page(request: Request, error: str = ""):
-    return templates.TemplateResponse("login.html", {
+    return templates.TemplateResponse(request, "login.html", {
         "request": request,
         "image": _next_image(),
         "error": error,
@@ -118,7 +118,7 @@ def logout(request: Request):
 
 @router.get("/change-password", response_class=HTMLResponse)
 def change_password_page(request: Request, error: str = "", success: str = ""):
-    return templates.TemplateResponse("change_password.html", {
+    return templates.TemplateResponse(request, "change_password.html", {
         "request": request,
         "error": error or None,
         "success": success or None,

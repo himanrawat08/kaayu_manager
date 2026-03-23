@@ -45,6 +45,7 @@ def activity_log(
     ]
 
     return templates.TemplateResponse(
+        request,
         "activity_log.html",
         {
             "request": request,

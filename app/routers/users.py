@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("", response_class=HTMLResponse)
 def users_list(request: Request, db: Session = Depends(get_db)):
     users = db.query(User).order_by(User.created_at.desc()).all()
-    return templates.TemplateResponse("users/list.html", {
+    return templates.TemplateResponse(request, "users/list.html", {
         "request": request,
         "users": users,
         "role_labels": USER_ROLE_LABELS,
@@ -28,7 +28,7 @@ def users_list(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/new", response_class=HTMLResponse)
 def users_new_form(request: Request):
-    return templates.TemplateResponse("users/form.html", {
+    return templates.TemplateResponse(request, "users/form.html", {
         "request": request,
         "user": None,
         "roles": USER_ROLES,
@@ -90,7 +90,7 @@ def users_edit_form(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return RedirectResponse(url="/users", status_code=303)
-    return templates.TemplateResponse("users/form.html", {
+    return templates.TemplateResponse(request, "users/form.html", {
         "request": request,
         "user": user,
         "roles": USER_ROLES,

@@ -26,6 +26,7 @@ def leads_pipeline(request: Request, db: Session = Depends(get_db)):
             by_stage[lead.stage].append(lead)
 
     return templates.TemplateResponse(
+        request,
         "leads/pipeline.html",
         {
             "request": request,
@@ -66,6 +67,7 @@ def lead_detail(
     )
 
     return templates.TemplateResponse(
+        request,
         "leads/detail.html",
         {
             "request": request,

@@ -79,7 +79,7 @@ def yarn_inventory(request: Request, db: Session = Depends(get_db)):
     # colors list is only needed for the datalist (id + code, no transactions)
     colors = db.query(YarnColor.id, YarnColor.color_code).order_by(YarnColor.color_code).all()
 
-    return templates.TemplateResponse("yarn/inventory.html", {
+    return templates.TemplateResponse(request, "yarn/inventory.html", {
         "request": request,
         "colors": colors,
         "projects": projects,
@@ -121,7 +121,7 @@ def yarn_master(
         elif bal < LOW_STOCK_THRESHOLD:
             low += 1
 
-    return templates.TemplateResponse("yarn/master.html", {
+    return templates.TemplateResponse(request, "yarn/master.html", {
         "request": request,
         "rows": rows,
         "search": search,
@@ -168,7 +168,7 @@ def yarn_history(
 
     transactions = query.all()
     projects = db.query(Project).order_by(Project.name).all()
-    return templates.TemplateResponse("yarn/history.html", {
+    return templates.TemplateResponse(request, "yarn/history.html", {
         "request": request,
         "transactions": transactions,
         "projects": projects,
