@@ -6,7 +6,6 @@ from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -22,9 +21,9 @@ from app.routers.yarn import _color_stats
 from app.services.contact_sync import sync_contact
 from app.services.log_activity import log_activity
 from app.constants import INDIAN_CITIES
+from app.templates_config import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────

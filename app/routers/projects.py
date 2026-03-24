@@ -9,7 +9,6 @@ import fitz  # PyMuPDF
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -19,10 +18,9 @@ from app.models.activity import ProjectActivity, ACTIVITY_TYPES
 from app.models.project_files import DesignFile, PRODUCTION_FILE_CATEGORIES
 from app.services.log_activity import log_activity
 from app.services import storage
+from app.templates_config import templates
 
 router = APIRouter(prefix="/projects")
-templates = Jinja2Templates(directory="app/templates")
-templates.env.globals["storage_url"] = storage.public_url
 
 
 

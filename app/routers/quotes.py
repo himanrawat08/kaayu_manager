@@ -5,7 +5,6 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -16,10 +15,10 @@ from app.models.quotation import (
     QUOTE_STATUSES, QUOTE_STATUS_LABELS, QUOTE_STATUS_CLS,
 )
 from app.services.log_activity import log_activity
+from app.templates_config import templates
 from app.utils.time import now_ist
 
 router = APIRouter(prefix="/quotes")
-templates = Jinja2Templates(directory="app/templates")
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

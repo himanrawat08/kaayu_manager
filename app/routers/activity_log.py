@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.system_log import SystemLog, SYSTEM_LOG_CAP
+from app.templates_config import templates
 
 router = APIRouter(prefix="/activity-log")
-templates = Jinja2Templates(directory="app/templates")
 
 PAGE_SIZE = 50
 

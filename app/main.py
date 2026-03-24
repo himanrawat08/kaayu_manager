@@ -6,7 +6,6 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import RedirectResponse
@@ -14,6 +13,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.config import settings
 from app.database import init_db
+from app.templates_config import templates
 from app.routers import auth, clients, projects, design, email_quick, tasks, social, users, activity_log, quotes, yarn
 from app.routers import files as files_router
 
@@ -133,11 +133,6 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # ── Templates ─────────────────────────────────────────────────────────────────
-templates = Jinja2Templates(directory=str(BASE_DIR / "app" / "templates"))
-templates.env.globals["email_tool_url"] = settings.EMAIL_TOOL_URL
-templates.env.globals["root_path"] = settings.ROOT_PATH
-
-
 
 def _filesizeformat(value):
     if not value:

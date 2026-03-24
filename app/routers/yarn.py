@@ -4,7 +4,6 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
@@ -12,10 +11,10 @@ from app.database import get_db
 from app.models.project import Project
 from app.models.yarn import LOW_STOCK_THRESHOLD, YarnColor, YarnTransaction
 from app.services.log_activity import log_activity
+from app.templates_config import templates
 from app.utils.time import now_ist
 
 router = APIRouter(prefix="/yarn")
-templates = Jinja2Templates(directory="app/templates")
 
 
 # ── Single aggregated query — replaces N+1 lazy loads ────────────────────────

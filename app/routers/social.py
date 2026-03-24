@@ -3,7 +3,6 @@ from datetime import date as date_type
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -14,9 +13,9 @@ from app.models.social_post import (
     POST_STATUSES, POST_STATUS_LABELS, POST_STATUS_CLS,
 )
 from app.models.task import Task
+from app.templates_config import templates
 
 router = APIRouter(prefix="/social")
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("", response_class=HTMLResponse)

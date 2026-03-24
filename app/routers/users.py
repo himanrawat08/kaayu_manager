@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User, USER_ROLES, USER_ROLE_LABELS, USER_ROLE_CLS, hash_password
 from app.services.log_activity import log_activity
+from app.templates_config import templates
 
 router = APIRouter(prefix="/users")
-templates = Jinja2Templates(directory="app/templates")
 
 
 # ── List ──────────────────────────────────────────────────────────────────────
