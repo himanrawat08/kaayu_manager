@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-me-to-a-long-random-string-in-production"
     BASE_URL: str = "http://localhost:8001"
     DATABASE_URL: str = "sqlite:///./studio_manager.db"
+    ROOT_PATH: str = ""   # e.g. "/pms" when served under a subpath
 
     # Supabase Storage
     SUPABASE_URL: str = ""

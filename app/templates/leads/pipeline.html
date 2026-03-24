@@ -7,7 +7,7 @@
     <h1 class="text-2xl font-bold text-gray-900">Lead Pipeline</h1>
     <p class="text-sm text-gray-500 mt-1">{{ total }} total leads</p>
   </div>
-  <a href="/contacts/new" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">+ New Contact / Lead</a>
+  <a href="{{ root_path }}/contacts/new" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">+ New Contact / Lead</a>
 </div>
 
 <!-- Kanban board -->
@@ -36,7 +36,7 @@
     <!-- Cards -->
     <div class="space-y-2 min-h-16">
       {% for lead in leads_in_stage %}
-      <a href="/leads/{{ lead.id }}"
+      <a href="{{ root_path }}/leads/{{ lead.id }}"
          class="block bg-white rounded-lg p-3 shadow-sm border border-gray-200 hover:border-indigo-300 hover:shadow transition">
         <div class="text-sm font-medium text-gray-900 truncate">{{ lead.client.name }}</div>
         {% if lead.client.principal_architect_name %}

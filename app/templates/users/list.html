@@ -8,7 +8,7 @@
     <h1 class="text-2xl font-bold text-gray-900">Users</h1>
     <p class="text-sm text-gray-400 mt-0.5">Manage team members and their roles</p>
   </div>
-  <a href="/users/new"
+  <a href="{{ root_path }}/users/new"
      class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">
     + Add User
   </a>
@@ -88,9 +88,9 @@
 
         {# Actions #}
         <td class="px-5 py-4 text-right whitespace-nowrap">
-          <a href="/users/{{ u.id }}/edit"
+          <a href="{{ root_path }}/users/{{ u.id }}/edit"
              class="text-xs text-gray-400 hover:text-indigo-600 px-2 py-1 rounded hover:bg-gray-100 transition mr-1">Edit</a>
-          <form method="post" action="/users/{{ u.id }}/delete" class="inline"
+          <form method="post" action="{{ root_path }}/users/{{ u.id }}/delete" class="inline"
                 onsubmit="return confirm('Delete user {{ u.username }}?')">
             <button type="submit" class="text-xs text-gray-300 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50 transition">Delete</button>
           </form>
@@ -116,7 +116,7 @@
   <div class="text-4xl mb-3">&#128101;</div>
   <p class="text-gray-500 font-medium mb-1">No users yet</p>
   <p class="text-gray-400 text-sm mb-5">Add your first team member to get started.</p>
-  <a href="/users/new"
+  <a href="{{ root_path }}/users/new"
      class="inline-block bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">
     + Add User
   </a>

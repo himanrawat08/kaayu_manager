@@ -15,7 +15,7 @@
 </div>
 
 <!-- Filters -->
-<form method="get" action="/activity-log" class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-5 flex flex-wrap gap-3 items-end">
+<form method="get" action="{{ root_path }}/activity-log" class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-5 flex flex-wrap gap-3 items-end">
   <div class="w-48">
     <label class="block text-xs text-gray-500 mb-1">User</label>
     <input type="text" name="user" value="{{ filter_user }}" placeholder="Filter by user…"
@@ -34,7 +34,7 @@
   <button type="submit"
     class="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm hover:bg-indigo-700 transition">Filter</button>
   {% if filter_user or filter_entity %}
-  <a href="/activity-log" class="text-sm text-gray-400 hover:text-gray-600 px-2 py-1.5">Clear</a>
+  <a href="{{ root_path }}/activity-log" class="text-sm text-gray-400 hover:text-gray-600 px-2 py-1.5">Clear</a>
   {% endif %}
 </form>
 

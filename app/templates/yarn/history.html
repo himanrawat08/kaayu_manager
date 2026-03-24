@@ -11,17 +11,17 @@
       <p class="text-sm text-gray-500 mt-0.5">All stock-in and stock-out transactions</p>
     </div>
     <div style="display:flex;gap:8px;">
-      <a href="/yarn"
+      <a href="{{ root_path }}/yarn"
          style="padding:8px 14px;border-radius:8px;border:1px solid #D8D2D2;font-size:13px;color:#2E2E2E;text-decoration:none;font-family:'Roboto',sans-serif;background:#fff;"
          onmouseover="this.style.background='#f7f5f2';" onmouseout="this.style.background='#fff';">← Back</a>
-      <a href="/yarn/master"
+      <a href="{{ root_path }}/yarn/master"
          style="padding:8px 14px;border-radius:8px;border:1px solid #D8D2D2;font-size:13px;color:#2E2E2E;text-decoration:none;font-family:'Roboto',sans-serif;background:#fff;"
          onmouseover="this.style.background='#f7f5f2';" onmouseout="this.style.background='#fff';">Master Table</a>
     </div>
   </div>
 
   <!-- Filters -->
-  <form method="get" action="/yarn/history">
+  <form method="get" action="{{ root_path }}/yarn/history">
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;">
       <div>
         <label style="display:block;font-size:11px;font-weight:500;color:rgba(46,46,46,0.5);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:'Roboto',sans-serif;">Color Code</label>
@@ -60,7 +60,7 @@
       <button type="submit"
               style="padding:8px 16px;border-radius:7px;border:none;background:#B17457;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'Roboto',sans-serif;">Filter</button>
       {% if filter_color or filter_type or filter_project_id or filter_date_from or filter_date_to %}
-      <a href="/yarn/history"
+      <a href="{{ root_path }}/yarn/history"
          style="padding:8px 12px;border-radius:7px;border:1px solid #D8D2D2;font-size:13px;color:#666;text-decoration:none;font-family:'Roboto',sans-serif;">Clear</a>
       {% endif %}
     </div>
@@ -103,7 +103,7 @@
           </td>
           <td style="padding:10px 16px;color:rgba(46,46,46,0.7);">
             {% if tx.project %}
-            <a href="/projects/{{ tx.project.id }}" style="color:#B17457;text-decoration:none;"
+            <a href="{{ root_path }}/projects/{{ tx.project.id }}" style="color:#B17457;text-decoration:none;"
                onmouseover="this.style.textDecoration='underline';"
                onmouseout="this.style.textDecoration='none';">{{ tx.project.name }}</a>
             {% else %}
@@ -112,7 +112,7 @@
           </td>
           <td style="padding:10px 16px;color:rgba(46,46,46,0.5);">{{ tx.notes or '—' }}</td>
           <td style="padding:10px 16px;text-align:center;">
-            <form method="post" action="/yarn/transactions/{{ tx.id }}/delete"
+            <form method="post" action="{{ root_path }}/yarn/transactions/{{ tx.id }}/delete"
                   onsubmit="return confirm('Delete this transaction?');" style="display:inline;">
               <button type="submit"
                       style="font-size:12px;padding:3px 8px;border-radius:5px;border:1px solid #fca5a5;color:#be123c;background:transparent;cursor:pointer;font-family:'Roboto',sans-serif;"

@@ -5,11 +5,11 @@
 <!-- Header -->
 <div class="mb-6 flex items-start justify-between">
   <div>
-    <a href="/leads" class="text-sm text-indigo-600 hover:underline">&larr; Pipeline</a>
+    <a href="{{ root_path }}/leads" class="text-sm text-indigo-600 hover:underline">&larr; Pipeline</a>
     <h1 class="text-2xl font-bold text-gray-900 mt-1">{{ lead.client.name }}</h1>
     <div class="flex items-center gap-3 mt-1">
       <span class="font-mono text-sm text-gray-400">{{ lead.lead_code }}</span>
-      <a href="/contacts/{{ lead.client.id }}" class="text-sm text-indigo-600 hover:underline">View Contact &rarr;</a>
+      <a href="{{ root_path }}/contacts/{{ lead.client.id }}" class="text-sm text-indigo-600 hover:underline">View Contact &rarr;</a>
     </div>
   </div>
 </div>
@@ -54,7 +54,7 @@
     <!-- Lead details form -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Lead Details</h2>
-      <form method="post" action="/leads/{{ lead.id }}/update" class="space-y-3">
+      <form method="post" action="{{ root_path }}/leads/{{ lead.id }}/update" class="space-y-3">
         <div>
           <label class="block text-xs text-gray-500 mb-1">Source</label>
           <select name="source" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
@@ -85,7 +85,7 @@
     <!-- Change stage -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
       <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Move Stage</h2>
-      <form method="post" action="/leads/{{ lead.id }}/stage" class="space-y-3">
+      <form method="post" action="{{ root_path }}/leads/{{ lead.id }}/stage" class="space-y-3">
         <div>
           <label class="block text-xs text-gray-500 mb-1">New Stage</label>
           <select name="stage" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
@@ -115,7 +115,7 @@
     <!-- Add Activity -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
       <h2 class="text-lg font-semibold mb-4">Log Activity</h2>
-      <form method="post" action="/leads/{{ lead.id }}/activities" class="flex flex-wrap gap-3 items-end">
+      <form method="post" action="{{ root_path }}/leads/{{ lead.id }}/activities" class="flex flex-wrap gap-3 items-end">
         <div class="w-40">
           <label class="block text-xs text-gray-500 mb-1">Type</label>
           <select name="activity_type" class="w-full border border-gray-300 rounded px-2 py-2 text-sm">
@@ -175,11 +175,11 @@
           </div>
           <div class="flex gap-1 shrink-0">
             {% if not act.is_completed %}
-            <form method="post" action="/leads/{{ lead.id }}/activities/{{ act.id }}/complete">
+            <form method="post" action="{{ root_path }}/leads/{{ lead.id }}/activities/{{ act.id }}/complete">
               <button type="submit" class="text-xs text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 px-2 py-1 rounded transition">Done</button>
             </form>
             {% endif %}
-            <form method="post" action="/leads/{{ lead.id }}/activities/{{ act.id }}/delete"
+            <form method="post" action="{{ root_path }}/leads/{{ lead.id }}/activities/{{ act.id }}/delete"
                   onsubmit="return confirm('Delete this activity?')">
               <button type="submit" class="text-xs text-gray-400 hover:text-red-600 px-2 py-1 transition">&times;</button>
             </form>

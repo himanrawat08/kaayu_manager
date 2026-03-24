@@ -5,11 +5,11 @@
 <div class="max-w-2xl">
   <div class="mb-6">
     {% if project %}
-    <a href="/projects/{{ project.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Project</a>
+    <a href="{{ root_path }}/projects/{{ project.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Project</a>
     {% elif prefill_client %}
-    <a href="/contacts/{{ prefill_client.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Contact</a>
+    <a href="{{ root_path }}/contacts/{{ prefill_client.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Contact</a>
     {% else %}
-    <a href="/projects" class="text-sm text-indigo-600 hover:underline">&larr; All Projects</a>
+    <a href="{{ root_path }}/projects" class="text-sm text-indigo-600 hover:underline">&larr; All Projects</a>
     {% endif %}
     <h1 class="text-2xl font-bold text-gray-900 mt-2">{{ 'Edit Project' if project else 'New Project' }}</h1>
   </div>

@@ -135,6 +135,7 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 # ── Templates ─────────────────────────────────────────────────────────────────
 templates = Jinja2Templates(directory=str(BASE_DIR / "app" / "templates"))
 templates.env.globals["email_tool_url"] = settings.EMAIL_TOOL_URL
+templates.env.globals["root_path"] = settings.ROOT_PATH
 
 
 

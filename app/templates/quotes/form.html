@@ -4,9 +4,9 @@
 {% block content %}
 <div class="mb-6">
   {% if quote %}
-  <a href="/quotes/{{ quote.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Quote</a>
+  <a href="{{ root_path }}/quotes/{{ quote.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Quote</a>
   {% else %}
-  <a href="/quotes" class="text-sm text-indigo-600 hover:underline">&larr; All Quotes</a>
+  <a href="{{ root_path }}/quotes" class="text-sm text-indigo-600 hover:underline">&larr; All Quotes</a>
   {% endif %}
   <h1 class="text-2xl font-bold text-gray-900 mt-2">{{ 'Edit Quote' if quote else 'New Quote' }}</h1>
 </div>

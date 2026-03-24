@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login — Kaayu Studio Manager</title>
-  <link rel="icon" type="image/png" href="/static/img/icon.png" />
+  <link rel="icon" type="image/png" href="{{ root_path }}/static/img/icon.png" />
 
-  <script src="/static/js/tailwind.min.js"></script>
+  <script src="{{ root_path }}/static/js/tailwind.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -166,7 +166,7 @@
 
   <!-- ── Left: cycling image ── -->
   <div class="login-image-panel">
-    <img src="/static/img/login_web/{{ image }}" alt="Kaayu Studio" />
+    <img src="{{ root_path }}/static/img/login_web/{{ image }}" alt="Kaayu Studio" />
     <div class="image-tagline">
       <div class="tag-main">Form meets flow.<br>Craft meets intention.</div>
       <div class="tag-sub">Kaayu Studio LLP</div>
@@ -174,13 +174,13 @@
   </div>
 
   <!-- ── Right: login form ── -->
-  <div class="login-form-panel" style="--bg-image: url('/static/img/login_web/{{ image }}')">
+  <div class="login-form-panel" style="--bg-image: url('{{ root_path }}/static/img/login_web/{{ image }}')">
 
     <div class="login-form-box">
 
       <!-- Logo -->
       <div style="text-align:center;margin-bottom:40px;">
-        <img src="/static/img/logo.png" alt="Kaayu"
+        <img src="{{ root_path }}/static/img/logo.png" alt="Kaayu"
              style="width:180px;height:auto;display:inline-block;" />
         <div style="color:#b0a9a9;font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;margin-top:10px;font-weight:300;">
           Studio Manager
@@ -204,7 +204,7 @@
       {% endif %}
 
       <!-- Form -->
-      <form method="post" action="/login">
+      <form method="post" action="{{ root_path }}/login">
         <div style="margin-bottom:16px;">
           <label style="display:block;font-size:12px;font-weight:500;color:#2E2E2E;margin-bottom:6px;letter-spacing:0.04em;">USERNAME</label>
           <input type="text" name="username" required autofocus
