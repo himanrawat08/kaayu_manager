@@ -101,7 +101,7 @@ class RequireLoginMiddleware:
         # Idle timeout — log out after 8 hours of inactivity
         IDLE_TIMEOUT = 8 * 3600
         last_active = session.get("last_active", 0)
-        if time.time() - last_active > IDLE_TIMEOUT:
+        if last_active and time.time() - last_active > IDLE_TIMEOUT:
             session.clear()
             response = RedirectResponse(url="/login", status_code=303)
             await response(scope, receive, send)
