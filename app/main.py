@@ -83,6 +83,8 @@ class RequireLoginMiddleware:
             return
 
         path = scope.get("path", "")
+        root_path = scope.get("root_path", "")
+        login_url = root_path + "/login"
         # Always allow: login/logout, static assets, health check
         if path in ("/login", "/logout", "/health") or path.startswith(("/static/", "/uploads/")):
             await self.app(scope, receive, send)
@@ -93,7 +95,7 @@ class RequireLoginMiddleware:
         user_id = session.get("user_id")
 
         if not user_id:
-            response = RedirectResponse(url="/login", status_code=303)
+            response = RedirectResponse(url=login_url, status_code=303)
             await response(scope, receive, send)
             return
 
@@ -105,7 +107,7 @@ class RequireLoginMiddleware:
             user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
             if not user:
                 scope["session"].clear()
-                response = RedirectResponse(url="/login", status_code=303)
+                response = RedirectResponse(url=login_url, status_code=303)
                 await response(scope, receive, send)
                 return
         except Exception:
