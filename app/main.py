@@ -1,6 +1,7 @@
 import logging
 import logging.config
 import os
+import time
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -96,6 +97,16 @@ class RequireLoginMiddleware:
             response = RedirectResponse(url="/login", status_code=303)
             await response(scope, receive, send)
             return
+
+        # Idle timeout — log out after 8 hours of inactivity
+        IDLE_TIMEOUT = 8 * 3600
+        last_active = session.get("last_active", 0)
+        if time.time() - last_active > IDLE_TIMEOUT:
+            session.clear()
+            response = RedirectResponse(url="/login", status_code=303)
+            await response(scope, receive, send)
+            return
+        session["last_active"] = time.time()
 
         # Re-validate that the user is still active in the DB
         from app.database import SessionLocal
