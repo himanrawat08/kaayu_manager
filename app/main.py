@@ -15,8 +15,9 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from app.config import settings
 from app.database import init_db
 from app.templates_config import templates
-from app.routers import auth, clients, projects, design, email_quick, tasks, social, users, activity_log, quotes, yarn
+from app.routers import auth, clients, projects, design, email_quick, tasks, social, users, activity_log, quotes, yarn, leads
 from app.routers import files as files_router
+from app.permissions import require_permission
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -161,15 +162,28 @@ templates.env.filters["filesizeformat"] = _filesizeformat
 app.include_router(auth.router)
 app.include_router(clients.router)
 app.include_router(projects.router)
-app.include_router(design.router)
 app.include_router(email_quick.router)
-app.include_router(tasks.router)
-app.include_router(social.router)
-app.include_router(files_router.router)
-app.include_router(users.router)
-app.include_router(quotes.router)
-app.include_router(activity_log.router)
 app.include_router(yarn.router)
+app.include_router(leads.router,          dependencies=[require_permission("leads")])
+app.include_router(quotes.router,         dependencies=[require_permission("quotations")])
+app.include_router(design.router,         dependencies=[require_permission("design_files")])
+app.include_router(files_router.router,   dependencies=[require_permission("production_files")])
+app.include_router(tasks.router,          dependencies=[require_permission("tasks")])
+app.include_router(social.router,         dependencies=[require_permission("social")])
+app.include_router(activity_log.router,   dependencies=[require_permission("activity_log")])
+app.include_router(users.router,          dependencies=[require_permission("user_management")])
+
+
+# ── Exception handlers ────────────────────────────────────────────────────────
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
+from fastapi.exception_handlers import http_exception_handler as _default_http_exc_handler
+
+
+@app.exception_handler(FastAPIHTTPException)
+async def custom_http_exc_handler(request, exc):
+    if exc.status_code == 403:
+        return templates.TemplateResponse("403.html", {"request": request}, status_code=403)
+    return await _default_http_exc_handler(request, exc)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

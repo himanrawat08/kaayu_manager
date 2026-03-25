@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+  <div style="width:72px;height:72px;background:rgba(177,116,87,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
+    <svg width="34" height="34" fill="none" stroke="#B17457" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+    </svg>
+  </div>
+
+  <h1 style="font-size:28px;font-weight:600;color:#2E2E2E;font-family:'Roboto',sans-serif;margin-bottom:8px;">
+    Access Denied
+  </h1>
+  <p style="color:rgba(46,46,46,0.55);font-size:14.5px;max-width:380px;line-height:1.65;font-family:'Roboto',sans-serif;margin-bottom:28px;">
+    You don't have permission to view this page. If you think this is a mistake, contact your administrator.
+  </p>
+
+  <a href="{{ root_path }}/"
+     style="display:inline-flex;align-items:center;gap:8px;background:#B17457;color:#fff;padding:10px 22px;border-radius:8px;font-size:13.5px;font-weight:500;text-decoration:none;font-family:'Roboto',sans-serif;transition:background 0.15s;"
+     onmouseover="this.style.background='#966148';"
+     onmouseout="this.style.background='#B17457';">
+    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+    </svg>
+    Go to Dashboard
+  </a>
+</div>
+{% endblock %}
