@@ -98,6 +98,7 @@ def _migrate_schema():
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prod_polish_type VARCHAR(255)",
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prod_veneer_type VARCHAR(255)",
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prod_design_page INTEGER DEFAULT 1",
+        "ALTER TABLE quotations ALTER COLUMN quote_number TYPE VARCHAR(250)",
     ]
     with engine.connect() as conn:
         for sql in migrations:

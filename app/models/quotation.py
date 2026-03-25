@@ -28,7 +28,7 @@ class Quotation(Base):
     __tablename__ = "quotations"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    quote_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    quote_number: Mapped[str | None] = mapped_column(String(250), nullable=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     is_final: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

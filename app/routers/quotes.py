@@ -23,10 +23,16 @@ router = APIRouter(prefix="/quotes")
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _generate_quote_number(db: Session) -> str:
-    year = str(now_ist().year)[2:]
+def _generate_quote_number(db: Session, client_name: str | None = None) -> str:
+    dt = now_ist()
+    year = str(dt.year)[2:]
     count = db.query(func.count(Quotation.id)).scalar() + 1
-    return f"QT{year}{count:03d}"
+    seq = f"QT{year}{count:03d}"
+    date_part = f"{dt.day}{dt.strftime('%b%Y')}"  # e.g. 25Mar2026
+    client_part = (client_name or "").strip()
+    if client_part:
+        return f"{seq}_{client_part}_{date_part}"
+    return f"{seq}_{date_part}"
 
 
 def _recalculate(q: Quotation) -> None:
@@ -212,7 +218,7 @@ def quotes_create(
     ).scalar() or 0
 
     q = Quotation(
-        quote_number=_generate_quote_number(db),
+        quote_number=_generate_quote_number(db, client_name),
         project_id=project_id,
         version=max_ver + 1,
         status="draft",
@@ -496,7 +502,7 @@ def quotes_new_version(request: Request, quote_id: int, db: Session = Depends(ge
     ).scalar() or 0
 
     new_q = Quotation(
-        quote_number=_generate_quote_number(db),
+        quote_number=_generate_quote_number(db, original.client_name),
         project_id=original.project_id,
         version=max_ver + 1,
         status="draft",
