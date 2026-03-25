@@ -1,7 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -9,6 +9,11 @@ from app.models.task import Task, TASK_PRIORITIES
 from app.services.log_activity import log_activity
 
 router = APIRouter(prefix="/tasks")
+
+
+@router.get("", response_class=HTMLResponse)
+def tasks_index():
+    return RedirectResponse(url="/?view=tasks", status_code=302)
 
 
 @router.post("/new")
