@@ -125,6 +125,13 @@ class RequireLoginMiddleware:
         finally:
             db.close()
 
+        # Viewer role: read-only — block all mutating methods
+        if session.get("user_role") == "viewer" and scope["method"] in ("POST", "PUT", "DELETE", "PATCH"):
+            from starlette.responses import Response
+            response = Response("Forbidden", status_code=403)
+            await response(scope, receive, send)
+            return
+
         await self.app(scope, receive, send)
 
 
