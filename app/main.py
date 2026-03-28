@@ -132,6 +132,15 @@ class RequireLoginMiddleware:
             await response(scope, receive, send)
             return
 
+        # Supervisor role: block contacts and phonebook paths
+        if session.get("user_role") == "supervisor" and (
+            path.startswith("/contacts") or path.startswith("/phonebook")
+        ):
+            from starlette.responses import Response
+            response = Response("Forbidden", status_code=403)
+            await response(scope, receive, send)
+            return
+
         await self.app(scope, receive, send)
 
 
@@ -167,7 +176,7 @@ templates.env.filters["filesizeformat"] = _filesizeformat
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
-app.include_router(clients.router,        dependencies=[require_permission("contacts")])
+app.include_router(clients.router)
 app.include_router(projects.router)
 app.include_router(email_quick.router)
 app.include_router(yarn.router)
