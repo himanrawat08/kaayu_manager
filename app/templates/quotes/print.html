@@ -149,8 +149,7 @@
     }
 
     .totals-table {
-      width: 240px;
-      flex-shrink: 0;
+      width: 100%;
       border-collapse: collapse;
     }
     .totals-table td {
@@ -158,7 +157,7 @@
       border: 1px solid #C8C0B0;
       font-size: 12px;
     }
-    .totals-table td:first-child { color: #5C5546; font-weight: 600; }
+    .totals-table td:first-child { color: #5C5546; font-weight: 600; text-align: right; border: none; background: transparent !important; }
     .totals-table td:last-child  { text-align: right; font-weight: 600; color: #404041; width: 100px; }
     .totals-table tr.grand-total td {
       background: #E4DDD3;
@@ -305,7 +304,7 @@
 {% endif %}
 
 <!-- ── Totals (right-aligned) ── -->
-<div style="display:flex; justify-content:flex-end; margin-bottom:22px;">
+<div style="margin-bottom:22px;">
   <table class="totals-table">
     {% set items_sub = q.items | sum(attribute='amount') %}
     <tr>
