@@ -141,6 +141,17 @@ class RequireLoginMiddleware:
             await response(scope, receive, send)
             return
 
+        # Supervisor role: block project create/edit pages
+        import re as _re
+        if session.get("user_role") == "supervisor" and (
+            path == "/projects/new"
+            or _re.match(r"^/projects/\d+/edit$", path)
+        ):
+            from starlette.responses import Response
+            response = Response("Forbidden", status_code=403)
+            await response(scope, receive, send)
+            return
+
         await self.app(scope, receive, send)
 
 
