@@ -2,11 +2,13 @@
 {% block title %}{{ project.name }}{% endblock %}
 
 {% block content %}
+{% set role = request.session.get('user_role', '') %}
 
 {# ── Header ────────────────────────────────────────────────────────────────── #}
 <div class="mb-5">
   <div class="flex items-center justify-between gap-2 mb-2">
     <a href="{{ root_path }}/projects" class="text-sm text-indigo-600 hover:underline">&larr; All Projects</a>
+    {% if role != 'supervisor' %}
     <div class="flex gap-2 shrink-0">
       <a href="{{ root_path }}/projects/{{ project.id }}/edit"
          class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded hover:bg-gray-200 transition text-sm">Edit</a>
@@ -16,6 +18,7 @@
                 class="bg-red-50 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 transition text-sm">Delete</button>
       </form>
     </div>
+    {% endif %}
   </div>
   <h1 class="text-2xl font-bold text-gray-900 leading-tight">{{ project.name }}
     {% if project.order_number %}
@@ -83,6 +86,7 @@
       {% endfor %}
     </div>
 
+    {% if role != 'supervisor' %}
     <div class="border-t border-gray-100 pt-4 flex flex-wrap gap-3 items-end">
       {% if current_log %}
       <form method="post" action="{{ root_path }}/projects/{{ project.id }}/stage-notes" class="flex-1 min-w-0 w-full">
@@ -128,6 +132,7 @@
         </div>
       </div>
     </div>
+    {% endif %}{# end supervisor check #}
   </div>
 
   {# ── Brief & Reference Files ── #}
@@ -156,10 +161,12 @@
           <a href="{{ storage_url(f.stored_filename) }}" target="_blank"
              class="text-xs text-indigo-500 hover:underline">Download</a>
           {% endif %}
+          {% if role != 'supervisor' %}
           <form method="post" action="{{ root_path }}/projects/{{ project.id }}/brief-files/{{ f.id }}/delete"
                 onsubmit="return confirm('Delete?')" class="inline">
             <button type="submit" class="text-gray-300 hover:text-red-500 text-sm leading-none ml-1">&times;</button>
           </form>
+          {% endif %}
         </div>
         {% endfor %}
       </div>
@@ -167,6 +174,7 @@
       {% if project.description %}
       <p class="text-sm text-gray-500 mb-4">{{ project.description }}</p>
       {% endif %}
+      {% if role != 'supervisor' %}
       {% if project.current_stage == 'design' %}
       <form method="post" action="{{ root_path }}/projects/{{ project.id }}/brief-files/upload"
             enctype="multipart/form-data" class="flex flex-wrap gap-2 items-center">
@@ -182,10 +190,12 @@
       {% else %}
       <p class="text-xs text-gray-400 italic">Brief uploads available during Design stage only.</p>
       {% endif %}
+      {% endif %}
     </div>
   </div>
 
   {# ── Inline Quotes ── #}
+  {% if role != 'supervisor' %}
   <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
     <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center gap-3">
       <h2 class="text-lg font-semibold">Quotations</h2>
@@ -242,6 +252,7 @@
       {% endif %}
     </div>
   </div>
+  {% endif %}{# end supervisor check for quotes #}
 
   {# ── Activity Log (compressed) ── #}
   <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
