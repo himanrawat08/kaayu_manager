@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ q.quote_number }} — Quotation</title>
+  <title>{{ q.quote_number.split('_')[0] }} — Quotation</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -255,7 +255,7 @@
     </div>
   </div>
   <div class="quote-meta">
-    <div class="quote-number">{{ q.quote_number }}</div>
+    <div class="quote-number">{{ q.quote_number.split('_')[0] }}</div>
     {% if q.version > 1 %}
     <div class="quote-meta-line">Version {{ q.version }}</div>
     {% endif %}
@@ -273,8 +273,8 @@
 <table class="items-table">
   <thead>
     <tr>
-      <th class="left">Product Name</th>
-      <th class="left">Material</th>
+      <th class="left" style="width:38%;">Product Name</th>
+      <th class="left" style="width:15%;">Material</th>
       <th style="width:48px;">Qty</th>
       <th style="width:100px;">Rate</th>
       <th style="width:46px;">GST</th>
@@ -333,10 +333,9 @@
 </div>
 
 <!-- ── T&C + Payment Details ── -->
-{% if q.terms_conditions or q.payment_account_name or q.payment_account_no %}
 <div class="footer-row">
   {% if q.terms_conditions %}
-  <div class="footer-col">
+  <div class="footer-col" style="flex: 2;">
     <div class="footer-heading">Terms &amp; Conditions</div>
     <div class="footer-content">
       {% for line in q.terms_conditions.split('\n') if line.strip() %}
@@ -345,19 +344,16 @@
     </div>
   </div>
   {% endif %}
-  {% if q.payment_account_name or q.payment_account_no %}
-  <div class="footer-col">
+  <div class="footer-col" style="{% if not q.terms_conditions %}margin-left: auto;{% endif %} flex: 1;">
     <div class="footer-heading">Payment Details</div>
     <div class="footer-content">
-      {% if q.payment_account_name %}<li><strong>Account Name:</strong> {{ q.payment_account_name }}</li>{% endif %}
-      {% if q.payment_account_no %}<li><strong>Account No:</strong> {{ q.payment_account_no }}</li>{% endif %}
-      {% if q.payment_ifsc %}<li><strong>IFSC Code:</strong> {{ q.payment_ifsc }}</li>{% endif %}
-      {% if q.payment_bank_name %}<li><strong>Bank Name:</strong> {{ q.payment_bank_name }}</li>{% endif %}
+      <li><strong>Account Name:</strong> Kaayu Studio LLP</li>
+      <li><strong>Account No:</strong> 50200115151829</li>
+      <li><strong>IFSC Code:</strong> HDFC0001246</li>
+      <li><strong>Bank Name:</strong> HDFC Bank</li>
     </div>
   </div>
-  {% endif %}
 </div>
-{% endif %}
 
 {% if q.payment_terms %}
 <div class="payment-terms-section">
