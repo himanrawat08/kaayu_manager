@@ -113,6 +113,7 @@
     /* ── Items table ── */
     .items-table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
       margin-bottom: 18px;
     }
@@ -150,6 +151,7 @@
 
     .totals-table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
     }
     .totals-table td {
@@ -158,7 +160,7 @@
       font-size: 12px;
     }
     .totals-table td:first-child { color: #5C5546; font-weight: 600; text-align: right; border: none; background: transparent !important; }
-    .totals-table td:last-child  { text-align: right; font-weight: 600; color: #404041; width: 100px; }
+    .totals-table td:last-child  { text-align: right; font-weight: 600; color: #404041; }
     .totals-table tr.grand-total td {
       background: #E4DDD3;
       font-weight: 700;
@@ -306,26 +308,34 @@
 <!-- ── Totals (right-aligned) ── -->
 <div style="margin-bottom:22px;">
   <table class="totals-table">
+    <colgroup>
+      <col style="width:38%;" />
+      <col style="width:15%;" />
+      <col style="width:48px;" />
+      <col style="width:100px;" />
+      <col style="width:46px;" />
+      <col style="width:100px;" />
+    </colgroup>
     {% set items_sub = q.items | sum(attribute='amount') %}
     <tr>
-      <td>Total</td>
+      <td colspan="5">Total</td>
       <td>Rs. {{ "%.0f"|format(items_sub) }}</td>
     </tr>
     {% if q.igst_amount %}
     {% set gst_pct = q.items[0].gst_percent if q.items else 0 %}
     <tr>
-      <td>GST {{ gst_pct | int if gst_pct == gst_pct | int else gst_pct }}%</td>
+      <td colspan="5">GST {{ gst_pct | int if gst_pct == gst_pct | int else gst_pct }}%</td>
       <td>Rs. {{ "%.0f"|format(q.igst_amount) }}</td>
     </tr>
     {% endif %}
     {% for s in q.sundries %}
     <tr>
-      <td>{{ s.particular }}</td>
+      <td colspan="5">{{ s.particular }}</td>
       <td>Rs. {{ "%.0f"|format(s.amount) }}</td>
     </tr>
     {% endfor %}
     <tr class="grand-total">
-      <td>Grand Total</td>
+      <td colspan="5">Grand Total</td>
       <td>Rs. {{ "%.0f"|format(q.total_amount or 0) }}</td>
     </tr>
   </table>
