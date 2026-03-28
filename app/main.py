@@ -125,8 +125,8 @@ class RequireLoginMiddleware:
         finally:
             db.close()
 
-        # Viewer role: read-only — block all mutating methods
-        if session.get("user_role") == "viewer" and scope["method"] in ("POST", "PUT", "DELETE", "PATCH"):
+        # Viewer / Supervisor roles: read-only — block all mutating methods
+        if session.get("user_role") in ("viewer", "supervisor") and scope["method"] in ("POST", "PUT", "DELETE", "PATCH"):
             from starlette.responses import Response
             response = Response("Forbidden", status_code=403)
             await response(scope, receive, send)
@@ -167,7 +167,7 @@ templates.env.filters["filesizeformat"] = _filesizeformat
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
-app.include_router(clients.router)
+app.include_router(clients.router,        dependencies=[require_permission("contacts")])
 app.include_router(projects.router)
 app.include_router(email_quick.router)
 app.include_router(yarn.router)

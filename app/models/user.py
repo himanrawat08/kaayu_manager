@@ -11,13 +11,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
-USER_ROLES = ["super_admin", "admin", "sales", "design", "viewer"]
+USER_ROLES = ["super_admin", "admin", "sales", "design", "supervisor", "viewer"]
 
 USER_ROLE_LABELS = {
     "super_admin": "Super Admin",
     "admin":       "Admin",
     "sales":       "Sales",
     "design":      "Design",
+    "supervisor":  "Supervisor",
     "viewer":      "Viewer",
 }
 
@@ -26,6 +27,7 @@ USER_ROLE_CLS = {
     "admin":       "bg-[#B17457] text-white",
     "sales":       "bg-blue-100 text-blue-700 border border-blue-200",
     "design":      "bg-[#637C60] text-white",
+    "supervisor":  "bg-amber-100 text-amber-800 border border-amber-300",
     "viewer":      "bg-gray-100 text-gray-600 border border-gray-300",
 }
 
