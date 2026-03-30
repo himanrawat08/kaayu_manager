@@ -16,6 +16,7 @@ from app.models.project import Project, STAGES, STAGE_LABELS
 from app.models.project_files import DesignFile
 from app.models.social_post import SocialPost
 from app.models.task import Task, TASK_PRIORITIES, TASK_PRIORITY_LABELS
+from app.models.user import User
 from app.models.yarn import LOW_STOCK_THRESHOLD
 from app.routers.yarn import _color_stats
 from app.services.contact_sync import sync_contact
@@ -69,6 +70,14 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
         db.query(Project)
         .filter(Project.status == "active")
         .order_by(Project.name)
+        .all()
+    )
+
+    # Active users for task assignment dropdown
+    active_users = (
+        db.query(User)
+        .filter(User.is_active == True)  # noqa: E712
+        .order_by(User.full_name)
         .all()
     )
 
@@ -141,6 +150,7 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
             "no_due_tasks": no_due_tasks,
             "done_tasks": done_tasks,
             "active_projects_list": active_projects_list,
+            "active_users": active_users,
             "task_priority_labels": TASK_PRIORITY_LABELS,
             "task_priorities": TASK_PRIORITIES,
             "calendar_events_json": json.dumps(cal_events),

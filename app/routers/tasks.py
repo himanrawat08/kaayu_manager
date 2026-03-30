@@ -24,6 +24,7 @@ def create_task(
     priority: str = Form("medium"),
     project_id: str = Form(""),
     notes: str = Form(""),
+    assigned_to: str = Form(""),
     db: Session = Depends(get_db),
 ):
     parsed_date = None
@@ -49,6 +50,7 @@ def create_task(
         due_date=parsed_date,
         priority=priority,
         project_id=pid,
+        assigned_to=assigned_to.strip() or None,
     )
     db.add(task)
     db.commit()

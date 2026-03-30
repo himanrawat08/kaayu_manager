@@ -25,4 +25,6 @@ class Task(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
 
+    assigned_to: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     project: Mapped["Project"] = relationship("Project")  # noqa: F821
