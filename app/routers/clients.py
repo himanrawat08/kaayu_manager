@@ -52,9 +52,11 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
         .all()
     )
 
-    # Tasks — all, pending first sorted by due date
+    # Tasks — only tasks assigned to the current user
+    current_user_name = request.session.get("user_name")
     all_tasks = (
         db.query(Task)
+        .filter(Task.assigned_to == current_user_name)
         .order_by(Task.is_completed, Task.due_date.asc().nullslast(), Task.created_at.asc())
         .all()
     )
