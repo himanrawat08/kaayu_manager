@@ -253,45 +253,12 @@
     </div>
   </div>
 
-  <!-- Payment Details -->
+  <!-- Payment Terms -->
   <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5">
-    <h2 class="text-base font-semibold text-gray-800 mb-4">Payment Details</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
-        <input type="text" name="payment_account_name"
-          value="{{ quote.payment_account_name or '' if quote else '' }}"
-          placeholder="e.g. IC Décor"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
-        <input type="text" name="payment_account_no"
-          value="{{ quote.payment_account_no or '' if quote else '' }}"
-          placeholder="e.g. 50200053612615"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">IFSC Code</label>
-        <input type="text" name="payment_ifsc"
-          value="{{ quote.payment_ifsc or '' if quote else '' }}"
-          placeholder="e.g. HDFC0001246"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
-        <input type="text" name="payment_bank_name"
-          value="{{ quote.payment_bank_name or '' if quote else '' }}"
-          placeholder="e.g. HDFC Bank, Suyojit Sankul"
-          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-      </div>
-    </div>
-    <div class="mt-5">
-      <label class="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
-      <textarea name="payment_terms" rows="3"
-        placeholder="e.g. Rs. 25000 - Design Advance (will be deducted from final total)&#10;70% advance post design and quote finalization&#10;30% balance before dispatch"
-        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ quote.payment_terms or '' if quote else '' }}</textarea>
-    </div>
+    <h2 class="text-base font-semibold text-gray-800 mb-4">Payment Terms</h2>
+    <textarea name="payment_terms" rows="3"
+      placeholder="e.g. Rs. 25000 - Design Advance (will be deducted from final total)&#10;70% advance post design and quote finalization&#10;30% balance before dispatch"
+      class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ quote.payment_terms or '' if quote else '' }}</textarea>
   </div>
 
   <div class="flex gap-3">
