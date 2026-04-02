@@ -180,6 +180,7 @@ def projects_detail(
             "active_tab": tab,
             "sales_flow_stages": SALES_FLOW_STAGES,
             "sales_outcome_stages": SALES_OUTCOME_STAGES,
+
             "sales_stages": SALES_STAGES,
             "production_stages": PRODUCTION_STAGES,
             "stage_advance_map": STAGE_ADVANCE_MAP,

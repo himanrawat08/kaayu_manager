@@ -86,8 +86,10 @@
     {# ── Sales row ── #}
     <div class="mb-1">
       <div class="text-xs text-gray-400 font-medium mb-2 uppercase tracking-widest">Sales</div>
+
+      {# Sequential steps #}
       <div class="flex items-start overflow-x-auto pb-1">
-        {% for stage in sales_stages %}
+        {% for stage in sales_flow_stages %}
         {% set idx = stages.index(stage) %}
         {% set done = idx < cur_idx %}
         {% set active = stage == project.current_stage %}
@@ -103,6 +105,56 @@
             {{ stage_labels[stage] }}
           </div>
         </div>
+        {% endfor %}
+      </div>
+
+      {# Outcome choices — mutually exclusive #}
+      <div class="flex items-center gap-2 mt-4 flex-wrap">
+        <span class="text-xs text-gray-400 mr-1">Outcome:</span>
+        {% set current_outcome = project.current_stage if project.current_stage in sales_outcome_stages else '' %}
+        {% for outcome in sales_outcome_stages %}
+        {% if current_outcome == outcome %}
+          {# Active outcome — highlighted, no form #}
+          {% if outcome == 'hold' %}
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            Hold
+          </span>
+          {% elif outcome == 'won' %}
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-300">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Won
+          </span>
+          {% else %}
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+            Lost
+          </span>
+          {% endif %}
+        {% elif role != 'supervisor' %}
+          {# Inactive — clickable to set #}
+          <form method="post" action="{{ root_path }}/projects/{{ project.id }}/set-stage" class="inline">
+            <input type="hidden" name="stage" value="{{ outcome }}" />
+            {% if outcome == 'hold' %}
+            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-gray-200 text-gray-400 hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50 transition">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+              Hold
+            </button>
+            {% elif outcome == 'won' %}
+            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-gray-200 text-gray-400 hover:border-green-300 hover:text-green-600 hover:bg-green-50 transition">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              Won
+            </button>
+            {% else %}
+            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+              Lost
+            </button>
+            {% endif %}
+          </form>
+        {% else %}
+          <span class="px-3 py-1 rounded-full text-xs border border-gray-100 text-gray-300">{{ stage_labels[outcome] }}</span>
+        {% endif %}
         {% endfor %}
       </div>
     </div>
