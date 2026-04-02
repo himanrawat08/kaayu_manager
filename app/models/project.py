@@ -7,9 +7,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-STAGES = ["design", "laser_cutting", "polish", "pre_production_check", "production", "completed"]
+SALES_STAGES = ["preliminary_design", "quote_sent", "quote_accepted"]
+PRODUCTION_STAGES = ["design", "laser_cutting", "polish", "pre_production_check", "production", "completed"]
+STAGES = SALES_STAGES + PRODUCTION_STAGES
 
 STAGE_LABELS = {
+    "preliminary_design": "Preliminary Design",
+    "quote_sent": "Quote Sent",
+    "quote_accepted": "Quote Accepted",
     "design": "Design",
     "laser_cutting": "Laser Cutting",
     "polish": "Polish",

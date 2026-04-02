@@ -80,26 +80,61 @@
 
   {# ── Pipeline + Stage Controls (merged) ── #}
   <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">Production Pipeline</h2>
-    <div class="flex items-start justify-between mb-5 overflow-x-auto pb-1">
-      {% for stage in stages %}
-      {% set idx = loop.index0 %}
-      {% set cur_idx = stages.index(project.current_stage) %}
-      {% set done = idx < cur_idx %}
-      {% set active = stage == project.current_stage %}
-      <div class="stage-step {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
-        <div class="stage-icon {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
-          {% if done %}
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-            </svg>
-          {% else %}{{ loop.index }}{% endif %}
+    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Project Pipeline</h2>
+    {% set cur_idx = stages.index(project.current_stage) %}
+
+    {# ── Sales row ── #}
+    <div class="mb-1">
+      <div class="text-xs text-gray-400 font-medium mb-2 uppercase tracking-widest">Sales</div>
+      <div class="flex items-start overflow-x-auto pb-1">
+        {% for stage in sales_stages %}
+        {% set idx = stages.index(stage) %}
+        {% set done = idx < cur_idx %}
+        {% set active = stage == project.current_stage %}
+        <div class="stage-step {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
+          <div class="stage-icon {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
+            {% if done %}
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            {% else %}{{ loop.index }}{% endif %}
+          </div>
+          <div class="stage-label {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
+            {{ stage_labels[stage] }}
+          </div>
         </div>
-        <div class="stage-label {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
-          {{ stage_labels[stage] }}
-        </div>
+        {% endfor %}
       </div>
-      {% endfor %}
+    </div>
+
+    {# ── Connector ── #}
+    <div class="flex items-center gap-1.5 px-3 py-1.5">
+      <div class="text-gray-300">&#8595;</div>
+      <div class="text-xs text-gray-300 italic">after Quote Accepted</div>
+    </div>
+
+    {# ── Production row ── #}
+    <div class="mb-5">
+      <div class="text-xs text-gray-400 font-medium mb-2 uppercase tracking-widest">Production</div>
+      <div class="flex items-start overflow-x-auto pb-1">
+        {% for stage in production_stages %}
+        {% set idx = stages.index(stage) %}
+        {% set done = idx < cur_idx %}
+        {% set active = stage == project.current_stage %}
+        <div class="stage-step {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
+          <div class="stage-icon {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
+            {% if done %}
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+              </svg>
+            {% else %}{{ loop.index }}{% endif %}
+          </div>
+          <div class="stage-label {% if done %}completed{% elif active %}current{% else %}pending{% endif %}">
+            {{ stage_labels[stage] }}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
     </div>
 
     {% if role != 'supervisor' %}

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.client import Client
-from app.models.project import Project, StageLog, STAGES, STAGE_LABELS
+from app.models.project import Project, StageLog, STAGES, STAGE_LABELS, SALES_STAGES, PRODUCTION_STAGES
 from app.models.activity import ProjectActivity, ACTIVITY_TYPES
 from app.models.project_files import DesignFile, PRODUCTION_FILE_CATEGORIES
 from app.models.yarn import YarnTransaction
@@ -92,7 +92,7 @@ def projects_create(
         completion_date=comp_date,
         project_contact_name=project_contact_name.strip() or None,
         project_contact_phone=project_contact_phone.strip() or None,
-        current_stage="design",
+        current_stage="preliminary_design",
         status="active",
     )
     db.add(project)
@@ -134,7 +134,7 @@ def projects_detail(
 
     has_final_design = any(f.is_final for f in project.design_files)
     show_design_section = (
-        project.current_stage == "design"
+        project.current_stage in PRODUCTION_STAGES
         or bool(project.design_files)
         or bool(project.production_files)
     )
@@ -174,6 +174,8 @@ def projects_detail(
             "show_design_section": show_design_section,
             "production_file_categories": PRODUCTION_FILE_CATEGORIES,
             "active_tab": tab,
+            "sales_stages": SALES_STAGES,
+            "production_stages": PRODUCTION_STAGES,
             "sent": sent,
             "error_msg": error_msg or error,
             "success": success,
