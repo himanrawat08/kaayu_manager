@@ -115,15 +115,15 @@
         {% for outcome in sales_outcome_stages %}
         {% if current_outcome == outcome %}
           {# Active outcome — highlighted, no form #}
-          {% if outcome == 'hold' %}
+          {% if outcome == 'quote_accepted' %}
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-300">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Quote Accepted
+          </span>
+          {% elif outcome == 'hold' %}
           <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
             Hold
-          </span>
-          {% elif outcome == 'won' %}
-          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-300">
-            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-            Won
           </span>
           {% else %}
           <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
@@ -135,15 +135,15 @@
           {# Inactive — clickable to set #}
           <form method="post" action="{{ root_path }}/projects/{{ project.id }}/set-stage" class="inline">
             <input type="hidden" name="stage" value="{{ outcome }}" />
-            {% if outcome == 'hold' %}
+            {% if outcome == 'quote_accepted' %}
+            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-gray-200 text-gray-400 hover:border-green-300 hover:text-green-600 hover:bg-green-50 transition">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              Quote Accepted
+            </button>
+            {% elif outcome == 'hold' %}
             <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-gray-200 text-gray-400 hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50 transition">
               <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
               Hold
-            </button>
-            {% elif outcome == 'won' %}
-            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-gray-200 text-gray-400 hover:border-green-300 hover:text-green-600 hover:bg-green-50 transition">
-              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-              Won
             </button>
             {% else %}
             <button type="submit" class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition">
@@ -162,7 +162,7 @@
     {# ── Connector ── #}
     <div class="flex items-center gap-1.5 px-3 py-1.5">
       <div class="text-gray-300">&#8595;</div>
-      <div class="text-xs text-gray-300 italic">after Quote Accepted / Won</div>
+      <div class="text-xs text-gray-300 italic">after Quote Accepted</div>
     </div>
 
     {# ── Production row ── #}
