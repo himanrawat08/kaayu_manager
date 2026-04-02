@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Job Card' if card else 'New Job Card' }}{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  {% if card %}
+  <a href="{{ root_path }}/job-cards/{{ card.id }}" class="text-sm text-indigo-600 hover:underline">&larr; Back to Job Card</a>
+  {% else %}
+  <a href="{{ root_path }}/job-cards" class="text-sm text-indigo-600 hover:underline">&larr; All Job Cards</a>
+  {% endif %}
+  <h1 class="text-2xl font-bold text-gray-900 mt-2">{{ 'Edit Job Card' if card else 'New Job Card' }}</h1>
+</div>
+
+<form method="post"
+      action="{{ '/job-cards/' + card.id|string + '/edit' if card else '/job-cards/new' }}"
+      id="jcForm">
+
+  <!-- Vendor + Project + Date -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Vendor <span class="text-red-500">*</span>
+        </label>
+        <div class="flex gap-2">
+          <select name="vendor_id" required
+            class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+            <option value="">— Select Vendor —</option>
+            {% for v in vendors %}
+            <option value="{{ v.id }}" {% if card and card.vendor_id == v.id %}selected{% endif %}>{{ v.name }}</option>
+            {% endfor %}
+          </select>
+          <a href="{{ root_path }}/vendors/new" target="_blank"
+             class="border border-gray-300 text-gray-500 px-2 py-2 rounded text-xs hover:bg-gray-50 hover:text-indigo-600 transition whitespace-nowrap self-start mt-0"
+             title="Add new vendor">+</a>
+        </div>
+        <a href="{{ root_path }}/vendors" target="_blank" class="text-xs text-gray-400 hover:text-indigo-600 mt-1 inline-block">Manage vendors &rarr;</a>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Project</label>
+        <select name="project_id"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          <option value="">— N/A (Stock Only) —</option>
+          {% for p in projects %}
+          <option value="{{ p.id }}" {% if card and card.project_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Receive By Date</label>
+        <input type="date" name="receive_by_date"
+          value="{{ card.receive_by_date.isoformat() if card and card.receive_by_date else '' }}"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Line Items -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-semibold text-gray-800">Line Items</h2>
+      <button type="button" onclick="addItemRow()"
+        class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded text-sm hover:bg-indigo-100 transition">
+        + Add Item
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm" id="itemsTable">
+      <thead class="border-b border-gray-200 text-gray-500">
+        <tr>
+          <th class="pb-2 text-left font-medium w-10">Sr.</th>
+          <th class="pb-2 text-left font-medium min-w-40">Particular</th>
+          <th class="pb-2 text-left font-medium w-28">Size</th>
+          <th class="pb-2 text-right font-medium w-16">Qty</th>
+          <th class="pb-2 text-right font-medium w-24">Rate (₹)</th>
+          <th class="pb-2 text-right font-medium w-24">Amount (₹)</th>
+          <th class="pb-2 w-8"></th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody">
+        {% if card and card.items %}
+          {% for item in card.items %}
+          <tr class="item-row border-b border-gray-100">
+            <td class="py-1.5 pr-2 text-gray-400 text-center sr-cell">{{ loop.index }}</td>
+            <td class="py-1.5 pr-2">
+              <input type="text" name="particular_name" value="{{ item.particular_name }}" placeholder="e.g. Cotton Fabric"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+            </td>
+            <td class="py-1.5 pr-2">
+              <input type="text" name="size" value="{{ item.size or '' }}" placeholder="e.g. 60"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+            </td>
+            <td class="py-1.5 pr-2">
+              <input type="number" name="quantity" value="{{ item.quantity }}" min="0" step="any"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 qty-input" />
+            </td>
+            <td class="py-1.5 pr-2">
+              <input type="number" name="rate" value="{{ item.rate }}" min="0" step="any"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 rate-input" />
+            </td>
+            <td class="py-1.5 pr-2 text-right">
+              <span class="amount-display font-medium text-gray-700">{{ "%.0f"|format(item.amount) }}</span>
+            </td>
+            <td class="py-1.5 text-center">
+              <button type="button" onclick="removeRow(this)" class="text-gray-300 hover:text-red-500 text-lg leading-none">&times;</button>
+            </td>
+          </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
+    </div>
+    <p id="noItemsMsg" class="text-center text-gray-400 text-sm py-4 {% if card and card.items %}hidden{% endif %}">
+      No items yet. Click "+ Add Item" to start.
+    </p>
+
+    <!-- Grand Total -->
+    <div class="flex justify-end mt-4 pt-3 border-t border-gray-100">
+      <div class="text-sm">
+        <span class="text-gray-500 mr-4">Grand Total</span>
+        <span class="font-bold text-lg text-indigo-700" id="grandTotal">₹0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+    <textarea name="notes" rows="3" placeholder="Any notes or instructions for this order…"
+      class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ card.notes or '' if card else '' }}</textarea>
+  </div>
+
+  <div class="flex gap-3">
+    <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">
+      {{ 'Save Changes' if card else 'Create Job Card' }}
+    </button>
+    <a href="{{ '/job-cards/' + card.id|string if card else '/job-cards' }}"
+       class="bg-gray-100 text-gray-700 px-5 py-2 rounded hover:bg-gray-200 transition text-sm">Cancel</a>
+  </div>
+</form>
+
+<script>
+const _itemRowTpl = `
+<tr class="item-row border-b border-gray-100">
+  <td class="py-1.5 pr-2 text-gray-400 text-center sr-cell"></td>
+  <td class="py-1.5 pr-2">
+    <input type="text" name="particular_name" value="" placeholder="e.g. Cotton Fabric"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+  </td>
+  <td class="py-1.5 pr-2">
+    <input type="text" name="size" value="" placeholder="e.g. 60"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+  </td>
+  <td class="py-1.5 pr-2">
+    <input type="number" name="quantity" value="1" min="0" step="any"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 qty-input" />
+  </td>
+  <td class="py-1.5 pr-2">
+    <input type="number" name="rate" value="0" min="0" step="any"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 rate-input" />
+  </td>
+  <td class="py-1.5 pr-2 text-right">
+    <span class="amount-display font-medium text-gray-700">0</span>
+  </td>
+  <td class="py-1.5 text-center">
+    <button type="button" onclick="removeRow(this)" class="text-gray-300 hover:text-red-500 text-lg leading-none">&times;</button>
+  </td>
+</tr>`;
+
+function renumberRows() {
+  document.querySelectorAll('.item-row').forEach(function(row, idx) {
+    var cell = row.querySelector('.sr-cell');
+    if (cell) cell.textContent = idx + 1;
+  });
+}
+
+function addItemRow() {
+  var tbody = document.getElementById('itemsBody');
+  tbody.insertAdjacentHTML('beforeend', _itemRowTpl);
+  var row = tbody.lastElementChild;
+  bindItemRow(row);
+  renumberRows();
+  document.getElementById('noItemsMsg').classList.add('hidden');
+}
+
+function removeRow(btn) {
+  btn.closest('tr').remove();
+  renumberRows();
+  var hasRows = document.querySelectorAll('.item-row').length > 0;
+  document.getElementById('noItemsMsg').classList.toggle('hidden', hasRows);
+  recalcTotal();
+}
+
+function bindItemRow(row) {
+  row.querySelectorAll('.qty-input, .rate-input').forEach(function(inp) {
+    inp.addEventListener('input', function() { updateRowAmount(row); recalcTotal(); });
+  });
+}
+
+function updateRowAmount(row) {
+  var qty  = parseFloat(row.querySelector('.qty-input').value)  || 0;
+  var rate = parseFloat(row.querySelector('.rate-input').value) || 0;
+  var amt  = qty * rate;
+  row.querySelector('.amount-display').textContent = Math.round(amt);
+  return amt;
+}
+
+function recalcTotal() {
+  var total = 0;
+  document.querySelectorAll('.item-row').forEach(function(row) {
+    total += updateRowAmount(row);
+  });
+  document.getElementById('grandTotal').textContent = '₹' + Math.round(total).toLocaleString('en-IN');
+}
+
+// Bind existing rows on page load
+document.querySelectorAll('.item-row').forEach(bindItemRow);
+recalcTotal();
+</script>
+{% endblock %}

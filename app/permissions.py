@@ -11,6 +11,7 @@ ROLE_PERMISSIONS: dict[str, list[str]] = {
     "social":           ["super_admin", "viewer"],
     "activity_log":     ["super_admin", "viewer"],
     "user_management":  ["super_admin"],
+    "job_cards":        ["super_admin"],
 }
 
 

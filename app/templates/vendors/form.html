@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Vendor' if vendor else 'New Vendor' }}{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+  <a href="{{ root_path }}/vendors" class="text-sm text-indigo-600 hover:underline">&larr; All Vendors</a>
+  <h1 class="text-2xl font-bold text-gray-900 mt-2">{{ 'Edit Vendor' if vendor else 'New Vendor' }}</h1>
+</div>
+
+<form method="post"
+      action="{{ '/vendors/' + vendor.id|string + '/edit' if vendor else '/vendors/new' }}">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Vendor Name <span class="text-red-500">*</span></label>
+        <input type="text" name="name" required
+          value="{{ vendor.name if vendor else '' }}"
+          placeholder="e.g. Apex Fabric Suppliers"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
+        <input type="text" name="contact_name"
+          value="{{ vendor.contact_name or '' if vendor else '' }}"
+          placeholder="e.g. Ramesh Patel"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+        <input type="text" name="phone"
+          value="{{ vendor.phone or '' if vendor else '' }}"
+          placeholder="e.g. 9876543210"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input type="email" name="email"
+          value="{{ vendor.email or '' if vendor else '' }}"
+          placeholder="e.g. vendor@example.com"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+        <input type="text" name="address"
+          value="{{ vendor.address or '' if vendor else '' }}"
+          placeholder="e.g. Surat, Gujarat"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+      </div>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">
+      {{ 'Save Changes' if vendor else 'Create Vendor' }}
+    </button>
+    <a href="{{ root_path }}/vendors" class="bg-gray-100 text-gray-700 px-5 py-2 rounded hover:bg-gray-200 transition text-sm">Cancel</a>
+  </div>
+</form>
+{% endblock %}

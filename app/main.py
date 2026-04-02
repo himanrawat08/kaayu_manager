@@ -15,7 +15,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from app.config import settings
 from app.database import init_db
 from app.templates_config import templates
-from app.routers import auth, clients, projects, design, email_quick, tasks, social, users, activity_log, quotes, yarn, leads
+from app.routers import auth, clients, projects, design, email_quick, tasks, social, users, activity_log, quotes, yarn, leads, vendors, job_cards
 from app.routers import files as files_router
 from app.permissions import require_permission
 
@@ -199,6 +199,8 @@ app.include_router(tasks.router,          dependencies=[require_permission("task
 app.include_router(social.router,         dependencies=[require_permission("social")])
 app.include_router(activity_log.router,   dependencies=[require_permission("activity_log")])
 app.include_router(users.router,          dependencies=[require_permission("user_management")])
+app.include_router(vendors.router,        dependencies=[require_permission("job_cards")])
+app.include_router(job_cards.router,      dependencies=[require_permission("job_cards")])
 
 
 # ── Exception handlers ────────────────────────────────────────────────────────

@@ -150,7 +150,7 @@ def _backfill_order_numbers():
 
 
 def init_db():
-    from app.models import client, project, design, activity, project_files, task, social_post, quotation, user, system_log, lead, yarn  # noqa: F401
+    from app.models import client, project, design, activity, project_files, task, social_post, quotation, user, system_log, lead, yarn, vendor, job_card  # noqa: F401
     from app.models.quotation import QuoteSundry  # noqa: F401 — ensure table is created
     Base.metadata.create_all(bind=engine)
     _migrate_schema()

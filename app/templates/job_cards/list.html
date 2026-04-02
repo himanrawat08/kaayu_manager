@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Job Cards{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <h1 class="text-2xl font-bold text-gray-900">Job Cards</h1>
+  <div class="flex gap-2">
+    <a href="{{ root_path }}/vendors" class="bg-gray-100 text-gray-700 border border-gray-200 px-3 py-2 rounded hover:bg-gray-200 transition text-sm">Manage Vendors</a>
+    <a href="{{ root_path }}/job-cards/new" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition text-sm font-medium">+ New Job Card</a>
+  </div>
+</div>
+
+{% if cards %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+  <div class="overflow-x-auto">
+  <table class="w-full text-sm min-w-[640px]">
+    <thead class="bg-gray-50 border-b border-gray-200">
+      <tr class="text-left text-gray-500">
+        <th class="px-4 py-3 font-medium">JC Number</th>
+        <th class="px-4 py-3 font-medium">Vendor</th>
+        <th class="px-4 py-3 font-medium">Project</th>
+        <th class="px-4 py-3 font-medium">Receive By</th>
+        <th class="px-4 py-3 font-medium text-right">Items</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in cards %}
+      <tr class="border-b last:border-0 hover:bg-gray-50">
+        <td class="px-4 py-3">
+          <a href="{{ root_path }}/job-cards/{{ c.id }}" class="font-medium text-indigo-600 hover:underline">{{ c.job_card_number }}</a>
+        </td>
+        <td class="px-4 py-3 text-gray-700">{{ c.vendor.name }}</td>
+        <td class="px-4 py-3 text-gray-600">
+          {% if c.project %}
+            <a href="{{ root_path }}/projects/{{ c.project_id }}" class="hover:underline">{{ c.project.name }}</a>
+          {% else %}
+            <span class="text-gray-400">Stock Only</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-3 text-gray-500">
+          {{ c.receive_by_date.strftime('%d %b %Y') if c.receive_by_date else '—' }}
+        </td>
+        <td class="px-4 py-3 text-right text-gray-500">{{ c.items|length }}</td>
+        <td class="px-4 py-3 text-right whitespace-nowrap">
+          <a href="{{ root_path }}/job-cards/{{ c.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs px-2 py-1 rounded hover:bg-gray-100 transition mr-1">Edit</a>
+          <form method="post" action="{{ root_path }}/job-cards/{{ c.id }}/delete" class="inline"
+                onsubmit="return confirm('Delete job card {{ c.job_card_number }}?')">
+            <button type="submit" class="text-gray-400 hover:text-red-600 text-xs px-2 py-1 rounded hover:bg-red-50 transition">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% else %}
+<div class="text-center py-16 text-gray-400">
+  <div class="text-4xl mb-3">&#128196;</div>
+  <p class="text-lg">No job cards yet</p>
+  <a href="{{ root_path }}/job-cards/new" class="mt-4 inline-block text-indigo-600 hover:underline text-sm">Create your first job card &rarr;</a>
+</div>
+{% endif %}
+{% endblock %}
