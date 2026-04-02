@@ -10,12 +10,17 @@
   </div>
 </div>
 
-<!-- Search -->
-<form method="get" class="mb-4 flex gap-2">
+<!-- Search + Filter -->
+<form method="get" class="mb-4 flex flex-wrap gap-2">
   <input type="text" name="q" value="{{ q or '' }}" placeholder="Search by studio name, architect, city, email..."
     class="border border-gray-300 rounded px-3 py-2 text-sm flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+  <select name="sample_box" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    <option value="">All Contacts</option>
+    <option value="1" {% if sample_box_filter == '1' %}selected{% endif %}>Sample Box Sent</option>
+    <option value="0" {% if sample_box_filter == '0' %}selected{% endif %}>Sample Box Not Sent</option>
+  </select>
   <button type="submit" class="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition">Search</button>
-  {% if q %}<a href="{{ root_path }}/contacts" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">Clear</a>{% endif %}
+  {% if q or sample_box_filter %}<a href="{{ root_path }}/contacts" class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">Clear</a>{% endif %}
 </form>
 
 {% if clients %}
@@ -29,6 +34,7 @@
         <th class="px-4 py-3 font-medium">Contact</th>
         <th class="px-4 py-3 font-medium">City</th>
         <th class="px-4 py-3 font-medium">Projects</th>
+        <th class="px-4 py-3 font-medium">Sample Box</th>
         <th class="px-4 py-3"></th>
       </tr>
     </thead>
@@ -61,6 +67,11 @@
         </td>
         <td class="px-4 py-3 text-gray-600">{{ client.city or '—' }}</td>
         <td class="px-4 py-3 text-center text-gray-600">{{ client.projects | length }}</td>
+        <td class="px-4 py-3 text-center">
+          {% if client.sample_box_sent %}
+          <span class="inline-block w-2 h-2 rounded-full bg-green-500" title="Sample box sent"></span>
+          {% endif %}
+        </td>
         <td class="px-4 py-3 text-right whitespace-nowrap">
           <a href="{{ root_path }}/contacts/{{ client.id }}/edit" class="text-gray-400 hover:text-indigo-600 text-xs px-2 py-1 rounded hover:bg-gray-100 transition mr-1">Edit</a>
           <form method="post" action="{{ root_path }}/contacts/{{ client.id }}/delete" class="inline"

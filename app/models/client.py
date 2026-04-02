@@ -3,7 +3,7 @@ from datetime import datetime
 
 from app.utils.time import now_ist
 
-from sqlalchemy import DateTime, String, Text
+from sqlalchemy import Boolean, DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -31,6 +31,9 @@ class Client(Base):
 
     # Contact
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Sample box tracking
+    sample_box_sent: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     # Legacy columns kept for DB compatibility
     phone: Mapped[str | None] = mapped_column(String(100), nullable=True)

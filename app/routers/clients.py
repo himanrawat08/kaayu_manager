@@ -164,7 +164,7 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
 # ── Client list ───────────────────────────────────────────────────────────────
 
 @router.get("/contacts", response_class=HTMLResponse)
-def clients_list(request: Request, q: str = "", db: Session = Depends(get_db)):
+def clients_list(request: Request, q: str = "", sample_box: str = "", db: Session = Depends(get_db)):
     query = db.query(Client)
     if q:
         like = f"%{q}%"
@@ -174,11 +174,15 @@ def clients_list(request: Request, q: str = "", db: Session = Depends(get_db)):
             | Client.principal_architect_name.ilike(like)
             | Client.city.ilike(like)
         )
+    if sample_box == "1":
+        query = query.filter(Client.sample_box_sent == True)  # noqa: E712
+    elif sample_box == "0":
+        query = query.filter(Client.sample_box_sent == False)  # noqa: E712
     clients = query.order_by(Client.name).all()
     return templates.TemplateResponse(
         request,
         "clients/list.html",
-        {"request": request, "clients": clients, "q": q},
+        {"request": request, "clients": clients, "q": q, "sample_box_filter": sample_box},
     )
 
 
@@ -204,6 +208,7 @@ def clients_create(
     cp_number: List[str] = Form(default=[]),
     address: str = Form(""),
     city: str = Form(""),
+    sample_box_sent: str = Form(""),
     db: Session = Depends(get_db),
 ):
     architects = []
@@ -233,6 +238,7 @@ def clients_create(
         contact_person_number=first_cp.get("number") or None,
         address=address.strip() or None,
         city=city.strip() or None,
+        sample_box_sent=bool(sample_box_sent),
     )
     db.add(client)
     db.commit()
@@ -452,6 +458,7 @@ def clients_update(
     cp_number: List[str] = Form(default=[]),
     address: str = Form(""),
     city: str = Form(""),
+    sample_box_sent: str = Form(""),
     db: Session = Depends(get_db),
 ):
     client = db.query(Client).filter(Client.id == client_id).first()
@@ -484,6 +491,7 @@ def clients_update(
     client.contact_person_number = first_cp.get("number") or None
     client.address = address.strip() or None
     client.city = city.strip() or None
+    client.sample_box_sent = bool(sample_box_sent)
     db.commit()
 
     if client.email:
