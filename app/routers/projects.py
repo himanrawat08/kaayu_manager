@@ -13,7 +13,11 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.client import Client
-from app.models.project import Project, StageLog, STAGES, STAGE_LABELS, SALES_STAGES, PRODUCTION_STAGES
+from app.models.project import (
+    Project, StageLog, STAGES, STAGE_LABELS,
+    SALES_FLOW_STAGES, SALES_OUTCOME_STAGES, SALES_STAGES, PRODUCTION_STAGES,
+    STAGE_ADVANCE_MAP,
+)
 from app.models.activity import ProjectActivity, ACTIVITY_TYPES
 from app.models.project_files import DesignFile, PRODUCTION_FILE_CATEGORIES
 from app.models.yarn import YarnTransaction
@@ -174,8 +178,11 @@ def projects_detail(
             "show_design_section": show_design_section,
             "production_file_categories": PRODUCTION_FILE_CATEGORIES,
             "active_tab": tab,
+            "sales_flow_stages": SALES_FLOW_STAGES,
+            "sales_outcome_stages": SALES_OUTCOME_STAGES,
             "sales_stages": SALES_STAGES,
             "production_stages": PRODUCTION_STAGES,
+            "stage_advance_map": STAGE_ADVANCE_MAP,
             "sent": sent,
             "error_msg": error_msg or error,
             "success": success,
@@ -266,11 +273,7 @@ def projects_delete(request: Request, project_id: int, db: Session = Depends(get
 @router.post("/{project_id}/advance-stage")
 def advance_stage(request: Request, project_id: int, db: Session = Depends(get_db)):
     project = db.query(Project).filter(Project.id == project_id).first()
-    if not project or project.current_stage == "completed":
-        return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
-
-    current_idx = STAGES.index(project.current_stage)
-    if current_idx + 1 >= len(STAGES):
+    if not project or project.current_stage not in STAGE_ADVANCE_MAP:
         return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
 
     current_log = (
@@ -282,7 +285,7 @@ def advance_stage(request: Request, project_id: int, db: Session = Depends(get_d
     if current_log and not current_log.completed_at:
         current_log.completed_at = now_ist()
 
-    next_stage = STAGES[current_idx + 1]
+    next_stage = STAGE_ADVANCE_MAP[project.current_stage]
     project.current_stage = next_stage
     db.add(StageLog(project_id=project_id, stage=next_stage, started_at=now_ist()))
     db.commit()
