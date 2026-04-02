@@ -110,6 +110,20 @@ def _migrate_schema():
             except Exception:
                 pass
     _backfill_order_numbers()
+    _migrate_project_stages()
+
+
+def _migrate_project_stages():
+    """Migrate removed/renamed stage values to valid ones."""
+    with engine.connect() as conn:
+        try:
+            # 'won' was removed — quote_accepted is the accepted/won state now
+            conn.execute(text(
+                "UPDATE projects SET current_stage = 'quote_accepted' WHERE current_stage = 'won'"
+            ))
+            conn.commit()
+        except Exception:
+            pass
 
 
 def _backfill_order_numbers():
