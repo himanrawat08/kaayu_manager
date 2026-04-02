@@ -174,13 +174,6 @@
       {% endcall %}
       {% endif %}
 
-      {% if role in ['super_admin', 'sales', 'design'] %}
-      {% call nav_link('/leads', 'Leads', true) %}
-        <svg style="width:16px;height:16px;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-        </svg>
-      {% endcall %}
-      {% endif %}
 
       {% if role in ['super_admin', 'sales', 'design'] %}
       {% call nav_link('/tasks', 'Tasks', true) %}
