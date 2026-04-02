@@ -16,6 +16,7 @@ from app.models.client import Client
 from app.models.project import Project, StageLog, STAGES, STAGE_LABELS
 from app.models.activity import ProjectActivity, ACTIVITY_TYPES
 from app.models.project_files import DesignFile, PRODUCTION_FILE_CATEGORIES
+from app.models.yarn import YarnTransaction
 from app.services.log_activity import log_activity
 from app.services import storage
 from app.templates_config import templates
@@ -145,6 +146,13 @@ def projects_detail(
         .all()
     )
 
+    yarn_transactions = (
+        db.query(YarnTransaction)
+        .filter(YarnTransaction.project_id == project_id)
+        .order_by(YarnTransaction.date.desc(), YarnTransaction.id.desc())
+        .all()
+    )
+
     return templates.TemplateResponse(
         request,
         "projects/detail.html",
@@ -163,6 +171,7 @@ def projects_detail(
             "success": success,
             "activity_types": ACTIVITY_TYPES,
             "recent_project_activities": recent_project_activities,
+            "yarn_transactions": yarn_transactions,
         },
     )
 
