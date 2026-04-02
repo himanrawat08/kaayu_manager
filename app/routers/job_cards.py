@@ -55,7 +55,7 @@ def job_card_list(request: Request, db: Session = Depends(get_db)):
 # ── Create ────────────────────────────────────────────────────────────────────
 
 @router.get("/new", response_class=HTMLResponse)
-def job_card_new(request: Request, db: Session = Depends(get_db)):
+def job_card_new(request: Request, project_id: str = "", db: Session = Depends(get_db)):
     vendors = db.query(Vendor).order_by(Vendor.name).all()
     projects = db.query(Project).order_by(Project.name).all()
     return templates.TemplateResponse(request, "job_cards/form.html", {
@@ -63,6 +63,7 @@ def job_card_new(request: Request, db: Session = Depends(get_db)):
         "card": None,
         "vendors": vendors,
         "projects": projects,
+        "prefill_project_id": project_id,
     })
 
 

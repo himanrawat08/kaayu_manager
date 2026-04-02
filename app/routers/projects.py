@@ -17,6 +17,7 @@ from app.models.project import Project, StageLog, STAGES, STAGE_LABELS
 from app.models.activity import ProjectActivity, ACTIVITY_TYPES
 from app.models.project_files import DesignFile, PRODUCTION_FILE_CATEGORIES
 from app.models.yarn import YarnTransaction
+from app.models.job_card import JobCard
 from app.services.log_activity import log_activity
 from app.services import storage
 from app.templates_config import templates
@@ -153,6 +154,13 @@ def projects_detail(
         .all()
     )
 
+    job_cards = (
+        db.query(JobCard)
+        .filter(JobCard.project_id == project_id)
+        .order_by(JobCard.id.desc())
+        .all()
+    )
+
     return templates.TemplateResponse(
         request,
         "projects/detail.html",
@@ -172,6 +180,7 @@ def projects_detail(
             "activity_types": ACTIVITY_TYPES,
             "recent_project_activities": recent_project_activities,
             "yarn_transactions": yarn_transactions,
+            "job_cards": job_cards,
         },
     )
 
