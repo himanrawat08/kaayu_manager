@@ -7,9 +7,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-SALES_FLOW_STAGES = ["preliminary_design", "quote_sent", "quote_accepted"]
-SALES_OUTCOME_STAGES = ["hold", "won", "lost"]
-SALES_STAGES = SALES_FLOW_STAGES + SALES_OUTCOME_STAGES
+SALES_STAGES = ["preliminary_design", "quote_sent", "quote_accepted", "hold", "won", "lost"]
+SALES_FLOW_STAGES = SALES_STAGES   # kept for router compat
+SALES_OUTCOME_STAGES: list[str] = []  # no longer separate
 PRODUCTION_STAGES = ["design", "laser_cutting", "polish", "pre_production_check", "production", "completed"]
 STAGES = SALES_STAGES + PRODUCTION_STAGES
 
