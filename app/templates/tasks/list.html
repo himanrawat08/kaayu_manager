@@ -135,7 +135,18 @@
             {% endif %}
           </td>
           <td class="px-4 py-3 text-gray-500 text-sm">
-            {{ task.assigned_to or '—' }}
+            {% if task.assigned_to %}
+              {% set names = task.assigned_to.split(',') %}
+              {% if names | length == 1 %}
+                {{ names[0].strip() }}
+              {% else %}
+                <span title="{{ task.assigned_to | replace(',', ', ') }}">
+                  {{ names[0].strip() }} +{{ names | length - 1 }}
+                </span>
+              {% endif %}
+            {% else %}
+              <span class="text-gray-300">—</span>
+            {% endif %}
           </td>
           <td class="px-4 py-3 text-right">
             <a href="{{ root_path }}/tasks/{{ task.id }}"

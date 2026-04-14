@@ -14,6 +14,8 @@
 
 <div class="max-w-2xl">
   {% set form_action = root_path ~ '/tasks/' ~ task.id ~ '/edit' if task else root_path ~ '/tasks/new' %}
+  {% set selected_users = task.assigned_to.split(',') if task and task.assigned_to else [] %}
+
   <form method="post" action="{{ form_action }}"
         class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5">
 
@@ -32,17 +34,13 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-        <input type="text" name="department"
-          value="{{ task.department if task else '' }}"
-          list="dept-list"
-          placeholder="e.g. Design, Marketing…"
-          autocomplete="off"
-          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-        <datalist id="dept-list">
+        <select name="department"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+          <option value="">— None —</option>
           {% for dept in departments %}
-          <option value="{{ dept }}">
+          <option value="{{ dept }}" {% if task and task.department == dept %}selected{% endif %}>{{ dept }}</option>
           {% endfor %}
-        </datalist>
+        </select>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -78,28 +76,50 @@
       </div>
     </div>
 
-    <!-- Assigned To + Project row -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
-        <input type="text" name="assigned_to"
-          value="{{ task.assigned_to if task else '' }}"
-          placeholder="Team member name"
-          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+    <!-- Assigned To -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+      <div class="relative" id="assigned-container">
+        <button type="button" id="assigned-btn" onclick="toggleAssigned()"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          <span id="assigned-label" class="truncate text-gray-400">Select team members…</span>
+          <svg class="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="assigned-dropdown"
+          class="hidden absolute z-20 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-52 overflow-y-auto">
+          {% if users %}
+            {% for user in users %}
+            <label class="flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-50 cursor-pointer">
+              <input type="checkbox" name="assigned_to" value="{{ user.full_name }}"
+                {% if user.full_name in selected_users %}checked{% endif %}
+                onchange="updateAssignedLabel()"
+                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-300" />
+              <span class="text-sm text-gray-700 flex-1">{{ user.full_name }}</span>
+              <span class="text-xs text-gray-400">{{ user.role }}</span>
+            </label>
+            {% endfor %}
+          {% else %}
+            <div class="px-3 py-3 text-sm text-gray-400">No users found.</div>
+          {% endif %}
+        </div>
       </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Linked Project <span class="text-gray-400 text-xs font-normal">(optional)</span></label>
-        <select name="project_id"
-          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
-          <option value="">— None —</option>
-          {% for project in projects %}
-          <option value="{{ project.id }}"
-            {% if task and task.project_id == project.id %}selected{% endif %}>
-            {% if project.order_number %}{{ project.order_number }} — {% endif %}{{ project.name }}
-          </option>
-          {% endfor %}
-        </select>
-      </div>
+    </div>
+
+    <!-- Linked Project -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Linked Project <span class="text-gray-400 text-xs font-normal">(optional)</span></label>
+      <select name="project_id"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+        <option value="">— None —</option>
+        {% for project in projects %}
+        <option value="{{ project.id }}"
+          {% if task and task.project_id == project.id %}selected{% endif %}>
+          {% if project.order_number %}{{ project.order_number }} — {% endif %}{{ project.name }}
+        </option>
+        {% endfor %}
+      </select>
     </div>
 
     <!-- Description -->
@@ -132,4 +152,37 @@
   </form>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function updateAssignedLabel() {
+    const checked = [...document.querySelectorAll('input[name="assigned_to"]:checked')];
+    const label = document.getElementById('assigned-label');
+    if (checked.length === 0) {
+      label.textContent = 'Select team members…';
+      label.classList.add('text-gray-400');
+      label.classList.remove('text-gray-700');
+    } else {
+      label.textContent = checked.map(c => c.value).join(', ');
+      label.classList.remove('text-gray-400');
+      label.classList.add('text-gray-700');
+    }
+  }
+
+  function toggleAssigned() {
+    document.getElementById('assigned-dropdown').classList.toggle('hidden');
+  }
+
+  // Close dropdown on outside click
+  document.addEventListener('click', function(e) {
+    const container = document.getElementById('assigned-container');
+    if (!container.contains(e.target)) {
+      document.getElementById('assigned-dropdown').classList.add('hidden');
+    }
+  });
+
+  // Initialize label on page load
+  updateAssignedLabel();
+</script>
 {% endblock %}

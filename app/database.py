@@ -107,6 +107,9 @@ def _migrate_schema():
         "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'todo'",
         "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP",
         "ALTER TABLE clients ADD COLUMN IF NOT EXISTS sample_box_sent BOOLEAN NOT NULL DEFAULT FALSE",
+        "ALTER TABLE tasks ALTER COLUMN assigned_to TYPE TEXT",
+        "ALTER TABLE subtasks ADD COLUMN IF NOT EXISTS assigned_to TEXT",
+        "ALTER TABLE subtasks ADD COLUMN IF NOT EXISTS due_date DATE",
     ]
     with engine.connect() as conn:
         for sql in migrations:
