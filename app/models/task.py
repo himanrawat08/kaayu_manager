@@ -109,6 +109,27 @@ class SubTask(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
 
     task: Mapped["Task"] = relationship("Task", back_populates="subtasks")
+    notes: Mapped[list["SubTaskNote"]] = relationship(
+        "SubTaskNote",
+        back_populates="subtask",
+        cascade="all, delete-orphan",
+        order_by="SubTaskNote.created_at",
+    )
+
+
+class SubTaskNote(Base):
+    __tablename__ = "subtask_notes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    subtask_id: Mapped[int] = mapped_column(
+        ForeignKey("subtasks.id", ondelete="CASCADE"), nullable=False
+    )
+    author: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    note_type: Mapped[str] = mapped_column(String(50), default="comment", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
+
+    subtask: Mapped["SubTask"] = relationship("SubTask", back_populates="notes")
 
 
 class TaskFile(Base):

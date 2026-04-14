@@ -19,6 +19,7 @@ from app.models.task import (
     TASK_STATUS_LABELS,
     TASK_STATUSES,
     SubTask,
+    SubTaskNote,
     Task,
     TaskFile,
     TaskNote,
@@ -233,7 +234,7 @@ def tasks_detail(
         .options(
             joinedload(Task.project),
             joinedload(Task.thread),
-            joinedload(Task.subtasks),
+            joinedload(Task.subtasks).joinedload(SubTask.notes),
             joinedload(Task.files),
         )
         .filter(Task.id == task_id)
@@ -535,6 +536,56 @@ def subtask_delete(
             except Exception:
                 pass
         db.delete(subtask)
+        db.commit()
+    return RedirectResponse(url=f"/tasks/{task_id}#subtasks", status_code=303)
+
+
+# ── Sub-task notes ────────────────────────────────────────────────────────────
+
+@router.post("/{task_id}/subtasks/{subtask_id}/note")
+def subtask_add_note(
+    request: Request,
+    task_id: int,
+    subtask_id: int,
+    body: str = Form(...),
+    note_type: str = Form("comment"),
+    db: Session = Depends(get_db),
+):
+    subtask = (
+        db.query(SubTask)
+        .filter(SubTask.id == subtask_id, SubTask.task_id == task_id)
+        .first()
+    )
+    if not subtask or not body.strip():
+        return RedirectResponse(url=f"/tasks/{task_id}#subtasks", status_code=303)
+    if note_type not in NOTE_TYPES:
+        note_type = "comment"
+    note = SubTaskNote(
+        subtask_id=subtask_id,
+        author=request.session.get("user_name") or "Unknown",
+        body=body.strip(),
+        note_type=note_type,
+    )
+    db.add(note)
+    db.commit()
+    return RedirectResponse(url=f"/tasks/{task_id}#subtasks", status_code=303)
+
+
+@router.post("/{task_id}/subtasks/{subtask_id}/note/{note_id}/delete")
+def subtask_delete_note(
+    request: Request,
+    task_id: int,
+    subtask_id: int,
+    note_id: int,
+    db: Session = Depends(get_db),
+):
+    note = (
+        db.query(SubTaskNote)
+        .filter(SubTaskNote.id == note_id, SubTaskNote.subtask_id == subtask_id)
+        .first()
+    )
+    if note:
+        db.delete(note)
         db.commit()
     return RedirectResponse(url=f"/tasks/{task_id}#subtasks", status_code=303)
 
