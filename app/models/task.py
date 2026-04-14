@@ -9,6 +9,34 @@ from app.database import Base
 
 TASK_PRIORITIES = ["high", "medium", "low"]
 TASK_PRIORITY_LABELS = {"high": "High", "medium": "Medium", "low": "Low"}
+TASK_PRIORITY_COLORS = {"high": "red", "medium": "amber", "low": "gray"}
+
+TASK_STATUSES = ["todo", "in_progress", "review", "done"]
+TASK_STATUS_LABELS = {
+    "todo": "To Do",
+    "in_progress": "In Progress",
+    "review": "Review",
+    "done": "Done",
+}
+
+TASK_DEPARTMENTS = [
+    "Design",
+    "Marketing",
+    "Logistics",
+    "Admin",
+    "Production",
+    "Accounts",
+    "Operations",
+    "Sales",
+]
+
+NOTE_TYPES = ["comment", "feedback", "revision_request", "approval"]
+NOTE_TYPE_LABELS = {
+    "comment": "Comment",
+    "feedback": "Feedback",
+    "revision_request": "Revision Request",
+    "approval": "Approved",
+}
 
 
 class Task(Base):
@@ -23,8 +51,33 @@ class Task(Base):
     project_id: Mapped[int | None] = mapped_column(
         ForeignKey("projects.id", ondelete="SET NULL"), nullable=True
     )
+    assigned_to: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
 
-    assigned_to: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Extended fields
+    department: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="todo", nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist, onupdate=now_ist)
 
     project: Mapped["Project"] = relationship("Project")  # noqa: F821
+    thread: Mapped[list["TaskNote"]] = relationship(
+        "TaskNote",
+        back_populates="task",
+        cascade="all, delete-orphan",
+        order_by="TaskNote.created_at",
+    )
+
+
+class TaskNote(Base):
+    __tablename__ = "task_notes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task_id: Mapped[int] = mapped_column(
+        ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False
+    )
+    author: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    note_type: Mapped[str] = mapped_column(String(50), default="comment", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
+
+    task: Mapped["Task"] = relationship("Task", back_populates="thread")

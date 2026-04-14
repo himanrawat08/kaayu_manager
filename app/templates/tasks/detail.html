@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}{{ task.title }}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="mb-5">
+  <a href="{{ root_path }}/tasks" class="text-sm text-gray-400 hover:text-gray-600">&larr; All Tasks</a>
+</div>
+
+<div class="max-w-3xl">
+
+  <!-- Title + badges -->
+  <div class="flex items-start gap-3 mb-1 flex-wrap">
+    <h1 class="text-2xl font-bold text-[#2E2E2E] flex-1 min-w-0 leading-snug
+               {% if task.status == 'done' %}line-through text-gray-400{% endif %}">
+      {{ task.title }}
+    </h1>
+  </div>
+
+  <div class="flex items-center gap-2 mb-5 flex-wrap">
+    <!-- Status badge -->
+    {% if task.status == 'todo' %}
+      <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">To Do</span>
+    {% elif task.status == 'in_progress' %}
+      <span class="text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-medium">In Progress</span>
+    {% elif task.status == 'review' %}
+      <span class="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">Review</span>
+    {% elif task.status == 'done' %}
+      <span class="text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-medium">Done</span>
+    {% endif %}
+
+    <!-- Priority badge -->
+    {% if task.priority == 'high' %}
+      <span class="text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-700 font-medium">High Priority</span>
+    {% elif task.priority == 'medium' %}
+      <span class="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">Medium Priority</span>
+    {% else %}
+      <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">Low Priority</span>
+    {% endif %}
+
+    <a href="{{ root_path }}/tasks/{{ task.id }}/edit"
+       class="text-xs text-gray-400 hover:text-indigo-600 px-2 py-1 rounded border border-gray-200 hover:border-gray-300 transition-colors ml-auto">
+      Edit
+    </a>
+    <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/delete"
+          onsubmit="return confirm('Delete this task?');" class="inline">
+      <button type="submit"
+              class="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded border border-gray-200 hover:border-red-200 transition-colors">
+        Delete
+      </button>
+    </form>
+  </div>
+
+  <!-- Meta grid -->
+  <div class="bg-white rounded-xl border border-gray-100 p-4 mb-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+    <div>
+      <div class="text-xs text-gray-400 uppercase tracking-wide mb-1" style="font-family:'Roboto',sans-serif;">Department</div>
+      <div class="text-gray-700 font-medium">{{ task.department or '—' }}</div>
+    </div>
+    <div>
+      <div class="text-xs text-gray-400 uppercase tracking-wide mb-1" style="font-family:'Roboto',sans-serif;">Due Date</div>
+      {% if task.due_date %}
+        {% set is_overdue = task.due_date < today and task.status != 'done' %}
+        <div class="font-medium {% if is_overdue %}text-red-500{% else %}text-gray-700{% endif %}">
+          {{ task.due_date.strftime('%d %b %Y') }}
+          {% if is_overdue %}<span class="text-xs ml-1 font-normal">overdue</span>{% endif %}
+        </div>
+      {% else %}
+        <div class="text-gray-300">Not set</div>
+      {% endif %}
+    </div>
+    <div>
+      <div class="text-xs text-gray-400 uppercase tracking-wide mb-1" style="font-family:'Roboto',sans-serif;">Assigned To</div>
+      <div class="text-gray-700 font-medium">{{ task.assigned_to or '—' }}</div>
+    </div>
+    <div>
+      <div class="text-xs text-gray-400 uppercase tracking-wide mb-1" style="font-family:'Roboto',sans-serif;">Linked Project</div>
+      {% if task.project %}
+        <a href="{{ root_path }}/projects/{{ task.project.id }}"
+           class="text-indigo-600 hover:underline font-medium text-sm">
+          {{ task.project.order_number or task.project.name }}
+        </a>
+      {% else %}
+        <div class="text-gray-300">None</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Description -->
+  {% if task.notes %}
+  <div class="bg-white rounded-xl border border-gray-100 p-4 mb-5">
+    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2" style="font-family:'Roboto',sans-serif;">Description</div>
+    <div class="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{{ task.notes }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Quick status transitions -->
+  <div class="mb-6">
+    <div class="text-xs text-gray-400 uppercase tracking-wide mb-2" style="font-family:'Roboto',sans-serif;">Move to</div>
+    <div class="flex flex-wrap gap-2">
+      {% set next_statuses = {
+        'todo':        ['in_progress', 'done'],
+        'in_progress': ['review', 'done'],
+        'review':      ['in_progress', 'done'],
+        'done':        ['todo'],
+      } %}
+      {% set status_colors = {
+        'todo':        'bg-gray-100 text-gray-600 hover:bg-gray-200',
+        'in_progress': 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+        'review':      'bg-amber-100 text-amber-700 hover:bg-amber-200',
+        'done':        'bg-green-100 text-green-700 hover:bg-green-200',
+      } %}
+      {% for ns in next_statuses[task.status] %}
+      <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/status">
+        <input type="hidden" name="status" value="{{ ns }}" />
+        <button type="submit"
+                class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors {{ status_colors[ns] }}">
+          → {{ status_labels[ns] }}
+        </button>
+      </form>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Notes / Activity thread -->
+  <div id="notes">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-base font-semibold text-[#2E2E2E]">Notes &amp; Feedback</h2>
+      <span class="text-xs text-gray-400">{{ task.thread | length }} note{% if task.thread | length != 1 %}s{% endif %}</span>
+    </div>
+
+    {% if task.thread %}
+    <div class="space-y-3 mb-5">
+      {% for note in task.thread %}
+      {% set note_styles = {
+        'comment':          ('bg-white border-gray-100', 'text-gray-500'),
+        'feedback':         ('bg-blue-50 border-blue-100', 'text-blue-600'),
+        'revision_request': ('bg-amber-50 border-amber-100', 'text-amber-700'),
+        'approval':         ('bg-green-50 border-green-100', 'text-green-700'),
+      } %}
+      {% set card_cls, label_cls = note_styles.get(note.note_type, ('bg-white border-gray-100', 'text-gray-500')) %}
+      <div class="rounded-xl border p-4 {{ card_cls }}">
+        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-gray-800">{{ note.author }}</span>
+            <span class="text-xs {{ label_cls }} font-medium px-2 py-0.5 rounded-full
+                         {% if note.note_type == 'comment' %}bg-gray-100
+                         {% elif note.note_type == 'feedback' %}bg-blue-100
+                         {% elif note.note_type == 'revision_request' %}bg-amber-100
+                         {% elif note.note_type == 'approval' %}bg-green-100{% endif %}">
+              {{ note_type_labels.get(note.note_type, note.note_type) }}
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-gray-400">{{ note.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+            <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/note/{{ note.id }}/delete"
+                  onsubmit="return confirm('Delete this note?');" class="inline">
+              <button type="submit" class="text-gray-300 hover:text-red-400 text-xs transition-colors">&times;</button>
+            </form>
+          </div>
+        </div>
+        <div class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ note.body }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-sm text-gray-400 mb-5 py-4 text-center border border-dashed border-gray-200 rounded-xl">
+      No notes yet. Add one below.
+    </div>
+    {% endif %}
+
+    <!-- Add note form -->
+    <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/note"
+          class="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide" style="font-family:'Roboto',sans-serif;">Add Note</label>
+        <textarea name="body" rows="3" placeholder="Write a comment, feedback, or revision request…"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-y"
+          required></textarea>
+      </div>
+      <div class="flex items-center gap-3 flex-wrap">
+        <select name="note_type"
+          class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+          {% for nt in note_types %}
+          <option value="{{ nt }}">{{ note_type_labels[nt] }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit"
+          style="background:#B17457;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;">
+          Post Note
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const today = new Date('{{ today }}');
+</script>
+{% endblock %}

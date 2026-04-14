@@ -64,6 +64,9 @@ def _create_indexes():
         "CREATE INDEX IF NOT EXISTS idx_system_logs_created_at ON system_logs(created_at DESC)",
         "CREATE INDEX IF NOT EXISTS idx_leads_stage            ON leads(stage)",
         "CREATE INDEX IF NOT EXISTS idx_design_files_project_id ON design_files(project_id)",
+        "CREATE INDEX IF NOT EXISTS idx_task_notes_task_id ON task_notes(task_id)",
+        "CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)",
+        "CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date)",
     ]
     with engine.connect() as conn:
         for sql in indexes:
@@ -100,6 +103,9 @@ def _migrate_schema():
         "ALTER TABLE projects ADD COLUMN IF NOT EXISTS prod_design_page INTEGER DEFAULT 1",
         "ALTER TABLE quotations ALTER COLUMN quote_number TYPE VARCHAR(250)",
         "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assigned_to VARCHAR(255)",
+        "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS department VARCHAR(100)",
+        "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'todo'",
+        "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP",
         "ALTER TABLE clients ADD COLUMN IF NOT EXISTS sample_box_sent BOOLEAN NOT NULL DEFAULT FALSE",
     ]
     with engine.connect() as conn:
@@ -111,6 +117,19 @@ def _migrate_schema():
                 pass
     _backfill_order_numbers()
     _migrate_project_stages()
+    _migrate_task_status()
+
+
+def _migrate_task_status():
+    """Backfill status column from is_completed for existing tasks."""
+    with engine.connect() as conn:
+        try:
+            conn.execute(text(
+                "UPDATE tasks SET status = 'done' WHERE is_completed = TRUE AND status = 'todo'"
+            ))
+            conn.commit()
+        except Exception:
+            pass
 
 
 def _migrate_project_stages():

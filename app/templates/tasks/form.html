@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Task' if task else 'New Task' }}{% endblock %}
+
+{% block content %}
+
+<div class="mb-5">
+  {% if task %}
+  <a href="{{ root_path }}/tasks/{{ task.id }}" class="text-sm text-gray-400 hover:text-gray-600">&larr; Back to Task</a>
+  {% else %}
+  <a href="{{ root_path }}/tasks" class="text-sm text-gray-400 hover:text-gray-600">&larr; All Tasks</a>
+  {% endif %}
+  <h1 class="text-2xl font-bold text-[#2E2E2E] mt-2">{{ 'Edit Task' if task else 'New Task' }}</h1>
+</div>
+
+<div class="max-w-2xl">
+  {% set form_action = root_path ~ '/tasks/' ~ task.id ~ '/edit' if task else root_path ~ '/tasks/new' %}
+  <form method="post" action="{{ form_action }}"
+        class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5">
+
+    <!-- Title -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Title <span class="text-red-400">*</span>
+      </label>
+      <input type="text" name="title" required
+        value="{{ task.title if task else '' }}"
+        placeholder="What needs to be done?"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+    </div>
+
+    <!-- Department + Status row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+        <input type="text" name="department"
+          value="{{ task.department if task else '' }}"
+          list="dept-list"
+          placeholder="e.g. Design, Marketing…"
+          autocomplete="off"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+        <datalist id="dept-list">
+          {% for dept in departments %}
+          <option value="{{ dept }}">
+          {% endfor %}
+        </datalist>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select name="status"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+          {% for s in statuses %}
+          <option value="{{ s }}" {% if task and task.status == s %}selected{% elif not task and s == 'todo' %}selected{% endif %}>
+            {{ status_labels[s] }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Priority + Due Date row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+        <select name="priority"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+          {% for p in priorities %}
+          <option value="{{ p }}" {% if task and task.priority == p %}selected{% elif not task and p == 'medium' %}selected{% endif %}>
+            {{ priority_labels[p] }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+        <input type="date" name="due_date"
+          value="{{ task.due_date.isoformat() if task and task.due_date else '' }}"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+      </div>
+    </div>
+
+    <!-- Assigned To + Project row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+        <input type="text" name="assigned_to"
+          value="{{ task.assigned_to if task else '' }}"
+          placeholder="Team member name"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Linked Project <span class="text-gray-400 text-xs font-normal">(optional)</span></label>
+        <select name="project_id"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+          <option value="">— None —</option>
+          {% for project in projects %}
+          <option value="{{ project.id }}"
+            {% if task and task.project_id == project.id %}selected{% endif %}>
+            {% if project.order_number %}{{ project.order_number }} — {% endif %}{{ project.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Description / Notes</label>
+      <textarea name="notes" rows="5"
+        placeholder="Add details, context, or instructions…"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-y">{{ task.notes if task and task.notes else '' }}</textarea>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3 pt-2">
+      <button type="submit"
+        style="background:#B17457;color:#fff;padding:9px 24px;border-radius:8px;font-size:13.5px;font-weight:500;border:none;cursor:pointer;">
+        {{ 'Save Changes' if task else 'Create Task' }}
+      </button>
+      {% if task %}
+      <a href="{{ root_path }}/tasks/{{ task.id }}"
+         class="bg-white border border-gray-200 text-gray-600 px-6 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors font-medium">
+        Cancel
+      </a>
+      {% else %}
+      <a href="{{ root_path }}/tasks"
+         class="bg-white border border-gray-200 text-gray-600 px-6 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors font-medium">
+        Cancel
+      </a>
+      {% endif %}
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}
