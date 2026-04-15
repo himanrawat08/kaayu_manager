@@ -3,7 +3,7 @@
 
 {% block content %}
 
-<div class="mb-6">
+<div class="mb-5">
   {% if task %}
   <a href="{{ root_path }}/tasks/{{ task.id }}" class="text-sm text-gray-400 hover:text-gray-600 inline-flex items-center gap-1">
     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -15,141 +15,139 @@
     All Tasks
   </a>
   {% endif %}
-  <h1 class="text-2xl font-bold text-[#2E2E2E] mt-2">{{ 'Edit Task' if task else 'New Task' }}</h1>
+  <h1 class="text-xl md:text-2xl font-bold text-[#2E2E2E] mt-2">{{ 'Edit Task' if task else 'New Task' }}</h1>
 </div>
 
 {% set selected_users = task.assigned_to.split(',') if task and task.assigned_to else [] %}
 {% set form_action = root_path ~ '/tasks/' ~ task.id ~ '/edit' if task else root_path ~ '/tasks/new' %}
 
-<div class="max-w-2xl">
-  <form method="post" action="{{ form_action }}" class="space-y-5">
+<form method="post" action="{{ form_action }}" class="space-y-4 max-w-2xl">
 
-    <!-- Title -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-      <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Title <span class="text-red-400">*</span></label>
-      <input type="text" name="title" required
-        value="{{ task.title if task else '' }}"
-        placeholder="What needs to be done?"
-        class="w-full border-0 border-b border-gray-200 pb-1 text-base text-gray-800 font-medium focus:outline-none focus:border-[#B17457] bg-transparent placeholder-gray-300 transition-colors" />
-    </div>
+  <!-- Title -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-5">
+    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+      Title <span class="text-red-400">*</span>
+    </label>
+    <input type="text" name="title" required
+      value="{{ task.title if task else '' }}"
+      placeholder="What needs to be done?"
+      class="w-full border-0 border-b border-gray-200 pb-1.5 text-base text-gray-800 font-medium focus:outline-none focus:border-[#B17457] bg-transparent placeholder-gray-300 transition-colors" />
+  </div>
 
-    <!-- Core fields -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+  <!-- Core fields -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-5 space-y-4">
 
-      <!-- Department + Status -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Department</label>
-          <select name="department"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-gray-700">
-            <option value="">— None —</option>
-            {% for dept in departments %}
-            <option value="{{ dept }}" {% if task and task.department == dept %}selected{% endif %}>{{ dept }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
-          <select name="status"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-gray-700">
-            {% for s in statuses %}
-            <option value="{{ s }}" {% if task and task.status == s %}selected{% elif not task and s == 'todo' %}selected{% endif %}>{{ status_labels[s] }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-
-      <!-- Priority + Due Date -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Priority</label>
-          <select name="priority"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-gray-700">
-            {% for p in priorities %}
-            <option value="{{ p }}" {% if task and task.priority == p %}selected{% elif not task and p == 'medium' %}selected{% endif %}>{{ priority_labels[p] }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Due Date</label>
-          <input type="date" name="due_date"
-            value="{{ task.due_date.isoformat() if task and task.due_date else '' }}"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 text-gray-700" />
-        </div>
-      </div>
-
-      <!-- Assigned To -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Assigned To</label>
-        <div class="relative" id="assigned-container">
-          <button type="button" id="assigned-btn" onclick="toggleAssigned()"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors">
-            <span id="assigned-label" class="truncate text-gray-400">Select team members…</span>
-            <svg class="w-4 h-4 text-gray-300 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-          <div id="assigned-dropdown"
-            class="hidden absolute z-20 w-full bg-white border border-gray-200 rounded-xl shadow-lg mt-1 overflow-hidden">
-            <div class="max-h-52 overflow-y-auto">
-              {% if users %}
-                {% for user in users %}
-                <label class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors">
-                  <input type="checkbox" name="assigned_to" value="{{ user.full_name }}"
-                    {% if user.full_name in selected_users %}checked{% endif %}
-                    onchange="updateAssignedLabel()"
-                    class="rounded border-gray-300 text-[#B17457] focus:ring-[#B17457]" />
-                  <span class="flex-1 text-sm text-gray-700">{{ user.full_name }}</span>
-                  <span class="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{{ user.role }}</span>
-                </label>
-                {% endfor %}
-              {% else %}
-                <div class="px-4 py-3 text-sm text-gray-400">No users found.</div>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Linked Project -->
-      <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-          Linked Project <span class="text-gray-300 font-normal normal-case tracking-normal">(optional)</span>
-        </label>
-        <select name="project_id"
-          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-gray-700">
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Department</label>
+        <select name="department"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-gray-700">
           <option value="">— None —</option>
-          {% for project in projects %}
-          <option value="{{ project.id }}" {% if task and task.project_id == project.id %}selected{% endif %}>
-            {% if project.order_number %}{{ project.order_number }} — {% endif %}{{ project.name }}
-          </option>
+          {% for dept in departments %}
+          <option value="{{ dept }}" {% if task and task.department == dept %}selected{% endif %}>{{ dept }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
+        <select name="status"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-gray-700">
+          {% for s in statuses %}
+          <option value="{{ s }}" {% if task and task.status == s %}selected{% elif not task and s == 'todo' %}selected{% endif %}>{{ status_labels[s] }}</option>
           {% endfor %}
         </select>
       </div>
     </div>
 
-    <!-- Description -->
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-      <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description / Notes</label>
-      <textarea name="notes" rows="4"
-        placeholder="Add details, context, or instructions…"
-        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-y text-gray-700 placeholder-gray-300">{{ task.notes if task and task.notes else '' }}</textarea>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Priority</label>
+        <select name="priority"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-gray-700">
+          {% for p in priorities %}
+          <option value="{{ p }}" {% if task and task.priority == p %}selected{% elif not task and p == 'medium' %}selected{% endif %}>{{ priority_labels[p] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Due Date</label>
+        <input type="date" name="due_date"
+          value="{{ task.due_date.isoformat() if task and task.due_date else '' }}"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 text-gray-700" />
+      </div>
     </div>
 
-    <!-- Actions -->
-    <div class="flex gap-3">
-      <button type="submit"
-        style="background:#B17457;color:#fff;padding:10px 28px;border-radius:8px;font-size:13.5px;font-weight:500;border:none;cursor:pointer;">
-        {{ 'Save Changes' if task else 'Create Task' }}
-      </button>
-      <a href="{{ root_path }}/tasks/{{ task.id if task else '' }}"
-         class="bg-white border border-gray-200 text-gray-500 px-6 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition-colors font-medium">
-        Cancel
-      </a>
+    <!-- Assigned To multi-select -->
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Assigned To</label>
+      <div class="relative" id="assigned-container">
+        <button type="button" id="assigned-btn" onclick="toggleAssigned()"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-left flex items-center justify-between bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors min-h-[44px]">
+          <span id="assigned-label" class="truncate text-gray-400">Select team members…</span>
+          <svg class="w-4 h-4 text-gray-300 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="assigned-dropdown"
+          class="hidden absolute z-30 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl mt-1 overflow-hidden">
+          <div class="max-h-52 overflow-y-auto overscroll-contain">
+            {% if users %}
+              {% for user in users %}
+              <label class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
+                <input type="checkbox" name="assigned_to" value="{{ user.full_name }}"
+                  {% if user.full_name in selected_users %}checked{% endif %}
+                  onchange="updateAssignedLabel()"
+                  class="w-4 h-4 rounded border-gray-300 text-[#B17457] focus:ring-[#B17457]" />
+                <span class="flex-1 text-sm text-gray-700">{{ user.full_name }}</span>
+                <span class="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{{ user.role }}</span>
+              </label>
+              {% endfor %}
+            {% else %}
+              <div class="px-4 py-4 text-sm text-gray-400 text-center">No users found.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
 
-  </form>
-</div>
+    <!-- Linked Project -->
+    <div>
+      <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+        Linked Project <span class="text-gray-300 font-normal normal-case tracking-normal">(optional)</span>
+      </label>
+      <select name="project_id"
+        class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 bg-white text-gray-700">
+        <option value="">— None —</option>
+        {% for project in projects %}
+        <option value="{{ project.id }}" {% if task and task.project_id == project.id %}selected{% endif %}>
+          {% if project.order_number %}{{ project.order_number }} — {% endif %}{{ project.name }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-5">
+    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description / Notes</label>
+    <textarea name="notes" rows="4"
+      placeholder="Add details, context, or instructions…"
+      class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-y text-gray-700 placeholder-gray-300">{{ task.notes if task and task.notes else '' }}</textarea>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pb-6">
+    <a href="{{ root_path }}/tasks/{{ task.id if task else '' }}"
+       class="flex items-center justify-center bg-white border border-gray-200 text-gray-500 px-6 py-3 rounded-lg text-sm hover:bg-gray-50 transition-colors font-medium">
+      Cancel
+    </a>
+    <button type="submit"
+      style="background:#B17457;color:#fff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:500;border:none;cursor:pointer;flex:1;">
+      {{ 'Save Changes' if task else 'Create Task' }}
+    </button>
+  </div>
+
+</form>
 
 {% endblock %}
 
@@ -160,17 +158,29 @@
     const label = document.getElementById('assigned-label');
     if (checked.length === 0) {
       label.textContent = 'Select team members…';
-      label.className = label.className.replace('text-gray-700','text-gray-400');
-      if (!label.className.includes('text-gray-400')) label.classList.add('text-gray-400');
+      label.classList.add('text-gray-400');
+      label.classList.remove('text-gray-700');
     } else {
       label.textContent = checked.map(c => c.value).join(', ');
-      label.className = label.className.replace('text-gray-400','text-gray-700');
-      if (!label.className.includes('text-gray-700')) label.classList.add('text-gray-700');
+      label.classList.remove('text-gray-400');
+      label.classList.add('text-gray-700');
     }
   }
 
   function toggleAssigned() {
-    document.getElementById('assigned-dropdown').classList.toggle('hidden');
+    const dd = document.getElementById('assigned-dropdown');
+    dd.classList.toggle('hidden');
+    // Flip dropdown above if it would go off-screen
+    if (!dd.classList.contains('hidden')) {
+      const rect = dd.getBoundingClientRect();
+      if (rect.bottom > window.innerHeight - 20) {
+        dd.style.bottom = '110%';
+        dd.style.top = 'auto';
+      } else {
+        dd.style.bottom = '';
+        dd.style.top = '';
+      }
+    }
   }
 
   document.addEventListener('click', function(e) {

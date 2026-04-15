@@ -3,8 +3,7 @@
 
 {% block content %}
 
-<!-- Back -->
-<div class="mb-5">
+<div class="mb-4">
   <a href="{{ root_path }}/tasks" class="text-sm text-gray-400 hover:text-gray-600 inline-flex items-center gap-1">
     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
     All Tasks
@@ -12,39 +11,39 @@
 </div>
 
 {% if success %}
-<div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm max-w-3xl">{{ success }}</div>
+<div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm">{{ success }}</div>
 {% endif %}
 {% if error %}
-<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm max-w-3xl">{{ error }}</div>
+<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">{{ error }}</div>
 {% endif %}
 
-<div class="max-w-3xl space-y-4">
+<div class="max-w-3xl space-y-3 md:space-y-4">
 
   <!-- ── Header card ─────────────────────────────────────────────────────── -->
-  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-5">
 
-    <!-- Title row -->
-    <div class="flex items-start gap-3 mb-3">
-      <h1 class="text-xl font-bold text-[#2E2E2E] flex-1 min-w-0 leading-snug
+    <!-- Title + Edit/Delete -->
+    <div class="flex items-start gap-2 mb-3 flex-wrap">
+      <h1 class="text-lg md:text-xl font-bold text-[#2E2E2E] flex-1 min-w-0 leading-snug
                  {% if task.status == 'done' %}line-through text-gray-400{% endif %}">
         {{ task.title }}
       </h1>
-      <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="flex items-center gap-1.5 flex-shrink-0">
         <a href="{{ root_path }}/tasks/{{ task.id }}/edit"
-           class="text-xs text-gray-400 hover:text-gray-700 px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors font-medium">
+           class="inline-flex items-center justify-center min-h-[36px] text-xs text-gray-500 font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors">
           Edit
         </a>
         <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/delete"
-              onsubmit="return confirm('Delete this task?');" class="inline">
+              onsubmit="return confirm('Delete this task?');">
           <button type="submit"
-                  class="text-xs text-gray-400 hover:text-red-500 px-2.5 py-1.5 rounded-lg border border-gray-200 hover:border-red-200 transition-colors font-medium">
+                  class="inline-flex items-center justify-center min-h-[36px] text-xs text-gray-400 font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:text-red-500 hover:border-red-200 transition-colors">
             Delete
           </button>
         </form>
       </div>
     </div>
 
-    <!-- Badges -->
+    <!-- Status + Priority badges -->
     <div class="flex items-center gap-2 mb-4 flex-wrap">
       {% if task.status == 'todo' %}
         <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">To Do</span>
@@ -58,32 +57,32 @@
       {% if task.priority == 'high' %}
         <span class="text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-700 font-medium">↑ High</span>
       {% elif task.priority == 'medium' %}
-        <span class="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 font-medium border border-amber-100">Med</span>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 font-medium border border-amber-100">Medium</span>
       {% else %}
         <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-400 font-medium">Low</span>
       {% endif %}
     </div>
 
-    <!-- Meta grid -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 pt-3 border-t border-gray-50">
+    <!-- Meta grid: 2-col on mobile, 4-col on md+ -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 pt-3 border-t border-gray-50 text-sm">
       <div>
-        <div class="text-xs text-gray-400 mb-1">Department</div>
-        <div class="text-sm text-gray-700 font-medium">{{ task.department or '—' }}</div>
+        <p class="text-xs text-gray-400 mb-1">Department</p>
+        <p class="font-medium text-gray-700">{{ task.department or '—' }}</p>
       </div>
       <div>
-        <div class="text-xs text-gray-400 mb-1">Due Date</div>
+        <p class="text-xs text-gray-400 mb-1">Due Date</p>
         {% if task.due_date %}
           {% set is_overdue = task.due_date < today and task.status != 'done' %}
-          <div class="text-sm font-medium {% if is_overdue %}text-red-500{% else %}text-gray-700{% endif %}">
+          <p class="font-medium {% if is_overdue %}text-red-500{% else %}text-gray-700{% endif %}">
             {{ task.due_date.strftime('%d %b %Y') }}
             {% if is_overdue %}<span class="text-xs font-normal ml-1 opacity-80">overdue</span>{% endif %}
-          </div>
+          </p>
         {% else %}
-          <div class="text-sm text-gray-300">Not set</div>
+          <p class="text-gray-300">Not set</p>
         {% endif %}
       </div>
       <div>
-        <div class="text-xs text-gray-400 mb-1">Assigned To</div>
+        <p class="text-xs text-gray-400 mb-1">Assigned To</p>
         {% if task.assigned_to %}
           <div class="flex flex-wrap gap-1">
             {% for name in task.assigned_to.split(',') %}
@@ -91,18 +90,18 @@
             {% endfor %}
           </div>
         {% else %}
-          <div class="text-sm text-gray-300">Unassigned</div>
+          <p class="text-gray-300">Unassigned</p>
         {% endif %}
       </div>
       <div>
-        <div class="text-xs text-gray-400 mb-1">Project</div>
+        <p class="text-xs text-gray-400 mb-1">Project</p>
         {% if task.project %}
           <a href="{{ root_path }}/projects/{{ task.project.id }}"
              class="text-sm text-indigo-600 hover:underline font-medium">
             {{ task.project.order_number or task.project.name }}
           </a>
         {% else %}
-          <div class="text-sm text-gray-300">—</div>
+          <p class="text-gray-300">—</p>
         {% endif %}
       </div>
     </div>
@@ -110,32 +109,34 @@
     <!-- Description -->
     {% if task.notes %}
     <div class="mt-4 pt-3 border-t border-gray-50">
-      <div class="text-xs text-gray-400 mb-1.5">Description</div>
-      <div class="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{{ task.notes }}</div>
+      <p class="text-xs text-gray-400 mb-1.5">Description</p>
+      <p class="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{{ task.notes }}</p>
     </div>
     {% endif %}
 
     <!-- Move to -->
-    <div class="mt-4 pt-3 border-t border-gray-50 flex items-center gap-2 flex-wrap">
-      <span class="text-xs text-gray-400 mr-1">Move to:</span>
-      {% set next_statuses = {'todo':['in_progress','done'],'in_progress':['review','done'],'review':['in_progress','done'],'done':['todo']} %}
-      {% set status_colors = {'todo':'bg-gray-100 text-gray-600 hover:bg-gray-200','in_progress':'bg-blue-100 text-blue-700 hover:bg-blue-200','review':'bg-amber-100 text-amber-700 hover:bg-amber-200','done':'bg-green-100 text-green-700 hover:bg-green-200'} %}
-      {% for ns in next_statuses[task.status] %}
-      <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/status" class="inline">
-        <input type="hidden" name="status" value="{{ ns }}" />
-        <button type="submit" class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors {{ status_colors[ns] }}">
-          {{ status_labels[ns] }}
-        </button>
-      </form>
-      {% endfor %}
+    <div class="mt-4 pt-3 border-t border-gray-50">
+      <p class="text-xs text-gray-400 mb-2">Move to</p>
+      <div class="flex flex-wrap gap-2">
+        {% set next_statuses = {'todo':['in_progress','done'],'in_progress':['review','done'],'review':['in_progress','done'],'done':['todo']} %}
+        {% set status_colors = {'todo':'bg-gray-100 text-gray-600 hover:bg-gray-200','in_progress':'bg-blue-100 text-blue-700 hover:bg-blue-200','review':'bg-amber-100 text-amber-700 hover:bg-amber-200','done':'bg-green-100 text-green-700 hover:bg-green-200'} %}
+        {% for ns in next_statuses[task.status] %}
+        <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/status" class="inline">
+          <input type="hidden" name="status" value="{{ ns }}" />
+          <button type="submit"
+            class="text-sm px-4 py-2 rounded-lg font-medium transition-colors min-h-[40px] {{ status_colors[ns] }}">
+            {{ status_labels[ns] }}
+          </button>
+        </form>
+        {% endfor %}
+      </div>
     </div>
   </div>
 
   <!-- ── Sub-tasks ────────────────────────────────────────────────────────── -->
   <div id="subtasks" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
 
-    <!-- Section header -->
-    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+    <div class="flex items-center justify-between px-4 md:px-5 py-3.5 border-b border-gray-50">
       <h2 class="text-sm font-semibold text-[#2E2E2E]">Sub-tasks</h2>
       {% if task.subtasks %}
       <span class="text-xs text-gray-400">
@@ -144,21 +145,20 @@
       {% endif %}
     </div>
 
-    <!-- Sub-task list -->
     {% if task.subtasks %}
     <div class="divide-y divide-gray-50">
       {% for st in task.subtasks %}
       {% set st_files = task.files | selectattr('subtask_id', 'equalto', st.id) | list %}
-      <div class="px-5 py-4 {% if st.is_completed %}bg-gray-50/50{% endif %}">
+      <div class="px-4 md:px-5 py-4 {% if st.is_completed %}bg-gray-50/50{% endif %}">
 
-        <!-- Row: checkbox + title + delete -->
         <div class="flex items-start gap-3">
-          <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/subtasks/{{ st.id }}/toggle" class="flex-shrink-0 mt-0.5">
+          <!-- Completion toggle (large enough to tap) -->
+          <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/subtasks/{{ st.id }}/toggle">
             <button type="submit"
-              class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
-                     {% if st.is_completed %}bg-green-500 border-green-500 text-white{% else %}border-gray-300 hover:border-green-400{% endif %}">
+              class="w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 mt-0.5
+                     {% if st.is_completed %}bg-green-500 border-green-500 text-white{% else %}border-gray-300 hover:border-green-400 active:bg-green-50{% endif %}">
               {% if st.is_completed %}
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
               </svg>
               {% endif %}
@@ -166,10 +166,10 @@
           </form>
 
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-800 {% if st.is_completed %}line-through text-gray-400{% endif %}">{{ st.title }}</p>
+            <p class="text-sm font-medium text-gray-800 leading-snug {% if st.is_completed %}line-through text-gray-400{% endif %}">{{ st.title }}</p>
 
-            <!-- Meta chips -->
-            <div class="flex flex-wrap items-center gap-2 mt-1.5">
+            <!-- Meta -->
+            <div class="flex flex-wrap items-center gap-1.5 mt-2">
               {% if st.assigned_to %}
                 {% for name in st.assigned_to.split(',') %}
                 <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">{{ name.strip() }}</span>
@@ -181,27 +181,19 @@
                   Due {{ st.due_date.strftime('%d %b %Y') }}{% if st_overdue %} · overdue{% endif %}
                 </span>
               {% endif %}
-              {% if st_files %}
-                <span class="text-xs text-gray-400">📎 {{ st_files | length }}</span>
-              {% endif %}
-              {% if st.notes %}
-                <span class="text-xs text-gray-400">💬 {{ st.notes | length }}</span>
-              {% endif %}
             </div>
 
-            <!-- Expandable sections — Files + Notes -->
-            <div class="mt-2.5 flex flex-wrap gap-2 text-xs">
-
-              <!-- Files toggle -->
+            <!-- Files / Notes toggle chips -->
+            <div class="flex flex-wrap gap-2 mt-2.5">
               <button type="button" onclick="toggleSection('st-files-{{ st.id }}')"
-                class="text-gray-400 hover:text-gray-600 underline underline-offset-2 decoration-dotted transition-colors">
-                {% if st_files %}Files ({{ st_files | length }}){% else %}+ File{% endif %}
+                class="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors font-medium min-h-[32px]">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                Files{% if st_files %} ({{ st_files | length }}){% endif %}
               </button>
-
-              <!-- Notes toggle -->
               <button type="button" onclick="toggleSection('st-notes-{{ st.id }}')"
-                class="text-gray-400 hover:text-gray-600 underline underline-offset-2 decoration-dotted transition-colors">
-                {% if st.notes %}Notes ({{ st.notes | length }}){% else %}+ Note{% endif %}
+                class="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors font-medium min-h-[32px]">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                Notes{% if st.notes %} ({{ st.notes | length }}){% endif %}
               </button>
             </div>
 
@@ -210,26 +202,26 @@
               {% if st_files %}
               <div class="space-y-1.5">
                 {% for f in st_files %}
-                <div class="flex items-center gap-2 text-xs bg-gray-50 rounded-lg px-2.5 py-2">
-                  <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                  </svg>
+                <div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 text-xs">
+                  <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                   <a href="{{ storage_url(f.stored_path) }}" target="_blank"
                      class="text-indigo-600 hover:underline truncate flex-1">{{ f.original_filename }}</a>
                   <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/files/{{ f.id }}/delete"
-                        onsubmit="return confirm('Delete file?');" class="inline flex-shrink-0">
-                    <button type="submit" class="text-gray-300 hover:text-red-400 transition-colors text-base leading-none">&times;</button>
+                        onsubmit="return confirm('Delete file?');">
+                    <button type="submit" class="text-gray-300 hover:text-red-400 transition-colors text-base leading-none p-1">&times;</button>
                   </form>
                 </div>
                 {% endfor %}
               </div>
               {% endif %}
               <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/subtasks/{{ st.id }}/files/upload"
-                    enctype="multipart/form-data" class="flex items-center gap-2 flex-wrap">
+                    enctype="multipart/form-data" class="flex flex-wrap items-center gap-2 pt-1">
                 <input type="file" name="file"
-                  class="text-xs text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-gray-200 file:text-xs file:bg-white file:text-gray-600 file:cursor-pointer hover:file:bg-gray-50" />
+                  class="text-xs text-gray-600 w-full sm:w-auto
+                         file:py-2 file:px-3 file:rounded-lg file:border file:border-gray-200
+                         file:text-xs file:bg-white file:text-gray-600 file:cursor-pointer hover:file:bg-gray-50" />
                 <button type="submit"
-                  class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors flex-shrink-0 font-medium">
+                  class="text-xs px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors font-medium min-h-[36px]">
                   Upload
                 </button>
               </form>
@@ -237,22 +229,22 @@
 
             <!-- Notes panel -->
             <div id="st-notes-{{ st.id }}" class="hidden mt-3 space-y-2">
-              {% for sn in st.notes %}
               {% set sn_bg = {'comment':'bg-white border-gray-100','feedback':'bg-blue-50 border-blue-100','revision_request':'bg-amber-50 border-amber-100','approval':'bg-green-50 border-green-100'} %}
               {% set sn_pill = {'comment':'bg-gray-100 text-gray-500','feedback':'bg-blue-100 text-blue-600','revision_request':'bg-amber-100 text-amber-700','approval':'bg-green-100 text-green-700'} %}
+              {% for sn in st.notes %}
               <div class="rounded-lg border p-3 text-xs {{ sn_bg.get(sn.note_type, 'bg-white border-gray-100') }}">
                 <div class="flex items-center justify-between gap-2 mb-2 flex-wrap">
-                  <div class="flex items-center gap-1.5">
+                  <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="font-semibold text-gray-700">{{ sn.author }}</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-xs font-medium {{ sn_pill.get(sn.note_type, 'bg-gray-100 text-gray-500') }}">
+                    <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ sn_pill.get(sn.note_type, 'bg-gray-100 text-gray-500') }}">
                       {{ note_type_labels.get(sn.note_type, sn.note_type) }}
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-gray-400">
                     <span>{{ sn.created_at.strftime('%d %b, %I:%M %p') }}</span>
                     <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/subtasks/{{ st.id }}/note/{{ sn.id }}/delete"
-                          onsubmit="return confirm('Delete note?');" class="inline">
-                      <button type="submit" class="text-gray-300 hover:text-red-400 transition-colors text-sm leading-none">&times;</button>
+                          onsubmit="return confirm('Delete note?');">
+                      <button type="submit" class="text-gray-300 hover:text-red-400 transition-colors p-1 text-base leading-none">&times;</button>
                     </form>
                   </div>
                 </div>
@@ -261,18 +253,18 @@
               {% endfor %}
 
               <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/subtasks/{{ st.id }}/note"
-                    class="space-y-2">
+                    class="space-y-2 pt-1">
                 <textarea name="body" rows="2" required placeholder="Add a note…"
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300 resize-none"></textarea>
-                <div class="flex items-center gap-2">
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-300 resize-none"></textarea>
+                <div class="flex flex-wrap items-center gap-2">
                   <select name="note_type"
-                    class="border border-gray-200 rounded-lg px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300">
+                    class="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300 min-h-[36px]">
                     {% for nt in note_types %}
                     <option value="{{ nt }}">{{ note_type_labels[nt] }}</option>
                     {% endfor %}
                   </select>
                   <button type="submit"
-                    style="background:#B17457;color:#fff;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:500;border:none;cursor:pointer;">
+                    style="background:#B17457;color:#fff;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:500;border:none;cursor:pointer;min-height:36px;">
                     Post
                   </button>
                 </div>
@@ -283,48 +275,51 @@
 
           <!-- Delete subtask -->
           <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/subtasks/{{ st.id }}/delete"
-                onsubmit="return confirm('Delete this sub-task?');" class="flex-shrink-0 mt-0.5">
-            <button type="submit" class="text-gray-300 hover:text-red-400 text-base leading-none transition-colors">&times;</button>
+                onsubmit="return confirm('Delete this sub-task?');" class="flex-shrink-0">
+            <button type="submit" class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors rounded-lg hover:bg-red-50 text-lg leading-none">&times;</button>
           </form>
-        </div><!-- /row -->
+        </div>
 
-      </div><!-- /subtask -->
+      </div>
       {% endfor %}
     </div>
     {% else %}
-    <div class="px-5 py-6 text-center text-sm text-gray-400">No sub-tasks yet.</div>
+    <div class="px-5 py-8 text-center text-sm text-gray-400">No sub-tasks yet.</div>
     {% endif %}
 
     <!-- Add sub-task -->
-    <div class="px-5 py-4 border-t border-gray-50 bg-gray-50/40">
-      <button type="button" onclick="toggleSection('add-subtask')"
-        class="text-sm font-medium text-[#B17457] hover:text-[#9e6348] transition-colors">
-        + Add Sub-task
+    <div class="px-4 md:px-5 py-4 border-t border-gray-50 bg-gray-50/40">
+      <button type="button" onclick="toggleSection('add-subtask')" id="add-subtask-btn"
+        class="inline-flex items-center gap-1.5 text-sm font-medium text-[#B17457] hover:text-[#9e6348] transition-colors py-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Sub-task
       </button>
       <div id="add-subtask" class="hidden mt-3">
         <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/subtasks/new" id="subtask-form">
           <div class="space-y-3">
             <input type="text" name="title" required placeholder="Sub-task title…"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Assign to -->
               <div>
-                <label class="block text-xs text-gray-500 mb-1">Assign to</label>
+                <label class="block text-xs text-gray-500 mb-1.5">Assign to</label>
                 <div class="relative" id="st-assigned-container">
                   <button type="button" onclick="toggleStAssigned()"
-                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between bg-white hover:border-gray-300 transition-colors">
-                    <span id="st-assigned-label" class="truncate text-gray-400 text-sm">Select people…</span>
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-left flex items-center justify-between bg-white hover:border-gray-300 transition-colors min-h-[44px]">
+                    <span id="st-assigned-label" class="truncate text-gray-400">Select people…</span>
                     <svg class="w-3.5 h-3.5 text-gray-300 flex-shrink-0 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                   </button>
                   <div id="st-assigned-dropdown"
-                    class="hidden absolute z-20 w-full bg-white border border-gray-200 rounded-xl shadow-lg mt-1 overflow-hidden">
-                    <div class="max-h-44 overflow-y-auto">
+                    class="hidden absolute z-30 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-xl mt-1 overflow-hidden">
+                    <div class="max-h-44 overflow-y-auto overscroll-contain">
                       {% for user in users %}
-                      <label class="flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors">
+                      <label class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors">
                         <input type="checkbox" name="assigned_to" value="{{ user.full_name }}"
                           onchange="updateStLabel()"
-                          class="rounded border-gray-300 text-[#B17457]" />
+                          class="w-4 h-4 rounded border-gray-300 text-[#B17457]" />
                         <span class="text-sm text-gray-700">{{ user.full_name }}</span>
                       </label>
                       {% endfor %}
@@ -332,20 +327,23 @@
                   </div>
                 </div>
               </div>
+
+              <!-- Deadline -->
               <div>
-                <label class="block text-xs text-gray-500 mb-1">Deadline</label>
+                <label class="block text-xs text-gray-500 mb-1.5">Deadline</label>
                 <input type="date" name="due_date"
-                  class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+                  class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 min-h-[44px]" />
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <button type="submit"
-                style="background:#B17457;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;">
-                Add Sub-task
-              </button>
+
+            <div class="flex flex-col-reverse sm:flex-row gap-2">
               <button type="button" onclick="toggleSection('add-subtask')"
-                class="text-sm text-gray-400 hover:text-gray-600 px-3 py-2 transition-colors">
+                class="flex items-center justify-center text-sm text-gray-400 hover:text-gray-600 px-4 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                 Cancel
+              </button>
+              <button type="submit"
+                style="background:#B17457;color:#fff;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;flex:1;">
+                Add Sub-task
               </button>
             </div>
           </div>
@@ -353,13 +351,13 @@
       </div>
     </div>
 
-  </div><!-- /subtasks card -->
+  </div><!-- /subtasks -->
 
   <!-- ── Files ─────────────────────────────────────────────────────────────── -->
   <div id="files" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
     {% set task_level_files = task.files | rejectattr('subtask_id') | list %}
 
-    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+    <div class="flex items-center justify-between px-4 md:px-5 py-3.5 border-b border-gray-50">
       <h2 class="text-sm font-semibold text-[#2E2E2E]">Files</h2>
       {% if task_level_files %}
       <span class="text-xs text-gray-400">{{ task_level_files | length }} attached</span>
@@ -370,11 +368,9 @@
     <div class="divide-y divide-gray-50">
       {% for f in task_level_files %}
       {% set ext = f.original_filename.rsplit('.', 1)[-1].lower() if '.' in f.original_filename else '' %}
-      <div class="flex items-center gap-3 px-5 py-3">
-        <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
-                    {% if ext in ['jpg','jpeg','png','gif','webp'] %}bg-blue-50
-                    {% elif ext == 'pdf' %}bg-red-50
-                    {% else %}bg-gray-50{% endif %}">
+      <div class="flex items-center gap-3 px-4 md:px-5 py-3.5">
+        <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center
+                    {% if ext in ['jpg','jpeg','png','gif','webp'] %}bg-blue-50{% elif ext == 'pdf' %}bg-red-50{% else %}bg-gray-50{% endif %}">
           {% if ext in ['jpg','jpeg','png','gif','webp'] %}
           <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           {% elif ext == 'pdf' %}
@@ -386,29 +382,31 @@
         <div class="flex-1 min-w-0">
           <a href="{{ storage_url(f.stored_path) }}" target="_blank"
              class="text-sm font-medium text-indigo-600 hover:underline truncate block">{{ f.original_filename }}</a>
-          <div class="text-xs text-gray-400 mt-0.5">
+          <p class="text-xs text-gray-400 mt-0.5">
             {{ f.uploaded_by }} · {{ f.created_at.strftime('%d %b %Y') }}
             {% if f.size_bytes %} · {{ (f.size_bytes / 1024 / 1024) | round(1) }} MB{% endif %}
-          </div>
+          </p>
         </div>
         <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/files/{{ f.id }}/delete"
               onsubmit="return confirm('Delete file?');" class="flex-shrink-0">
-          <button type="submit" class="text-gray-300 hover:text-red-400 text-lg leading-none transition-colors">&times;</button>
+          <button type="submit" class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors text-lg leading-none">&times;</button>
         </form>
       </div>
       {% endfor %}
     </div>
     {% else %}
-    <div class="px-5 py-4 text-sm text-gray-400">No files attached yet.</div>
+    <div class="px-5 py-5 text-sm text-gray-400">No files attached yet.</div>
     {% endif %}
 
-    <div class="px-5 py-3.5 border-t border-gray-50 bg-gray-50/40">
+    <div class="px-4 md:px-5 py-3.5 border-t border-gray-50 bg-gray-50/40">
       <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/files/upload"
-            enctype="multipart/form-data" class="flex items-center gap-3 flex-wrap">
+            enctype="multipart/form-data" class="flex flex-wrap items-center gap-3">
         <input type="file" name="file"
-          class="text-sm text-gray-600 file:mr-2 file:py-1.5 file:px-4 file:rounded-lg file:border file:border-gray-200 file:text-sm file:bg-white file:text-gray-600 file:cursor-pointer hover:file:bg-gray-50" />
+          class="text-sm text-gray-600 w-full sm:w-auto
+                 file:py-2 file:px-4 file:rounded-lg file:border file:border-gray-200
+                 file:text-sm file:bg-white file:text-gray-600 file:cursor-pointer hover:file:bg-gray-50" />
         <button type="submit"
-          class="text-sm px-4 py-1.5 bg-white border border-gray-200 hover:border-gray-300 text-gray-600 rounded-lg transition-colors font-medium flex-shrink-0">
+          class="text-sm px-5 py-2 bg-white border border-gray-200 hover:border-gray-300 text-gray-600 rounded-lg transition-colors font-medium min-h-[40px]">
           Upload
         </button>
       </form>
@@ -418,7 +416,7 @@
   <!-- ── Notes & Feedback ──────────────────────────────────────────────────── -->
   <div id="notes" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
 
-    <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+    <div class="flex items-center justify-between px-4 md:px-5 py-3.5 border-b border-gray-50">
       <h2 class="text-sm font-semibold text-[#2E2E2E]">Notes &amp; Feedback</h2>
       {% if task.thread %}
       <span class="text-xs text-gray-400">{{ task.thread | length }}</span>
@@ -430,43 +428,41 @@
       {% for note in task.thread %}
       {% set note_bg = {'comment':'bg-white','feedback':'bg-blue-50','revision_request':'bg-amber-50','approval':'bg-green-50'} %}
       {% set note_pill = {'comment':'bg-gray-100 text-gray-500','feedback':'bg-blue-100 text-blue-600','revision_request':'bg-amber-100 text-amber-700','approval':'bg-green-100 text-green-700'} %}
-      <div class="px-5 py-4 {{ note_bg.get(note.note_type, 'bg-white') }}">
-        <div class="flex items-center justify-between gap-2 mb-2 flex-wrap">
-          <div class="flex items-center gap-2">
+      <div class="px-4 md:px-5 py-4 {{ note_bg.get(note.note_type, 'bg-white') }}">
+        <div class="flex items-start justify-between gap-2 mb-2 flex-wrap">
+          <div class="flex flex-wrap items-center gap-2">
             <span class="text-sm font-semibold text-gray-800">{{ note.author }}</span>
             <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ note_pill.get(note.note_type, 'bg-gray-100 text-gray-500') }}">
               {{ note_type_labels.get(note.note_type, note.note_type) }}
             </span>
-          </div>
-          <div class="flex items-center gap-3">
             <span class="text-xs text-gray-400">{{ note.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
-            <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/note/{{ note.id }}/delete"
-                  onsubmit="return confirm('Delete note?');" class="inline">
-              <button type="submit" class="text-gray-300 hover:text-red-400 transition-colors text-base leading-none">&times;</button>
-            </form>
           </div>
+          <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/note/{{ note.id }}/delete"
+                onsubmit="return confirm('Delete note?');">
+            <button type="submit" class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors text-lg leading-none">&times;</button>
+          </form>
         </div>
         <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ note.body }}</p>
       </div>
       {% endfor %}
     </div>
     {% else %}
-    <div class="px-5 py-6 text-center text-sm text-gray-400">No notes yet.</div>
+    <div class="px-5 py-8 text-center text-sm text-gray-400">No notes yet.</div>
     {% endif %}
 
-    <div class="px-5 py-4 border-t border-gray-50 bg-gray-50/40">
+    <div class="px-4 md:px-5 py-4 border-t border-gray-50 bg-gray-50/40">
       <form method="post" action="{{ root_path }}/tasks/{{ task.id }}/note" class="space-y-3">
         <textarea name="body" rows="3" required placeholder="Write a comment, feedback, or revision request…"
-          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-y"></textarea>
-        <div class="flex items-center gap-3">
+          class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-y"></textarea>
+        <div class="flex flex-wrap items-center gap-2">
           <select name="note_type"
-            class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200">
+            class="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 min-h-[44px]">
             {% for nt in note_types %}
             <option value="{{ nt }}">{{ note_type_labels[nt] }}</option>
             {% endfor %}
           </select>
           <button type="submit"
-            style="background:#B17457;color:#fff;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;">
+            style="background:#B17457;color:#fff;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;min-height:44px;">
             Post Note
           </button>
         </div>
@@ -474,7 +470,7 @@
     </div>
   </div>
 
-</div><!-- /max-w-3xl -->
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -485,7 +481,8 @@
   }
 
   function toggleStAssigned() {
-    document.getElementById('st-assigned-dropdown').classList.toggle('hidden');
+    const dd = document.getElementById('st-assigned-dropdown');
+    dd.classList.toggle('hidden');
   }
 
   function updateStLabel() {
@@ -503,8 +500,8 @@
   }
 
   document.addEventListener('click', function(e) {
-    const container = document.getElementById('st-assigned-container');
-    if (container && !container.contains(e.target)) {
+    const stCont = document.getElementById('st-assigned-container');
+    if (stCont && !stCont.contains(e.target)) {
       document.getElementById('st-assigned-dropdown').classList.add('hidden');
     }
   });

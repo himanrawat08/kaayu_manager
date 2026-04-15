@@ -4,15 +4,15 @@
 {% block content %}
 
 <div class="mb-5 flex items-center justify-between gap-3">
-  <h1 class="text-2xl font-bold text-[#2E2E2E]">Tasks</h1>
+  <h1 class="text-xl md:text-2xl font-bold text-[#2E2E2E]">Tasks</h1>
   <a href="{{ root_path }}/tasks/new"
-     style="background:#B17457;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none;white-space:nowrap;">
+     style="background:#B17457;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none;white-space:nowrap;">
     + New Task
   </a>
 </div>
 
 <!-- Status summary -->
-<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-5">
   {% set chip_data = [
     ('todo',        counts.todo,        'bg-gray-100 text-gray-500',   'To Do'),
     ('in_progress', counts.in_progress, 'bg-blue-100 text-blue-700',   'In Progress'),
@@ -21,10 +21,10 @@
   ] %}
   {% for chip_status, chip_count, chip_cls, chip_label in chip_data %}
   <a href="?status={{ chip_status }}"
-     class="bg-white rounded-xl border {% if status_filter == chip_status %}border-gray-400 shadow-sm{% else %}border-gray-100{% endif %} px-4 py-3 flex items-center justify-between hover:border-gray-300 transition-colors no-underline">
+     class="bg-white rounded-xl border {% if status_filter == chip_status %}border-gray-400 shadow-sm{% else %}border-gray-100{% endif %} px-3 md:px-4 py-3 flex items-center justify-between hover:border-gray-300 transition-colors no-underline">
     <div>
-      <div class="text-xl font-bold text-[#2E2E2E]">{{ chip_count }}</div>
-      <div class="text-xs text-gray-400 mt-0.5">{{ chip_label }}</div>
+      <div class="text-lg md:text-xl font-bold text-[#2E2E2E]">{{ chip_count }}</div>
+      <div class="text-xs text-gray-400 mt-0.5 hidden sm:block">{{ chip_label }}</div>
     </div>
     <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ chip_cls }}">{{ chip_label }}</span>
   </a>
@@ -32,45 +32,110 @@
 </div>
 
 <!-- Filters -->
-<form method="get" class="mb-4 flex flex-wrap gap-2 items-center">
-  <input type="text" name="q" value="{{ q }}" placeholder="Search tasks…"
-    class="border border-gray-200 rounded-lg px-3 py-2 text-sm flex-1 min-w-[160px] focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white" />
+<form method="get" class="mb-4">
+  <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 items-stretch sm:items-center">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search tasks…"
+      class="border border-gray-200 rounded-lg px-3 py-2.5 text-sm w-full sm:flex-1 sm:min-w-[160px] focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white" />
 
-  <select name="department"
-    class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-    <option value="">All Departments</option>
-    {% for dept in departments %}
-    <option value="{{ dept }}" {% if dept_filter == dept %}selected{% endif %}>{{ dept }}</option>
-    {% endfor %}
-  </select>
+    <div class="grid grid-cols-2 sm:flex gap-2">
+      <select name="department"
+        class="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 w-full sm:w-auto">
+        <option value="">All Depts</option>
+        {% for dept in departments %}
+        <option value="{{ dept }}" {% if dept_filter == dept %}selected{% endif %}>{{ dept }}</option>
+        {% endfor %}
+      </select>
 
-  <select name="status"
-    class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-    <option value="">All Statuses</option>
-    {% for s in statuses %}
-    <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ status_labels[s] }}</option>
-    {% endfor %}
-  </select>
+      <select name="status"
+        class="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 w-full sm:w-auto">
+        <option value="">All Statuses</option>
+        {% for s in statuses %}
+        <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ status_labels[s] }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-  <select name="priority"
-    class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
-    <option value="">All Priorities</option>
-    {% for p in priorities %}
-    <option value="{{ p }}" {% if priority_filter == p %}selected{% endif %}>{{ priority_labels[p] }}</option>
-    {% endfor %}
-  </select>
+    <div class="flex gap-2">
+      <select name="priority"
+        class="border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 flex-1 sm:flex-none">
+        <option value="">All Priorities</option>
+        {% for p in priorities %}
+        <option value="{{ p }}" {% if priority_filter == p %}selected{% endif %}>{{ priority_labels[p] }}</option>
+        {% endfor %}
+      </select>
 
-  <button type="submit"
-    class="bg-gray-100 border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-200 transition-colors">
-    Filter
-  </button>
-  {% if dept_filter or status_filter or priority_filter or q %}
-  <a href="{{ root_path }}/tasks" class="text-sm text-gray-400 hover:text-gray-600 px-2">Clear</a>
-  {% endif %}
+      <button type="submit"
+        class="bg-gray-100 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg text-sm hover:bg-gray-200 transition-colors font-medium flex-shrink-0">
+        Filter
+      </button>
+      {% if dept_filter or status_filter or priority_filter or q %}
+      <a href="{{ root_path }}/tasks" class="text-sm text-gray-400 hover:text-gray-600 flex items-center px-1">Clear</a>
+      {% endif %}
+    </div>
+  </div>
 </form>
 
 {% if tasks %}
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+
+<!-- ── Mobile card view (hidden on md+) ────────────────────────────────── -->
+<div class="md:hidden space-y-2">
+  {% for task in tasks %}
+  {% set is_overdue = task.due_date and task.due_date < today and task.status != 'done' %}
+  <a href="{{ root_path }}/tasks/{{ task.id }}"
+     class="block bg-white rounded-xl border border-gray-100 p-4 active:bg-gray-50 transition-colors no-underline {% if task.status == 'done' %}opacity-60{% endif %}">
+
+    <!-- Title + status -->
+    <div class="flex items-start gap-2 mb-2">
+      <p class="text-sm font-semibold text-[#2E2E2E] leading-snug flex-1 min-w-0
+                {% if task.status == 'done' %}line-through text-gray-400{% endif %}">
+        {{ task.title }}
+      </p>
+      {% if task.status == 'todo' %}
+        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium flex-shrink-0">To Do</span>
+      {% elif task.status == 'in_progress' %}
+        <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium flex-shrink-0">In Progress</span>
+      {% elif task.status == 'review' %}
+        <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium flex-shrink-0">Review</span>
+      {% elif task.status == 'done' %}
+        <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium flex-shrink-0">Done</span>
+      {% endif %}
+    </div>
+
+    <!-- Meta row -->
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+      {% if task.department %}
+      <span class="bg-gray-100 px-2 py-0.5 rounded-full text-gray-500">{{ task.department }}</span>
+      {% endif %}
+
+      {% if task.priority == 'high' %}
+        <span class="text-red-600 font-medium">↑ High</span>
+      {% elif task.priority == 'low' %}
+        <span class="text-gray-400">Low</span>
+      {% endif %}
+
+      {% if task.due_date %}
+      <span class="{% if is_overdue %}text-red-500 font-medium{% else %}text-gray-400{% endif %}">
+        {{ '⚠ ' if is_overdue else '' }}{{ task.due_date.strftime('%d %b %Y') }}
+      </span>
+      {% endif %}
+
+      {% if task.assigned_to %}
+        {% set names = task.assigned_to.split(',') %}
+        <span class="text-gray-400">
+          {{ names[0].strip() }}{% if names | length > 1 %} +{{ names | length - 1 }}{% endif %}
+        </span>
+      {% endif %}
+    </div>
+
+    {% if task.project %}
+    <div class="mt-1.5 text-xs text-gray-400">{{ task.project.order_number or task.project.name }}</div>
+    {% endif %}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- ── Desktop / tablet table (hidden below md) ────────────────────────── -->
+<div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
   <div class="overflow-x-auto">
     <table class="w-full text-sm min-w-[680px]">
       <thead style="background:#FAFAF8;border-bottom:1px solid #EEE;">
@@ -88,8 +153,6 @@
         {% for task in tasks %}
         {% set is_overdue = task.due_date and task.due_date < today and task.status != 'done' %}
         <tr class="border-b border-gray-50 last:border-0 hover:bg-[#FDFCF9] transition-colors {% if task.status == 'done' %}opacity-55{% endif %}">
-
-          <!-- Task title + project -->
           <td class="px-4 py-3 max-w-[240px]">
             <a href="{{ root_path }}/tasks/{{ task.id }}"
                class="font-medium text-[#2E2E2E] hover:text-[#B17457] leading-snug block truncate {% if task.status == 'done' %}line-through text-gray-400{% endif %}">
@@ -99,67 +162,38 @@
             <div class="text-xs text-gray-400 truncate mt-0.5">{{ task.project.order_number or task.project.name }}</div>
             {% endif %}
           </td>
-
-          <!-- Department -->
           <td class="px-4 py-3 whitespace-nowrap">
             {% if task.department %}
             <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{{ task.department }}</span>
-            {% else %}
-            <span class="text-gray-300">—</span>
-            {% endif %}
+            {% else %}<span class="text-gray-300">—</span>{% endif %}
           </td>
-
-          <!-- Status -->
           <td class="px-4 py-3 whitespace-nowrap">
-            {% if task.status == 'todo' %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">To Do</span>
-            {% elif task.status == 'in_progress' %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">In Progress</span>
-            {% elif task.status == 'review' %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Review</span>
-            {% elif task.status == 'done' %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Done</span>
+            {% if task.status == 'todo' %}<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">To Do</span>
+            {% elif task.status == 'in_progress' %}<span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">In Progress</span>
+            {% elif task.status == 'review' %}<span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Review</span>
+            {% elif task.status == 'done' %}<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Done</span>
             {% endif %}
           </td>
-
-          <!-- Priority -->
           <td class="px-4 py-3 whitespace-nowrap">
-            {% if task.priority == 'high' %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">High</span>
-            {% elif task.priority == 'medium' %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Med</span>
-            {% else %}
-              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">Low</span>
+            {% if task.priority == 'high' %}<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">High</span>
+            {% elif task.priority == 'medium' %}<span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Med</span>
+            {% else %}<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">Low</span>
             {% endif %}
           </td>
-
-          <!-- Due date -->
           <td class="px-4 py-3 whitespace-nowrap text-xs {% if is_overdue %}text-red-500 font-medium{% else %}text-gray-500{% endif %}">
             {% if task.due_date %}
               {{ task.due_date.strftime('%d %b %Y') }}
               {% if is_overdue %}<div class="text-red-400 font-normal">overdue</div>{% endif %}
-            {% else %}
-              <span class="text-gray-300">—</span>
-            {% endif %}
+            {% else %}<span class="text-gray-300">—</span>{% endif %}
           </td>
-
-          <!-- Assigned -->
           <td class="px-4 py-3 text-xs text-gray-500 max-w-[120px]">
             {% if task.assigned_to %}
               {% set names = task.assigned_to.split(',') %}
-              {% if names | length == 1 %}
-                <span class="truncate block">{{ names[0].strip() }}</span>
-              {% else %}
-                <span class="truncate block" title="{{ task.assigned_to | replace(',', ', ') }}">
-                  {{ names[0].strip() }}<span class="text-gray-400 ml-1">+{{ names | length - 1 }}</span>
-                </span>
-              {% endif %}
-            {% else %}
-              <span class="text-gray-300">—</span>
-            {% endif %}
+              <span class="truncate block" title="{{ task.assigned_to | replace(',', ', ') }}">
+                {{ names[0].strip() }}{% if names | length > 1 %}<span class="text-gray-400 ml-1">+{{ names | length - 1 }}</span>{% endif %}
+              </span>
+            {% else %}<span class="text-gray-300">—</span>{% endif %}
           </td>
-
-          <!-- View -->
           <td class="px-4 py-3 text-right">
             <a href="{{ root_path }}/tasks/{{ task.id }}"
                class="text-xs text-gray-400 hover:text-[#B17457] px-2 py-1 rounded transition-colors">View →</a>
@@ -170,13 +204,14 @@
     </table>
   </div>
 </div>
+
 {% else %}
-<div class="text-center py-20 text-gray-400">
+<div class="text-center py-16 text-gray-400">
   {% if dept_filter or status_filter or priority_filter or q %}
   <p class="text-base">No tasks match your filters.</p>
   <a href="{{ root_path }}/tasks" class="mt-3 inline-block text-[#B17457] hover:underline text-sm">Clear filters</a>
   {% else %}
-  <svg class="mx-auto mb-4 text-gray-200" width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg class="mx-auto mb-4 text-gray-200" width="44" height="44" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
   </svg>
   <p class="text-base">No tasks yet.</p>
