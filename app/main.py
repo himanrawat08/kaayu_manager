@@ -188,7 +188,7 @@ templates.env.filters["filesizeformat"] = _filesizeformat
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
 app.include_router(clients.router)
-app.include_router(projects.router)
+app.include_router(projects.router,       dependencies=[require_permission("projects")])
 app.include_router(email_quick.router)
 app.include_router(yarn.router)
 app.include_router(leads.router,          dependencies=[require_permission("leads")])

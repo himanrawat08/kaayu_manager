@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException
 from starlette.requests import Request
 
 ROLE_PERMISSIONS: dict[str, list[str]] = {
+    "projects":         ["super_admin", "admin", "sales", "supervisor", "viewer"],
     "contacts":         ["super_admin", "admin", "sales", "design", "viewer"],
     "leads":            ["super_admin", "sales", "design", "viewer"],
     "quotations":       ["super_admin", "sales", "viewer"],
