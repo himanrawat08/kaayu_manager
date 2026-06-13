@@ -21,29 +21,24 @@
       margin: 0 auto;
     }
     @page {
-      margin: 12mm;
-      size: A4;
-    }
-    @page :first {
       margin: 0;
+      size: A4;
     }
     @media print {
       .no-print { display: none !important; }
-      html {
+      html, body {
+        margin: 0;
         background: #F0EBE0;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
       body {
-        margin: 0;
-        padding: 9mm 12mm;
-        background: transparent;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        padding: 12mm;
+        max-width: none;
       }
       .doc-header { margin-bottom: 16px; }
       .info-section { margin-bottom: 12px; }
-      .footer-row { break-inside: avoid; page-break-inside: avoid; }
+      .footer-row { padding-top: 10mm; break-inside: avoid; page-break-inside: avoid; }
       .payment-terms-section { break-inside: avoid; page-break-inside: avoid; }
       .page-footer { margin-top: 14px; break-inside: avoid; page-break-inside: avoid; }
     }
