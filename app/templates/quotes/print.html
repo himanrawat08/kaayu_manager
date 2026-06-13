@@ -38,7 +38,9 @@
       }
       .doc-header { margin-bottom: 16px; }
       .info-section { margin-bottom: 12px; }
-      .footer-row { padding-top: 10mm; break-inside: avoid; page-break-inside: avoid; }
+      .items-table tbody tr { break-inside: avoid; page-break-inside: avoid; }
+      .totals-section { break-inside: avoid; page-break-inside: avoid; }
+      .footer-row { padding-top: 12mm; break-inside: avoid; page-break-inside: avoid; }
       .payment-terms-section { break-inside: avoid; page-break-inside: avoid; }
       .page-footer { margin-top: 14px; break-inside: avoid; page-break-inside: avoid; }
     }
@@ -315,7 +317,7 @@
 {% endif %}
 
 <!-- ── Totals (right-aligned) ── -->
-<div style="margin-bottom:16px;">
+<div class="totals-section" style="margin-bottom:16px;">
   <table class="totals-table">
     <colgroup>
       <col style="width:38%;" />
