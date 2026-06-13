@@ -20,19 +20,24 @@
       max-width: 860px;
       margin: 0 auto;
     }
+    @page {
+      margin: 0;
+      size: A4;
+    }
     @media print {
       .no-print { display: none !important; }
-      @page {
-        margin: 0;
-        size: A4;
-      }
       html, body {
         margin: 0;
-        padding: 12mm 14mm;
+        padding: 9mm 12mm;
         background: #F0EBE0;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+      .doc-header { margin-bottom: 16px; }
+      .info-section { margin-bottom: 12px; }
+      .footer-row { break-inside: avoid; page-break-inside: avoid; }
+      .payment-terms-section { break-inside: avoid; page-break-inside: avoid; }
+      .page-footer { margin-top: 14px; break-inside: avoid; page-break-inside: avoid; }
     }
 
     /* ── Header ── */
@@ -306,7 +311,7 @@
 {% endif %}
 
 <!-- ── Totals (right-aligned) ── -->
-<div style="margin-bottom:22px;">
+<div style="margin-bottom:16px;">
   <table class="totals-table">
     <colgroup>
       <col style="width:38%;" />

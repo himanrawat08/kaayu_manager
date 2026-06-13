@@ -7,35 +7,31 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-SALES_FLOW_STAGES = ["preliminary_design", "quote_sent", "quote_accepted"]
-SALES_OUTCOME_STAGES = ["hold", "won", "lost"]
+SALES_FLOW_STAGES = ["preliminary_design", "quote_sent"]
+SALES_OUTCOME_STAGES = ["quote_accepted", "hold", "lost"]
 SALES_STAGES = SALES_FLOW_STAGES + SALES_OUTCOME_STAGES
 PRODUCTION_STAGES = ["design", "laser_cutting", "polish", "pre_production_check", "production", "completed"]
 STAGES = SALES_STAGES + PRODUCTION_STAGES
 
 STAGE_LABELS = {
     "preliminary_design": "Preliminary Design",
-    "quote_sent": "Quote Sent",
-    "quote_accepted": "Quote Accepted",
-    "hold": "Hold",
-    "won": "Won",
-    "lost": "Lost",
-    "design": "Design",
-    "laser_cutting": "Laser Cutting",
-    "polish": "Polish",
+    "quote_sent":         "Quote Sent",
+    "quote_accepted":     "Quote Accepted",
+    "hold":               "Hold",
+    "lost":               "Lost",
+    "design":             "Design",
+    "laser_cutting":      "Laser Cutting",
+    "polish":             "Polish",
     "pre_production_check": "Pre-Production Check",
-    "production": "Production",
-    "completed": "Completed",
+    "production":         "Production",
+    "completed":          "Completed",
 }
 
-# Maps each stage to the next stage for the "Advance" button.
-# Outcome stages (hold, lost) are not in this map — no automatic advance.
-# Won advances to Design (enters production pipeline).
+# Advance map — outcome stages (hold, lost) and quote_sent have no
+# automatic next step; the outcome chips handle those transitions.
 STAGE_ADVANCE_MAP = {
     "preliminary_design": "quote_sent",
-    "quote_sent":         "quote_accepted",
     "quote_accepted":     "design",
-    "won":                "design",
     "design":             "laser_cutting",
     "laser_cutting":      "polish",
     "polish":             "pre_production_check",
