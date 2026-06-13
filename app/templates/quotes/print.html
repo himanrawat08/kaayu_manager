@@ -29,10 +29,15 @@
     }
     @media print {
       .no-print { display: none !important; }
-      html, body {
+      html {
+        background: #F0EBE0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      body {
         margin: 0;
         padding: 9mm 12mm;
-        background: #F0EBE0;
+        background: transparent;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
