@@ -21,8 +21,11 @@
       margin: 0 auto;
     }
     @page {
-      margin: 0;
+      margin: 12mm;
       size: A4;
+    }
+    @page :first {
+      margin: 0;
     }
     @media print {
       .no-print { display: none !important; }
