@@ -32,7 +32,7 @@
           <option value="{{ p.id }}"
             {% if quote and quote.project_id == p.id %}selected
             {% elif prefill_project_id and prefill_project_id == p.id|string %}selected{% endif %}>
-            {{ p.name }}
+            {{ p.name }}{% if p.client %} — {{ p.client.name }}{% endif %}{% if p.order_number %} ({{ p.order_number }}){% endif %}
           </option>
           {% endfor %}
         </select>
