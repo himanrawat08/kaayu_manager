@@ -295,7 +295,7 @@
   </div>
 
   {# ── Inline Quotes ── #}
-  {% if role != 'supervisor' %}
+  {% if role not in ('supervisor', 'design') %}
   <div class="bg-white rounded-lg shadow-sm border border-gray-100 mb-6 overflow-hidden">
     <div class="px-6 pt-5 pb-3 border-b border-gray-100 flex items-center gap-3">
       <h2 class="text-lg font-semibold">Quotations</h2>
