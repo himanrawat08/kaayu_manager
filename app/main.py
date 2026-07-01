@@ -141,6 +141,13 @@ class RequireLoginMiddleware:
             await response(scope, receive, send)
             return
 
+        # Design role: block phonebook
+        if session.get("user_role") == "design" and path.startswith("/phonebook"):
+            from starlette.responses import Response
+            response = Response("Forbidden", status_code=403)
+            await response(scope, receive, send)
+            return
+
         # Supervisor role: block project create/edit pages
         import re as _re
         if session.get("user_role") == "supervisor" and (
