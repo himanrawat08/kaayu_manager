@@ -111,30 +111,35 @@ def _parse_date(s: str) -> date | None:
         return None
 
 
-def _sync_project_status(q: Quotation, db: Session) -> None:
-    """Derive and persist project.status from the statuses of all its quotes.
+def _derive_project_status(project) -> str:
+    """Compute the correct project status from stage + quote statuses.
 
     Priority:
-      accepted  → active   (deal won, work in progress)
-      on_hold   → on_hold  (client has paused)
-      draft/sent → active  (negotiations still open)
-      all rejected → lost
+      completed stage → completed
+      accepted quote  → active
+      on_hold quote   → on_hold
+      draft/sent quote → active  (negotiations open)
+      all rejected    → lost
     """
+    if project.current_stage == "completed":
+        return "completed"
+    quotes = project.quotations
+    if not quotes:
+        return "active"
+    if any(qt.status == "accepted" for qt in quotes):
+        return "active"
+    if any(qt.status == "on_hold" for qt in quotes):
+        return "on_hold"
+    if any(qt.status in ("draft", "sent") for qt in quotes):
+        return "active"
+    return "lost"
+
+
+def _sync_project_status(q: Quotation, db: Session) -> None:
     project = q.project
     if not project:
         return
-    quotes = project.quotations
-    if not quotes:
-        new_status = "active"
-    elif any(qt.status == "accepted" for qt in quotes):
-        new_status = "active"
-    elif any(qt.status == "on_hold" for qt in quotes):
-        new_status = "on_hold"
-    elif any(qt.status in ("draft", "sent") for qt in quotes):
-        new_status = "active"
-    else:
-        new_status = "lost"
-    project.status = new_status
+    project.status = _derive_project_status(project)
 
 
 # ── List ──────────────────────────────────────────────────────────────────────

@@ -22,6 +22,7 @@
     <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
     <option value="on_hold" {% if status_filter == 'on_hold' %}selected{% endif %}>On Hold</option>
     <option value="lost" {% if status_filter == 'lost' %}selected{% endif %}>Lost</option>
+    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
   </select>
   <button type="submit" class="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition">Filter</button>
   {% if stage_filter or status_filter %}

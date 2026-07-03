@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.client import Client
+from app.models.quotation import Quotation
 from app.models.project import (
     Project, StageLog, STAGES, STAGE_LABELS,
     SALES_FLOW_STAGES, SALES_OUTCOME_STAGES, SALES_STAGES, PRODUCTION_STAGES,
@@ -28,6 +29,24 @@ from app.templates_config import templates
 
 router = APIRouter(prefix="/projects")
 
+
+def _sync_project_status(project) -> None:
+    """Update project.status based on current_stage and quote statuses."""
+    if project.current_stage == "completed":
+        project.status = "completed"
+        return
+    quotes = project.quotations
+    if not quotes:
+        project.status = "active"
+        return
+    if any(q.status == "accepted" for q in quotes):
+        project.status = "active"
+    elif any(q.status == "on_hold" for q in quotes):
+        project.status = "on_hold"
+    elif any(q.status in ("draft", "sent") for q in quotes):
+        project.status = "active"
+    else:
+        project.status = "lost"
 
 
 # ── List ──────────────────────────────────────────────────────────────────────
@@ -286,6 +305,7 @@ def advance_stage(request: Request, project_id: int, db: Session = Depends(get_d
 
     next_stage = STAGE_ADVANCE_MAP[project.current_stage]
     project.current_stage = next_stage
+    _sync_project_status(project)
     db.add(StageLog(project_id=project_id, stage=next_stage, started_at=now_ist()))
     db.commit()
 
@@ -301,6 +321,7 @@ def set_stage(project_id: int, stage: str = Form(...), db: Session = Depends(get
         return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
 
     project.current_stage = stage
+    _sync_project_status(project)
     db.add(StageLog(project_id=project_id, stage=stage, started_at=now_ist()))
     db.commit()
     return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
