@@ -111,6 +111,32 @@ def _parse_date(s: str) -> date | None:
         return None
 
 
+def _sync_project_status(q: Quotation, db: Session) -> None:
+    """Derive and persist project.status from the statuses of all its quotes.
+
+    Priority:
+      accepted  → active   (deal won, work in progress)
+      on_hold   → on_hold  (client has paused)
+      draft/sent → active  (negotiations still open)
+      all rejected → lost
+    """
+    project = q.project
+    if not project:
+        return
+    quotes = project.quotations
+    if not quotes:
+        new_status = "active"
+    elif any(qt.status == "accepted" for qt in quotes):
+        new_status = "active"
+    elif any(qt.status == "on_hold" for qt in quotes):
+        new_status = "on_hold"
+    elif any(qt.status in ("draft", "sent") for qt in quotes):
+        new_status = "active"
+    else:
+        new_status = "lost"
+    project.status = new_status
+
+
 # ── List ──────────────────────────────────────────────────────────────────────
 
 @router.get("", response_class=HTMLResponse)
@@ -445,6 +471,7 @@ def quotes_send(request: Request, quote_id: int, db: Session = Depends(get_db)):
     if q and q.status == "draft":
         q.status = "sent"
         q.sent_at = now_ist()
+        _sync_project_status(q, db)
         db.commit()
         log_activity(db, request.session.get("user_name"), "Marked quote as sent",
                      entity_type="quote", entity_id=q.id, detail=q.quote_number)
@@ -462,6 +489,7 @@ def quotes_accept(request: Request, quote_id: int, db: Session = Depends(get_db)
         q.status = "accepted"
         q.is_final = True
         q.accepted_at = now_ist()
+        _sync_project_status(q, db)
         db.commit()
         log_activity(db, request.session.get("user_name"), "Accepted quote",
                      entity_type="quote", entity_id=q.id, detail=q.quote_number)
@@ -473,8 +501,21 @@ def quotes_reject(request: Request, quote_id: int, db: Session = Depends(get_db)
     q = db.query(Quotation).filter(Quotation.id == quote_id).first()
     if q and q.status == "sent":
         q.status = "rejected"
+        _sync_project_status(q, db)
         db.commit()
         log_activity(db, request.session.get("user_name"), "Rejected quote",
+                     entity_type="quote", entity_id=q.id, detail=q.quote_number)
+    return RedirectResponse(url=f"/quotes/{quote_id}", status_code=303)
+
+
+@router.post("/{quote_id}/hold")
+def quotes_hold(request: Request, quote_id: int, db: Session = Depends(get_db)):
+    q = db.query(Quotation).filter(Quotation.id == quote_id).first()
+    if q and q.status == "sent":
+        q.status = "on_hold"
+        _sync_project_status(q, db)
+        db.commit()
+        log_activity(db, request.session.get("user_name"), "Put quote on hold",
                      entity_type="quote", entity_id=q.id, detail=q.quote_number)
     return RedirectResponse(url=f"/quotes/{quote_id}", status_code=303)
 
@@ -482,9 +523,10 @@ def quotes_reject(request: Request, quote_id: int, db: Session = Depends(get_db)
 @router.post("/{quote_id}/revert")
 def quotes_revert(request: Request, quote_id: int, db: Session = Depends(get_db)):
     q = db.query(Quotation).filter(Quotation.id == quote_id).first()
-    if q and q.status in ("sent", "rejected"):
+    if q and q.status in ("sent", "rejected", "on_hold"):
         q.status = "draft"
         q.sent_at = None
+        _sync_project_status(q, db)
         db.commit()
     return RedirectResponse(url=f"/quotes/{quote_id}", status_code=303)
 

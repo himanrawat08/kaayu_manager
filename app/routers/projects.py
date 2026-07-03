@@ -217,7 +217,6 @@ def projects_update(
     client_id: int = Form(...),
     name: str = Form(...),
     description: str = Form(""),
-    status: str = Form("active"),
     completion_date: str = Form(""),
     project_contact_name: str = Form(""),
     project_contact_phone: str = Form(""),
@@ -237,7 +236,6 @@ def projects_update(
     project.client_id = client_id
     project.name = name.strip()
     project.description = description.strip() or None
-    project.status = status
     project.completion_date = comp_date
     project.project_contact_name = project_contact_name.strip() or None
     project.project_contact_phone = project_contact_phone.strip() or None

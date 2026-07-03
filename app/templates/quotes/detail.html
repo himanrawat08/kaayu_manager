@@ -34,6 +34,10 @@
       <form method="post" action="{{ root_path }}/quotes/{{ q.id }}/revert">
         <button type="submit" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-50 transition">Revert to Draft</button>
       </form>
+      <form method="post" action="{{ root_path }}/quotes/{{ q.id }}/hold"
+            onsubmit="return confirm('Put this quote on hold?')">
+        <button type="submit" class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded text-sm hover:bg-amber-100 transition">Put on Hold</button>
+      </form>
       <form method="post" action="{{ root_path }}/quotes/{{ q.id }}/reject"
             onsubmit="return confirm('Mark this quote as rejected?')">
         <button type="submit" class="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm hover:bg-red-100 transition">Reject</button>
@@ -46,9 +50,14 @@
       <form method="post" action="{{ root_path }}/quotes/{{ q.id }}/revert">
         <button type="submit" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-50 transition">Revert to Draft</button>
       </form>
+
+    {% elif q.status == 'on_hold' %}
+      <form method="post" action="{{ root_path }}/quotes/{{ q.id }}/revert">
+        <button type="submit" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-50 transition">Revert to Draft</button>
+      </form>
     {% endif %}
 
-    {% if q.status in ('sent', 'accepted', 'rejected') %}
+    {% if q.status in ('sent', 'accepted', 'rejected', 'on_hold') %}
     <form method="post" action="{{ root_path }}/quotes/{{ q.id }}/new-version">
       <button type="submit" class="bg-white border border-indigo-300 text-indigo-700 px-4 py-2 rounded text-sm hover:bg-indigo-50 transition">+ New Version</button>
     </form>

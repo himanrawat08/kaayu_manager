@@ -7,13 +7,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-QUOTE_STATUSES = ["draft", "sent", "accepted", "rejected"]
+QUOTE_STATUSES = ["draft", "sent", "accepted", "rejected", "on_hold"]
 
 QUOTE_STATUS_LABELS = {
     "draft":    "Draft",
     "sent":     "Sent",
     "accepted": "Accepted",
     "rejected": "Rejected",
+    "on_hold":  "On Hold",
 }
 
 QUOTE_STATUS_CLS = {
@@ -21,6 +22,7 @@ QUOTE_STATUS_CLS = {
     "sent":     "bg-blue-50 text-blue-700 border border-blue-200",
     "accepted": "bg-green-50 text-green-700 border border-green-200",
     "rejected": "bg-red-50 text-red-600 border border-red-200",
+    "on_hold":  "bg-amber-50 text-amber-800 border border-amber-200",
 }
 
 
