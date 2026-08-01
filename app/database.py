@@ -122,6 +122,22 @@ def _migrate_schema():
     _backfill_order_numbers()
     _migrate_project_stages()
     _migrate_task_status()
+    _fix_lost_project_statuses()
+
+
+def _fix_lost_project_statuses():
+    """Fix projects whose stage is 'lost' or 'completed' but status was incorrectly set."""
+    with engine.connect() as conn:
+        try:
+            conn.execute(text(
+                "UPDATE projects SET status = 'lost' WHERE current_stage = 'lost' AND status != 'lost'"
+            ))
+            conn.execute(text(
+                "UPDATE projects SET status = 'completed' WHERE current_stage = 'completed' AND status != 'completed'"
+            ))
+            conn.commit()
+        except Exception:
+            pass
 
 
 def _migrate_task_status():

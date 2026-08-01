@@ -36,6 +36,9 @@ def _sync_project_status(project) -> None:
     if project.current_stage == "completed":
         project.status = "completed"
         return
+    if project.current_stage == "lost":
+        project.status = "lost"
+        return
     quotes = project.quotations
     if not quotes:
         project.status = "active"

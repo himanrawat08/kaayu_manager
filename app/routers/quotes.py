@@ -116,6 +116,7 @@ def _derive_project_status(project) -> str:
 
     Priority:
       completed stage → completed
+      lost stage      → lost
       accepted quote  → active
       on_hold quote   → on_hold
       draft/sent quote → active  (negotiations open)
@@ -123,6 +124,8 @@ def _derive_project_status(project) -> str:
     """
     if project.current_stage == "completed":
         return "completed"
+    if project.current_stage == "lost":
+        return "lost"
     quotes = project.quotations
     if not quotes:
         return "active"
