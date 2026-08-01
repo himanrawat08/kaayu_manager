@@ -65,12 +65,16 @@ def projects_list(
     if status:
         query = query.filter(Project.status == status)
     projects = query.order_by(Project.updated_at.desc()).all()
+    active_projects = [p for p in projects if p.status in ("active", "on_hold")]
+    closed_projects = [p for p in projects if p.status in ("completed", "lost")]
     return templates.TemplateResponse(
         request,
         "projects/list.html",
         {
             "request": request,
             "projects": projects,
+            "active_projects": active_projects,
+            "closed_projects": closed_projects,
             "stage_labels": STAGE_LABELS,
             "stage_filter": stage,
             "status_filter": status,
