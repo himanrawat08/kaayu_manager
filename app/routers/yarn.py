@@ -97,6 +97,8 @@ def yarn_inventory(request: Request, db: Session = Depends(get_db)):
 def yarn_master(
     request: Request,
     search: str = "",
+    success: str = "",
+    error: str = "",
     db: Session = Depends(get_db),
 ):
     stats = _color_stats(db)   # 1 query
@@ -128,7 +130,31 @@ def yarn_master(
         "low_stock_count": low,
         "out_of_stock_count": out,
         "low_stock_threshold": LOW_STOCK_THRESHOLD,
+        "success": success,
+        "error": error,
     })
+
+
+# ── Add Color ─────────────────────────────────────────────────────────────────
+
+@router.post("/add-color")
+def yarn_add_color(
+    request: Request,
+    color_code: str = Form(...),
+    opening_stock: float = Form(0),
+    db: Session = Depends(get_db),
+):
+    code = color_code.strip().upper()
+    if not code:
+        return RedirectResponse(url="/yarn/master?error=Color+code+is+required", status_code=303)
+    existing = db.query(YarnColor).filter(YarnColor.color_code == code).first()
+    if existing:
+        return RedirectResponse(url="/yarn/master?error=Color+code+already+exists", status_code=303)
+    db.add(YarnColor(color_code=code, opening_stock=max(0.0, opening_stock)))
+    db.commit()
+    log_activity(db, request.session.get("user_name"), "Added yarn color",
+                 entity_type="yarn", detail=code)
+    return RedirectResponse(url=f"/yarn/master?success=Color+{code}+added", status_code=303)
 
 
 # ── History ───────────────────────────────────────────────────────────────────

@@ -67,6 +67,7 @@ def _create_indexes():
         "CREATE INDEX IF NOT EXISTS idx_task_notes_task_id ON task_notes(task_id)",
         "CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)",
         "CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date)",
+        "CREATE INDEX IF NOT EXISTS idx_project_milestones_project_id ON project_milestones(project_id)",
     ]
     with engine.connect() as conn:
         for sql in indexes:

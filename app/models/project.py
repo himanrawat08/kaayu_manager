@@ -7,6 +7,17 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
+MILESTONE_TYPES = {
+    "concept_board_shared":      "Concept Board Shared",
+    "concept_board_revision":    "Concept Board Revision",
+    "stitch_drawing_shared":     "Stitch Drawing Shared",
+    "colour_file_shared":        "Colour File Shared",
+    "production_file_generated": "Production File Generated",
+    "polish":                    "Polish",
+    "production":                "Production",
+    "final":                     "Final",
+}
+
 SALES_FLOW_STAGES = ["preliminary_design", "quote_sent"]
 SALES_OUTCOME_STAGES = ["quote_accepted", "hold", "lost"]
 SALES_STAGES = SALES_FLOW_STAGES + SALES_OUTCOME_STAGES
@@ -98,6 +109,10 @@ class Project(Base):
     quotations: Mapped[list["Quotation"]] = relationship(  # noqa: F821
         "Quotation", back_populates="project", cascade="all, delete-orphan",
     )
+    milestones: Mapped[list["ProjectMilestone"]] = relationship(
+        "ProjectMilestone", back_populates="project", cascade="all, delete-orphan",
+        order_by="ProjectMilestone.occurred_at",
+    )
 
 
 class StageLog(Base):
@@ -112,3 +127,17 @@ class StageLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
 
     project: Mapped["Project"] = relationship("Project", back_populates="stage_logs")
+
+
+class ProjectMilestone(Base):
+    __tablename__ = "project_milestones"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False)
+    milestone_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    revision_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
+
+    project: Mapped["Project"] = relationship("Project", back_populates="milestones")

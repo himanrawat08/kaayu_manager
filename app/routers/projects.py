@@ -15,7 +15,8 @@ from app.database import get_db
 from app.models.client import Client
 from app.models.quotation import Quotation
 from app.models.project import (
-    Project, StageLog, STAGES, STAGE_LABELS,
+    Project, StageLog, ProjectMilestone,
+    STAGES, STAGE_LABELS, MILESTONE_TYPES,
     SALES_FLOW_STAGES, SALES_OUTCOME_STAGES, SALES_STAGES, PRODUCTION_STAGES,
     STAGE_ADVANCE_MAP,
 )
@@ -184,6 +185,12 @@ def projects_detail(
         .all()
     )
 
+    milestones = project.milestones  # ordered by occurred_at
+    milestone_deltas = [None]
+    for i in range(1, len(milestones)):
+        delta = (milestones[i].occurred_at - milestones[i - 1].occurred_at).days
+        milestone_deltas.append(delta)
+
     return templates.TemplateResponse(
         request,
         "projects/detail.html",
@@ -199,7 +206,6 @@ def projects_detail(
             "active_tab": tab,
             "sales_flow_stages": SALES_FLOW_STAGES,
             "sales_outcome_stages": SALES_OUTCOME_STAGES,
-
             "sales_stages": SALES_STAGES,
             "production_stages": PRODUCTION_STAGES,
             "stage_advance_map": STAGE_ADVANCE_MAP,
@@ -210,6 +216,9 @@ def projects_detail(
             "recent_project_activities": recent_project_activities,
             "yarn_transactions": yarn_transactions,
             "job_cards": job_cards,
+            "milestones": milestones,
+            "milestone_deltas": milestone_deltas,
+            "milestone_types": MILESTONE_TYPES,
         },
     )
 
@@ -308,6 +317,16 @@ def advance_stage(request: Request, project_id: int, db: Session = Depends(get_d
     _sync_project_status(project)
     db.add(StageLog(project_id=project_id, stage=next_stage, started_at=now_ist()))
     db.commit()
+
+    # Auto-milestone for key production stages (only if none exists yet)
+    if next_stage in ("polish", "production"):
+        existing = db.query(ProjectMilestone).filter(
+            ProjectMilestone.project_id == project_id,
+            ProjectMilestone.milestone_type == next_stage,
+        ).first()
+        if not existing:
+            db.add(ProjectMilestone(project_id=project_id, milestone_type=next_stage))
+            db.commit()
 
     log_activity(db, request.session.get("user_name"), f"Advanced stage to {STAGE_LABELS[next_stage]}",
                  entity_type="project", entity_id=project_id, detail=project.name)
@@ -488,5 +507,47 @@ def project_delete_activity(project_id: int, activity_id: int, db: Session = Dep
     ).first()
     if act:
         db.delete(act)
+        db.commit()
+    return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
+
+
+# ── Design Milestones ─────────────────────────────────────────────────────────
+
+@router.post("/{project_id}/milestones")
+def add_milestone(
+    project_id: int,
+    milestone_type: str = Form(...),
+    notes: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    if milestone_type not in MILESTONE_TYPES:
+        return RedirectResponse(url=f"/projects/{project_id}", status_code=303)
+
+    revision_number = None
+    if milestone_type == "concept_board_revision":
+        existing_revs = db.query(ProjectMilestone).filter(
+            ProjectMilestone.project_id == project_id,
+            ProjectMilestone.milestone_type == "concept_board_revision",
+        ).all()
+        revision_number = max((r.revision_number or 0 for r in existing_revs), default=0) + 1
+
+    db.add(ProjectMilestone(
+        project_id=project_id,
+        milestone_type=milestone_type,
+        revision_number=revision_number,
+        notes=notes.strip() or None,
+    ))
+    db.commit()
+    return RedirectResponse(url=f"/projects/{project_id}?success=Milestone+logged", status_code=303)
+
+
+@router.post("/{project_id}/milestones/{milestone_id}/delete")
+def delete_milestone(project_id: int, milestone_id: int, db: Session = Depends(get_db)):
+    m = db.query(ProjectMilestone).filter(
+        ProjectMilestone.id == milestone_id,
+        ProjectMilestone.project_id == project_id,
+    ).first()
+    if m:
+        db.delete(m)
         db.commit()
     return RedirectResponse(url=f"/projects/{project_id}", status_code=303)

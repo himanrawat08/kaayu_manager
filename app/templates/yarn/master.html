@@ -10,11 +10,62 @@
       <h1 class="text-2xl font-semibold text-charcoal">Yarn Master Table</h1>
       <p class="text-sm text-gray-500 mt-0.5">All {{ total_colors }} Anchor thread colors with stock levels</p>
     </div>
-    <a href="{{ root_path }}/yarn"
-       style="padding:8px 16px;border-radius:8px;border:1px solid #D8D2D2;font-size:13px;color:#2E2E2E;text-decoration:none;font-family:'Roboto',sans-serif;background:#fff;"
-       onmouseover="this.style.background='#f7f5f2';" onmouseout="this.style.background='#fff';">
-      ← Back
-    </a>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="document.getElementById('add-color-modal').classList.remove('hidden')"
+        style="padding:8px 16px;border-radius:8px;border:1px solid #B17457;font-size:13px;color:#fff;font-family:'Roboto',sans-serif;background:#B17457;cursor:pointer;"
+        onmouseover="this.style.background='#9a6349';" onmouseout="this.style.background='#B17457';">
+        + Add Color
+      </button>
+      <a href="{{ root_path }}/yarn"
+         style="padding:8px 16px;border-radius:8px;border:1px solid #D8D2D2;font-size:13px;color:#2E2E2E;text-decoration:none;font-family:'Roboto',sans-serif;background:#fff;"
+         onmouseover="this.style.background='#f7f5f2';" onmouseout="this.style.background='#fff';">
+        ← Back
+      </a>
+    </div>
+  </div>
+
+  <!-- Flash messages -->
+  {% if success %}
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:8px;padding:10px 16px;font-size:13px;font-family:'Roboto',sans-serif;">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+  <div style="background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;border-radius:8px;padding:10px 16px;font-size:13px;font-family:'Roboto',sans-serif;">{{ error }}</div>
+  {% endif %}
+
+  <!-- Add Color Modal -->
+  <div id="add-color-modal" class="hidden" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4);">
+    <div style="background:#fff;border-radius:12px;padding:28px 28px 24px;width:340px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.2);font-family:'Roboto',sans-serif;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h3 style="font-size:16px;font-weight:600;color:#2E2E2E;margin:0;">Add New Color</h3>
+        <button onclick="document.getElementById('add-color-modal').classList.add('hidden')"
+          style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+      <form method="post" action="{{ root_path }}/yarn/add-color">
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:12px;color:#666;margin-bottom:5px;font-weight:500;">Color Code</label>
+          <input type="text" name="color_code" required placeholder="e.g. 317"
+            style="width:100%;padding:8px 12px;border:1px solid #D8D2D2;border-radius:8px;font-size:14px;font-family:'Roboto',sans-serif;box-sizing:border-box;outline:none;"
+            onfocus="this.style.borderColor='#B17457';" onblur="this.style.borderColor='#D8D2D2';" />
+        </div>
+        <div style="margin-bottom:20px;">
+          <label style="display:block;font-size:12px;color:#666;margin-bottom:5px;font-weight:500;">Opening Stock (optional)</label>
+          <input type="number" name="opening_stock" value="0" min="0" step="1"
+            style="width:100%;padding:8px 12px;border:1px solid #D8D2D2;border-radius:8px;font-size:14px;font-family:'Roboto',sans-serif;box-sizing:border-box;outline:none;"
+            onfocus="this.style.borderColor='#B17457';" onblur="this.style.borderColor='#D8D2D2';" />
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button type="submit"
+            style="flex:1;padding:9px;background:#B17457;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Roboto',sans-serif;"
+            onmouseover="this.style.background='#9a6349';" onmouseout="this.style.background='#B17457';">
+            Add Color
+          </button>
+          <button type="button" onclick="document.getElementById('add-color-modal').classList.add('hidden')"
+            style="padding:9px 16px;background:#f7f5f2;color:#666;border:1px solid #D8D2D2;border-radius:8px;font-size:14px;cursor:pointer;font-family:'Roboto',sans-serif;">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Stats chips -->

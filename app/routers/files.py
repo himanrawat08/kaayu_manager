@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 from app.database import get_db
-from app.models.project import Project
+from app.models.project import Project, ProjectMilestone
 from app.models.project_files import (
     DesignFile, DesignFileFeedback, ProductionFile, ProjectBriefFile,
     PRODUCTION_FILE_CATEGORIES,
@@ -330,6 +330,16 @@ def upload_production_file(
         file_size=size,
     ))
     db.commit()
+
+    # Auto-milestone: production_file_generated (only first time)
+    existing_m = db.query(ProjectMilestone).filter(
+        ProjectMilestone.project_id == project_id,
+        ProjectMilestone.milestone_type == "production_file_generated",
+    ).first()
+    if not existing_m:
+        db.add(ProjectMilestone(project_id=project_id, milestone_type="production_file_generated"))
+        db.commit()
+
     return RedirectResponse(url=f"/projects/{project_id}?tab=production&success=Production+file+uploaded", status_code=303)
 
 
