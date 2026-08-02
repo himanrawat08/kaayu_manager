@@ -497,6 +497,31 @@ def subtask_create(
     return RedirectResponse(url=f"/tasks/{task_id}#subtasks", status_code=303)
 
 
+@router.post("/{task_id}/subtasks/{subtask_id}/edit")
+def subtask_edit(
+    task_id: int,
+    subtask_id: int,
+    title: str = Form(...),
+    assigned_to: List[str] = Form(default=[]),
+    due_date: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    subtask = db.query(SubTask).filter(SubTask.id == subtask_id, SubTask.task_id == task_id).first()
+    if not subtask:
+        return RedirectResponse(url=f"/tasks/{task_id}#subtasks", status_code=303)
+    parsed_date = None
+    if due_date.strip():
+        try:
+            parsed_date = date.fromisoformat(due_date.strip())
+        except ValueError:
+            pass
+    subtask.title = title.strip()
+    subtask.assigned_to = _assigned_names(assigned_to)
+    subtask.due_date = parsed_date
+    db.commit()
+    return RedirectResponse(url=f"/tasks/{task_id}#subtasks", status_code=303)
+
+
 @router.post("/{task_id}/subtasks/{subtask_id}/toggle")
 def subtask_toggle(
     request: Request,
