@@ -228,7 +228,7 @@
             </div>
 
             <!-- Notes panel -->
-            <div id="st-notes-{{ st.id }}" class="hidden mt-3 space-y-2">
+            <div id="st-notes-{{ st.id }}" class="{% if not st.notes %}hidden {% endif %}mt-3 space-y-2">
               {% set sn_bg = {'comment':'bg-white border-gray-100','feedback':'bg-blue-50 border-blue-100','revision_request':'bg-amber-50 border-amber-100','approval':'bg-green-50 border-green-100'} %}
               {% set sn_pill = {'comment':'bg-gray-100 text-gray-500','feedback':'bg-blue-100 text-blue-600','revision_request':'bg-amber-100 text-amber-700','approval':'bg-green-100 text-green-700'} %}
               {% for sn in st.notes %}
