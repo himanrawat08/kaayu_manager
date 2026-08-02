@@ -106,6 +106,16 @@ def tasks_list(
 
     tasks = query.order_by(nulls_last(Task.due_date.asc()), Task.created_at.desc()).all()
 
+    # Group tasks by department in TASK_DEPARTMENTS order
+    from collections import defaultdict
+    dept_buckets: dict = defaultdict(list)
+    for task in tasks:
+        key = task.department if task.department in TASK_DEPARTMENTS else "__other__"
+        dept_buckets[key].append(task)
+    tasks_by_dept = [(dept, dept_buckets[dept]) for dept in TASK_DEPARTMENTS if dept in dept_buckets]
+    if "__other__" in dept_buckets:
+        tasks_by_dept.append(("Other", dept_buckets["__other__"]))
+
     # Summary counts (unfiltered for admins, filtered for non-admins)
     count_query = db.query(Task.status)
     if not _is_admin(request):
@@ -128,6 +138,7 @@ def tasks_list(
         {
             "request": request,
             "tasks": tasks,
+            "tasks_by_dept": tasks_by_dept,
             "counts": counts,
             "departments": TASK_DEPARTMENTS,
             "statuses": TASK_STATUSES,

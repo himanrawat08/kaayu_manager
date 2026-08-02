@@ -77,133 +77,126 @@
 
 {% if tasks %}
 
-<!-- ── Mobile card view (hidden on md+) ────────────────────────────────── -->
-<div class="md:hidden space-y-2">
-  {% for task in tasks %}
-  {% set is_overdue = task.due_date and task.due_date < today and task.status != 'done' %}
-  <a href="{{ root_path }}/tasks/{{ task.id }}"
-     class="block bg-white rounded-xl border border-gray-100 p-4 active:bg-gray-50 transition-colors no-underline {% if task.status == 'done' %}opacity-60{% endif %}">
+{% for dept_name, dept_tasks in tasks_by_dept %}
+<div class="mb-7">
 
-    <!-- Title + status -->
-    <div class="flex items-start gap-2 mb-2">
-      <p class="text-sm font-semibold text-[#2E2E2E] leading-snug flex-1 min-w-0
-                {% if task.status == 'done' %}line-through text-gray-400{% endif %}">
-        {{ task.title }}
-      </p>
-      {% if task.status == 'todo' %}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium flex-shrink-0">To Do</span>
-      {% elif task.status == 'in_progress' %}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium flex-shrink-0">In Progress</span>
-      {% elif task.status == 'review' %}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium flex-shrink-0">Review</span>
-      {% elif task.status == 'done' %}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium flex-shrink-0">Done</span>
-      {% endif %}
-    </div>
-
-    <!-- Meta row -->
-    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-      {% if task.department %}
-      <span class="bg-gray-100 px-2 py-0.5 rounded-full text-gray-500">{{ task.department }}</span>
-      {% endif %}
-
-      {% if task.priority == 'high' %}
-        <span class="text-red-600 font-medium">↑ High</span>
-      {% elif task.priority == 'low' %}
-        <span class="text-gray-400">Low</span>
-      {% endif %}
-
-      {% if task.due_date %}
-      <span class="{% if is_overdue %}text-red-500 font-medium{% else %}text-gray-400{% endif %}">
-        {{ '⚠ ' if is_overdue else '' }}{{ task.due_date.strftime('%d %b %Y') }}
-      </span>
-      {% endif %}
-
-      {% if task.assigned_to %}
-        {% set names = task.assigned_to.split(',') %}
-        <span class="text-gray-400">
-          {{ names[0].strip() }}{% if names | length > 1 %} +{{ names | length - 1 }}{% endif %}
-        </span>
-      {% endif %}
-    </div>
-
-    {% if task.project %}
-    <div class="mt-1.5 text-xs text-gray-400">{{ task.project.order_number or task.project.name }}</div>
-    {% endif %}
-  </a>
-  {% endfor %}
-</div>
-
-<!-- ── Desktop / tablet table (hidden below md) ────────────────────────── -->
-<div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm min-w-[680px]">
-      <thead style="background:#FAFAF8;border-bottom:1px solid #EEE;">
-        <tr class="text-left text-gray-400" style="font-size:11px;letter-spacing:0.07em;text-transform:uppercase;font-family:'Roboto',sans-serif;">
-          <th class="px-4 py-3 font-medium">Task</th>
-          <th class="px-4 py-3 font-medium">Dept</th>
-          <th class="px-4 py-3 font-medium">Status</th>
-          <th class="px-4 py-3 font-medium">Priority</th>
-          <th class="px-4 py-3 font-medium">Due</th>
-          <th class="px-4 py-3 font-medium">Assigned</th>
-          <th class="px-4 py-3"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for task in tasks %}
-        {% set is_overdue = task.due_date and task.due_date < today and task.status != 'done' %}
-        <tr class="border-b border-gray-50 last:border-0 hover:bg-[#FDFCF9] transition-colors {% if task.status == 'done' %}opacity-55{% endif %}">
-          <td class="px-4 py-3 max-w-[240px]">
-            <a href="{{ root_path }}/tasks/{{ task.id }}"
-               class="font-medium text-[#2E2E2E] hover:text-[#B17457] leading-snug block truncate {% if task.status == 'done' %}line-through text-gray-400{% endif %}">
-              {{ task.title }}
-            </a>
-            {% if task.project %}
-            <div class="text-xs text-gray-400 truncate mt-0.5">{{ task.project.order_number or task.project.name }}</div>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap">
-            {% if task.department %}
-            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{{ task.department }}</span>
-            {% else %}<span class="text-gray-300">—</span>{% endif %}
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap">
-            {% if task.status == 'todo' %}<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">To Do</span>
-            {% elif task.status == 'in_progress' %}<span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">In Progress</span>
-            {% elif task.status == 'review' %}<span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Review</span>
-            {% elif task.status == 'done' %}<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Done</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap">
-            {% if task.priority == 'high' %}<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">High</span>
-            {% elif task.priority == 'medium' %}<span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Med</span>
-            {% else %}<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">Low</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 whitespace-nowrap text-xs {% if is_overdue %}text-red-500 font-medium{% else %}text-gray-500{% endif %}">
-            {% if task.due_date %}
-              {{ task.due_date.strftime('%d %b %Y') }}
-              {% if is_overdue %}<div class="text-red-400 font-normal">overdue</div>{% endif %}
-            {% else %}<span class="text-gray-300">—</span>{% endif %}
-          </td>
-          <td class="px-4 py-3 text-xs text-gray-500 max-w-[120px]">
-            {% if task.assigned_to %}
-              {% set names = task.assigned_to.split(',') %}
-              <span class="truncate block" title="{{ task.assigned_to | replace(',', ', ') }}">
-                {{ names[0].strip() }}{% if names | length > 1 %}<span class="text-gray-400 ml-1">+{{ names | length - 1 }}</span>{% endif %}
-              </span>
-            {% else %}<span class="text-gray-300">—</span>{% endif %}
-          </td>
-          <td class="px-4 py-3 text-right">
-            <a href="{{ root_path }}/tasks/{{ task.id }}"
-               class="text-xs text-gray-400 hover:text-[#B17457] px-2 py-1 rounded transition-colors">View →</a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <!-- Department header -->
+  <div class="flex items-center gap-2 mb-2 px-1">
+    <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-widest">{{ dept_name }}</h2>
+    <span class="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full font-medium">{{ dept_tasks | length }}</span>
   </div>
+
+  <!-- Mobile cards (hidden on md+) -->
+  <div class="md:hidden space-y-2">
+    {% for task in dept_tasks %}
+    {% set is_overdue = task.due_date and task.due_date < today and task.status != 'done' %}
+    <a href="{{ root_path }}/tasks/{{ task.id }}"
+       class="block bg-white rounded-xl border border-gray-100 p-4 active:bg-gray-50 transition-colors no-underline {% if task.status == 'done' %}opacity-60{% endif %}">
+      <div class="flex items-start gap-2 mb-2">
+        <p class="text-sm font-semibold text-[#2E2E2E] leading-snug flex-1 min-w-0
+                  {% if task.status == 'done' %}line-through text-gray-400{% endif %}">
+          {{ task.title }}
+        </p>
+        {% if task.status == 'todo' %}
+          <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium flex-shrink-0">To Do</span>
+        {% elif task.status == 'in_progress' %}
+          <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium flex-shrink-0">In Progress</span>
+        {% elif task.status == 'review' %}
+          <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium flex-shrink-0">Review</span>
+        {% elif task.status == 'done' %}
+          <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium flex-shrink-0">Done</span>
+        {% endif %}
+      </div>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+        {% if task.priority == 'high' %}
+          <span class="text-red-600 font-medium">↑ High</span>
+        {% elif task.priority == 'low' %}
+          <span class="text-gray-400">Low</span>
+        {% endif %}
+        {% if task.due_date %}
+        <span class="{% if is_overdue %}text-red-500 font-medium{% else %}text-gray-400{% endif %}">
+          {{ '⚠ ' if is_overdue else '' }}{{ task.due_date.strftime('%d %b %Y') }}
+        </span>
+        {% endif %}
+        {% if task.assigned_to %}
+          {% set names = task.assigned_to.split(',') %}
+          <span class="text-gray-400">{{ names[0].strip() }}{% if names | length > 1 %} +{{ names | length - 1 }}{% endif %}</span>
+        {% endif %}
+      </div>
+      {% if task.project %}
+      <div class="mt-1.5 text-xs text-gray-400">{{ task.project.order_number or task.project.name }}</div>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Desktop table (hidden below md) -->
+  <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[620px]">
+        <thead style="background:#FAFAF8;border-bottom:1px solid #EEE;">
+          <tr class="text-left text-gray-400" style="font-size:11px;letter-spacing:0.07em;text-transform:uppercase;font-family:'Roboto',sans-serif;">
+            <th class="px-4 py-3 font-medium">Task</th>
+            <th class="px-4 py-3 font-medium">Status</th>
+            <th class="px-4 py-3 font-medium">Priority</th>
+            <th class="px-4 py-3 font-medium">Due</th>
+            <th class="px-4 py-3 font-medium">Assigned</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for task in dept_tasks %}
+          {% set is_overdue = task.due_date and task.due_date < today and task.status != 'done' %}
+          <tr class="border-b border-gray-50 last:border-0 hover:bg-[#FDFCF9] transition-colors {% if task.status == 'done' %}opacity-55{% endif %}">
+            <td class="px-4 py-3 max-w-[260px]">
+              <a href="{{ root_path }}/tasks/{{ task.id }}"
+                 class="font-medium text-[#2E2E2E] hover:text-[#B17457] leading-snug block truncate {% if task.status == 'done' %}line-through text-gray-400{% endif %}">
+                {{ task.title }}
+              </a>
+              {% if task.project %}
+              <div class="text-xs text-gray-400 truncate mt-0.5">{{ task.project.order_number or task.project.name }}</div>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap">
+              {% if task.status == 'todo' %}<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">To Do</span>
+              {% elif task.status == 'in_progress' %}<span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">In Progress</span>
+              {% elif task.status == 'review' %}<span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Review</span>
+              {% elif task.status == 'done' %}<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Done</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap">
+              {% if task.priority == 'high' %}<span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-medium">High</span>
+              {% elif task.priority == 'medium' %}<span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Med</span>
+              {% else %}<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">Low</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-xs {% if is_overdue %}text-red-500 font-medium{% else %}text-gray-500{% endif %}">
+              {% if task.due_date %}
+                {{ task.due_date.strftime('%d %b %Y') }}
+                {% if is_overdue %}<div class="text-red-400 font-normal">overdue</div>{% endif %}
+              {% else %}<span class="text-gray-300">—</span>{% endif %}
+            </td>
+            <td class="px-4 py-3 text-xs text-gray-500 max-w-[130px]">
+              {% if task.assigned_to %}
+                {% set names = task.assigned_to.split(',') %}
+                <span class="truncate block" title="{{ task.assigned_to | replace(',', ', ') }}">
+                  {{ names[0].strip() }}{% if names | length > 1 %}<span class="text-gray-400 ml-1">+{{ names | length - 1 }}</span>{% endif %}
+                </span>
+              {% else %}<span class="text-gray-300">—</span>{% endif %}
+            </td>
+            <td class="px-4 py-3 text-right">
+              <a href="{{ root_path }}/tasks/{{ task.id }}"
+                 class="text-xs text-gray-400 hover:text-[#B17457] px-2 py-1 rounded transition-colors">View →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
+{% endfor %}
 
 {% else %}
 <div class="text-center py-16 text-gray-400">
