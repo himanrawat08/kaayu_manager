@@ -636,9 +636,13 @@ function showDay(dateStr) {
       const a = document.createElement('a');
       a.href = e.url;
       a.className = 'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition hover:opacity-80 ' + dc;
-      a.innerHTML = '<span class="flex-1 truncate">' + e.title + '</span>' +
-                    '<svg class="w-3.5 h-3.5 opacity-50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+      let inner = '<span class="flex-1 min-w-0"><span class="block truncate">' + e.title + '</span>';
+      if (e.type === 'task' && e.assigned_to) {
+        inner += '<span class="block text-xs font-normal opacity-60 truncate">' + e.assigned_to + '</span>';
+      }
+      inner += '</span><svg class="w-3.5 h-3.5 opacity-50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+               '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
+      a.innerHTML = inner;
       container.appendChild(a);
     });
   });

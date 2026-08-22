@@ -85,15 +85,27 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
 
     # Calendar events (all dated items)
     cal_events = []
-    for t in all_tasks:
-        if t.due_date and not t.is_completed:
-            cal_events.append({
-                "date": t.due_date.isoformat(),
-                "type": "task",
-                "title": t.title,
-                "priority": t.priority,
-                "url": "/?view=tasks",
-            })
+
+    # Tasks for calendar: super_admin sees ALL tasks; others see only their own
+    is_super_admin = request.session.get("user_role") == "super_admin"
+    if is_super_admin:
+        cal_tasks = (
+            db.query(Task)
+            .filter(Task.due_date.isnot(None), Task.is_completed == False)  # noqa: E712
+            .all()
+        )
+    else:
+        cal_tasks = [t for t in all_tasks if t.due_date and not t.is_completed]
+
+    for t in cal_tasks:
+        cal_events.append({
+            "date": t.due_date.isoformat(),
+            "type": "task",
+            "title": t.title,
+            "priority": t.priority,
+            "url": "/?view=tasks",
+            "assigned_to": t.assigned_to or "",
+        })
     for p in db.query(Project).filter(Project.completion_date.isnot(None)).all():
         cal_events.append({
             "date": p.completion_date.isoformat(),
