@@ -556,7 +556,6 @@ function renderCalendar(year, month) {
     const isToday  = dateStr === TODAY_ISO;
     const isSel    = dateStr === selectedDate;
     const events   = byDate[dateStr] || [];
-    const MAX_SHOW = 3;
 
     cell.className = [
       'bg-white min-h-28 p-1.5 align-top transition cursor-pointer',
@@ -574,9 +573,8 @@ function renderCalendar(year, month) {
     num.textContent = dayNum;
     cell.appendChild(num);
 
-    // Colored chips
-    const shown = events.slice(0, MAX_SHOW);
-    shown.forEach(e => {
+    // Colored chips — all events shown
+    events.forEach(e => {
       const chip = document.createElement('div');
       const c = CHIP[e.type] || { cls: 'bg-gray-100 text-gray-600 border border-gray-200', label: e.type };
       chip.className = 'block text-xs px-1.5 py-0.5 rounded mb-0.5 truncate font-medium ' + c.cls;
@@ -584,14 +582,6 @@ function renderCalendar(year, month) {
       chip.title = e.title;
       cell.appendChild(chip);
     });
-
-    // Overflow badge
-    if (events.length > MAX_SHOW) {
-      const more = document.createElement('div');
-      more.className = 'text-xs text-gray-400 pl-1 mt-0.5';
-      more.textContent = '+' + (events.length - MAX_SHOW) + ' more';
-      cell.appendChild(more);
-    }
 
     grid.appendChild(cell);
   }
