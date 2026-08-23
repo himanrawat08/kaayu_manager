@@ -100,8 +100,13 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
     # Batch-fetch project names for cal tasks (avoids N+1)
     cal_project_ids = {t.project_id for t in cal_tasks if t.project_id}
     if cal_project_ids:
-        _cal_projects = db.query(Project.id, Project.name).filter(Project.id.in_(cal_project_ids)).all()
-        cal_project_names = {p.id: p.name for p in _cal_projects}
+        _cal_projects = (
+            db.query(Project.id, Project.name, Client.name.label("client_name"))
+            .join(Client, Project.client_id == Client.id)
+            .filter(Project.id.in_(cal_project_ids))
+            .all()
+        )
+        cal_project_names = {p.id: f"{p.name} ({p.client_name})" for p in _cal_projects}
     else:
         cal_project_names = {}
 
