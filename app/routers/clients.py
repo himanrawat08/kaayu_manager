@@ -111,7 +111,7 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
             "type": "task",
             "title": t.title,
             "priority": t.priority,
-            "url": "/?view=tasks",
+            "url": f"/tasks/{t.id}",
             "assigned_to": t.assigned_to or "",
             "project_id": t.project_id,
             "project_name": cal_project_names.get(t.project_id) if t.project_id else None,
