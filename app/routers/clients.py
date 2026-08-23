@@ -97,6 +97,14 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
     else:
         cal_tasks = [t for t in all_tasks if t.due_date and not t.is_completed]
 
+    # Batch-fetch project names for cal tasks (avoids N+1)
+    cal_project_ids = {t.project_id for t in cal_tasks if t.project_id}
+    if cal_project_ids:
+        _cal_projects = db.query(Project.id, Project.name).filter(Project.id.in_(cal_project_ids)).all()
+        cal_project_names = {p.id: p.name for p in _cal_projects}
+    else:
+        cal_project_names = {}
+
     for t in cal_tasks:
         cal_events.append({
             "date": t.due_date.isoformat(),
@@ -105,6 +113,8 @@ def dashboard(request: Request, view: str = "overview", db: Session = Depends(ge
             "priority": t.priority,
             "url": "/?view=tasks",
             "assigned_to": t.assigned_to or "",
+            "project_id": t.project_id,
+            "project_name": cal_project_names.get(t.project_id) if t.project_id else None,
         })
     for p in db.query(Project).filter(Project.completion_date.isnot(None)).all():
         cal_events.append({
