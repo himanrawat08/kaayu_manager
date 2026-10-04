@@ -9,6 +9,7 @@
       {{ q.quote_number }}
       <span class="text-base font-normal text-gray-400">v{{ q.version }}</span>
       <span class="badge badge-{{ q.status }}">{{ status_labels[q.status] }}</span>
+      {% if q.quote_type == 'range' %}<span class="text-xs bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full">Range</span>{% endif %}
       {% if q.is_final %}<span class="text-xs bg-seagreen text-white px-2 py-0.5 rounded-full">Final</span>{% endif %}
     </h1>
     <p class="text-sm text-gray-500 mt-1">
@@ -60,6 +61,13 @@
     {% if q.status in ('sent', 'accepted', 'rejected', 'on_hold') %}
     <form method="post" action="{{ root_path }}/quotes/{{ q.id }}/new-version">
       <button type="submit" class="bg-white border border-indigo-300 text-indigo-700 px-4 py-2 rounded text-sm hover:bg-indigo-50 transition">+ New Version</button>
+    </form>
+    {% endif %}
+
+    {% if q.quote_type == 'range' and q.status in ('draft', 'sent') %}
+    <form method="post" action="{{ root_path }}/quotes/{{ q.id }}/convert-to-final"
+          onsubmit="return confirm('Create a new standard quote from this range estimate?')">
+      <button type="submit" class="bg-amber-600 text-white px-4 py-2 rounded text-sm hover:bg-amber-700 transition">Convert to Final Quote</button>
     </form>
     {% endif %}
 
@@ -117,9 +125,9 @@
             <th class="px-3 py-2 font-medium">Material</th>
             <th class="px-3 py-2 font-medium text-right w-12">Qty</th>
             <th class="px-3 py-2 font-medium w-12">Unit</th>
-            <th class="px-3 py-2 font-medium text-right w-24">Rate (₹)</th>
+            <th class="px-3 py-2 font-medium text-right w-24">{% if q.quote_type == 'range' %}Rate (Min–Max){% else %}Rate (₹){% endif %}</th>
             <th class="px-3 py-2 font-medium text-right w-16">GST%</th>
-            <th class="px-5 py-2 font-medium text-right w-24">Amount (₹)</th>
+            <th class="px-5 py-2 font-medium text-right w-24">{% if q.quote_type == 'range' %}Amount (Min–Max){% else %}Amount (₹){% endif %}</th>
           </tr>
         </thead>
         <tbody>
@@ -134,9 +142,21 @@
             <td class="px-3 py-2.5 text-gray-500 text-xs">{{ item.material or '—' }}</td>
             <td class="px-3 py-2.5 text-right text-gray-700">{{ item.qty | int if item.qty == item.qty | int else item.qty }}</td>
             <td class="px-3 py-2.5 text-gray-500 text-xs">{{ item.unit }}</td>
-            <td class="px-3 py-2.5 text-right text-gray-700">{{ "%.0f"|format(item.unit_price) }}</td>
+            <td class="px-3 py-2.5 text-right text-gray-700">
+              {% if q.quote_type == 'range' %}
+                {{ "%.0f"|format(item.min_unit_price) }} – {{ "%.0f"|format(item.unit_price) }}
+              {% else %}
+                {{ "%.0f"|format(item.unit_price) }}
+              {% endif %}
+            </td>
             <td class="px-3 py-2.5 text-right text-gray-500 text-xs">{{ item.gst_percent | int if item.gst_percent == item.gst_percent | int else item.gst_percent }}%</td>
-            <td class="px-5 py-2.5 text-right font-medium text-gray-800">{{ "%.0f"|format(item.amount) }}</td>
+            <td class="px-5 py-2.5 text-right font-medium text-gray-800">
+              {% if q.quote_type == 'range' %}
+                {{ "%.0f"|format(item.min_amount) }} – {{ "%.0f"|format(item.amount) }}
+              {% else %}
+                {{ "%.0f"|format(item.amount) }}
+              {% endif %}
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -193,7 +213,13 @@
           {% endfor %}
           <tr class="border-t border-gray-200">
             <td class="pt-2 font-semibold text-gray-800">Grand Total</td>
-            <td class="pt-2 text-right font-bold text-lg text-indigo-700">₹{{ "%.0f"|format(q.total_amount or 0) }}</td>
+            <td class="pt-2 text-right font-bold text-lg text-indigo-700">
+              {% if q.quote_type == 'range' and q.min_total_amount %}
+                ₹{{ "%.0f"|format(q.min_total_amount) }} – ₹{{ "%.0f"|format(q.total_amount or 0) }}
+              {% else %}
+                ₹{{ "%.0f"|format(q.total_amount or 0) }}
+              {% endif %}
+            </td>
           </tr>
         </tbody>
       </table>

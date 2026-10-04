@@ -25,6 +25,8 @@ QUOTE_STATUS_CLS = {
     "on_hold":  "bg-amber-50 text-amber-800 border border-amber-200",
 }
 
+QUOTE_TYPES = ["standard", "range"]
+
 
 class Quotation(Base):
     __tablename__ = "quotations"
@@ -35,6 +37,9 @@ class Quotation(Base):
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     is_final: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="draft", nullable=False)
+    quote_type: Mapped[str] = mapped_column(String(20), default="standard", nullable=False)
+    min_total_amount: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    converted_from_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("quotations.id"), nullable=True)
 
     valid_until: Mapped[date | None] = mapped_column(Date, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -99,8 +104,10 @@ class QuoteItem(Base):
     qty: Mapped[float] = mapped_column(Float, default=1.0)
     unit: Mapped[str] = mapped_column(String(20), default="pcs")
     unit_price: Mapped[float] = mapped_column(Float, default=0.0)
+    min_unit_price: Mapped[float] = mapped_column(Float, default=0.0)
     gst_percent: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     amount: Mapped[float] = mapped_column(Float, default=0.0)
+    min_amount: Mapped[float] = mapped_column(Float, default=0.0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now_ist)
 
     quotation: Mapped["Quotation"] = relationship("Quotation", back_populates="items")

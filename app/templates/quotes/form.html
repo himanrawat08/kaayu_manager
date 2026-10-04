@@ -46,6 +46,27 @@
     </div>
   </div>
 
+  <!-- Quote Type -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5">
+    <h2 class="text-base font-semibold text-gray-800 mb-3">Quote Type</h2>
+    <div class="flex flex-wrap gap-6">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="radio" name="quote_type" value="standard" id="qtStandard"
+          {% if not quote or quote.quote_type == 'standard' %}checked{% endif %}
+          onchange="setQuoteType('standard')" class="text-indigo-600">
+        <span class="text-sm text-gray-700 font-medium">Standard</span>
+        <span class="text-xs text-gray-400">— single fixed rate per item</span>
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="radio" name="quote_type" value="range" id="qtRange"
+          {% if quote and quote.quote_type == 'range' %}checked{% endif %}
+          onchange="setQuoteType('range')" class="text-indigo-600">
+        <span class="text-sm text-gray-700 font-medium">Range</span>
+        <span class="text-xs text-gray-400">— min–max estimate (two rates per item)</span>
+      </label>
+    </div>
+  </div>
+
   <!-- Client & Contact Info -->
   <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-5">
     <h2 class="text-base font-semibold text-gray-800 mb-4">Client &amp; Contact</h2>
@@ -98,9 +119,10 @@
           <th class="pb-2 text-left font-medium min-w-40">Material</th>
           <th class="pb-2 text-right font-medium w-14">Qty</th>
           <th class="pb-2 text-left font-medium w-14">Unit</th>
-          <th class="pb-2 text-right font-medium w-24">Rate (₹)</th>
+          <th class="pb-2 text-right font-medium w-24">Max Rate (₹)</th>
+          <th class="pb-2 text-right font-medium w-24 range-col {% if not quote or quote.quote_type != 'range' %}hidden{% endif %}">Min Rate (₹)</th>
           <th class="pb-2 text-right font-medium w-16">GST %</th>
-          <th class="pb-2 text-right font-medium w-24">Amount (₹)</th>
+          <th class="pb-2 text-right font-medium w-24" id="amtHeader">{% if quote and quote.quote_type == 'range' %}Min–Max (₹){% else %}Amount (₹){% endif %}</th>
           <th class="pb-2 w-8"></th>
         </tr>
       </thead>
@@ -129,6 +151,10 @@
             <td class="py-1.5 pr-2">
               <input type="number" name="unit_price" value="{{ item.unit_price }}" min="0" step="any"
                 class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 price-input" />
+            </td>
+            <td class="py-1.5 pr-2 range-col {% if not quote or quote.quote_type != 'range' %}hidden{% endif %}">
+              <input type="number" name="min_unit_price" value="{{ item.min_unit_price }}" min="0" step="any"
+                class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 min-price-input" />
             </td>
             <td class="py-1.5 pr-2">
               <input type="number" name="gst_percent" value="{{ item.gst_percent }}" min="0" max="100" step="any"
@@ -276,6 +302,19 @@
 </form>
 
 <script>
+// ── Quote type helpers ─────────────────────────────────────────────────────────
+function isRangeMode() {
+  const el = document.querySelector('input[name="quote_type"]:checked');
+  return el && el.value === 'range';
+}
+
+function setQuoteType(t) {
+  const isRange = t === 'range';
+  document.querySelectorAll('.range-col').forEach(el => el.classList.toggle('hidden', !isRange));
+  document.getElementById('amtHeader').textContent = isRange ? 'Min–Max (₹)' : 'Amount (₹)';
+  recalcTotals();
+}
+
 // ── Item rows ─────────────────────────────────────────────────────────────────
 const _itemRowTpl = `
 <tr class="item-row border-b border-gray-100">
@@ -300,6 +339,10 @@ const _itemRowTpl = `
   <td class="py-1.5 pr-2">
     <input type="number" name="unit_price" value="0" min="0" step="any"
       class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 price-input" />
+  </td>
+  <td class="py-1.5 pr-2 range-col">
+    <input type="number" name="min_unit_price" value="0" min="0" step="any"
+      class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-300 min-price-input" />
   </td>
   <td class="py-1.5 pr-2">
     <input type="number" name="gst_percent" value="5" min="0" max="100" step="any"
@@ -332,6 +375,9 @@ function addItemRow() {
   const tbody = document.getElementById('itemsBody');
   tbody.insertAdjacentHTML('beforeend', _itemRowTpl);
   const row = tbody.lastElementChild;
+  // Sync range-col visibility with current mode
+  const isRange = isRangeMode();
+  row.querySelectorAll('.range-col').forEach(el => el.classList.toggle('hidden', !isRange));
   bindItemRow(row);
   document.getElementById('noItemsMsg').classList.add('hidden');
 }
@@ -362,28 +408,39 @@ function bindItemRow(row) {
   row.querySelectorAll('.qty-input, .price-input').forEach(inp =>
     inp.addEventListener('input', () => { updateRowAmount(row); recalcTotals(); })
   );
+  const minPriceInp = row.querySelector('.min-price-input');
+  if (minPriceInp) minPriceInp.addEventListener('input', () => { updateRowAmount(row); recalcTotals(); });
   const gstInp = row.querySelector('.gst-input');
   if (gstInp) gstInp.addEventListener('input', recalcTotals);
 }
 
 function updateRowAmount(row) {
-  const qty   = parseFloat(row.querySelector('.qty-input').value)   || 0;
-  const price = parseFloat(row.querySelector('.price-input').value) || 0;
+  const qty   = parseFloat(row.querySelector('.qty-input')?.value) || 0;
+  const price = parseFloat(row.querySelector('.price-input')?.value) || 0;
   const amt   = qty * price;
-  row.querySelector('.amount-display').textContent = Math.round(amt);
-  return amt;
+  const minPriceInp = row.querySelector('.min-price-input');
+  const minAmt = minPriceInp ? (parseFloat(minPriceInp.value) || 0) * qty : 0;
+  const disp = row.querySelector('.amount-display');
+  if (isRangeMode() && minPriceInp) {
+    disp.textContent = Math.round(minAmt) + ' – ' + Math.round(amt);
+  } else {
+    disp.textContent = Math.round(amt);
+  }
+  return { max: amt, min: minAmt };
 }
 
 function fmtRupee(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
 
 function recalcTotals() {
-  let itemsSub = 0;
-  let itemsGst = 0;
+  const rangeMode = isRangeMode();
+  let itemsSub = 0, itemsGst = 0, minItemsSub = 0, minItemsGst = 0;
   document.querySelectorAll('.item-row').forEach(row => {
-    const amt    = updateRowAmount(row);
+    const { max: amt, min: minAmt } = updateRowAmount(row);
     itemsSub    += amt;
+    minItemsSub += minAmt;
     const gstPct = parseFloat(row.querySelector('.gst-input')?.value) || 0;
     itemsGst    += amt * gstPct / 100;
+    minItemsGst += minAmt * gstPct / 100;
   });
 
   let sundriesSub = 0;
@@ -391,14 +448,22 @@ function recalcTotals() {
     sundriesSub += parseFloat(inp.value) || 0;
   });
 
-  const grandTotal = Math.round(itemsSub + itemsGst + sundriesSub);
+  const grandTotal    = Math.round(itemsSub + itemsGst + sundriesSub);
+  const minGrandTotal = Math.round(minItemsSub + minItemsGst + sundriesSub);
 
-  document.getElementById('dispItemsSub').textContent = fmtRupee(itemsSub);
-  document.getElementById('dispTotal').textContent    = fmtRupee(grandTotal);
-
-  const hasGst = itemsGst > 0;
-  document.getElementById('gstRow').classList.toggle('hidden', !hasGst);
-  if (hasGst) document.getElementById('dispGst').textContent = fmtRupee(itemsGst);
+  if (rangeMode) {
+    document.getElementById('dispItemsSub').textContent = fmtRupee(minItemsSub) + ' – ' + fmtRupee(itemsSub);
+    document.getElementById('dispTotal').textContent    = fmtRupee(minGrandTotal) + ' – ' + fmtRupee(grandTotal);
+    const hasGst = itemsGst > 0 || minItemsGst > 0;
+    document.getElementById('gstRow').classList.toggle('hidden', !hasGst);
+    if (hasGst) document.getElementById('dispGst').textContent = fmtRupee(minItemsGst) + ' – ' + fmtRupee(itemsGst);
+  } else {
+    document.getElementById('dispItemsSub').textContent = fmtRupee(itemsSub);
+    document.getElementById('dispTotal').textContent    = fmtRupee(grandTotal);
+    const hasGst = itemsGst > 0;
+    document.getElementById('gstRow').classList.toggle('hidden', !hasGst);
+    if (hasGst) document.getElementById('dispGst').textContent = fmtRupee(itemsGst);
+  }
 
   const hasSundries = sundriesSub > 0;
   document.getElementById('sundriesRow').classList.toggle('hidden', !hasSundries);

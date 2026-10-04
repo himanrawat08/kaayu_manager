@@ -47,6 +47,7 @@
       <tr class="border-b last:border-0 hover:bg-gray-50">
         <td class="px-4 py-3">
           <a href="{{ root_path }}/quotes/{{ q.id }}" class="font-medium text-indigo-600 hover:underline">{{ q.quote_number }}</a>
+          {% if q.quote_type == 'range' %}<span class="ml-1 text-xs bg-amber-100 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded">Range</span>{% endif %}
           {% if q.is_final %}<span class="ml-1 text-xs text-seagreen font-medium">(Final)</span>{% endif %}
         </td>
         <td class="px-4 py-3">
@@ -57,7 +58,13 @@
           <span class="badge badge-{{ q.status }}">{{ status_labels[q.status] }}</span>
         </td>
         <td class="px-4 py-3 text-right font-medium text-gray-800">
-          {% if q.total_amount %}₹{{ "%.2f"|format(q.total_amount) }}{% else %}—{% endif %}
+          {% if q.quote_type == 'range' and q.min_total_amount and q.total_amount %}
+            ₹{{ "%.0f"|format(q.min_total_amount) }}–{{ "%.0f"|format(q.total_amount) }}
+          {% elif q.total_amount %}
+            ₹{{ "%.2f"|format(q.total_amount) }}
+          {% else %}
+            —
+          {% endif %}
         </td>
         <td class="px-4 py-3 text-gray-400">{{ q.created_at.strftime('%d %b %Y') }}</td>
         <td class="px-4 py-3 text-right whitespace-nowrap">

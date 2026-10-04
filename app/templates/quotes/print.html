@@ -302,9 +302,21 @@
       </td>
       <td style="color:#5C5546; font-size:11px;">{{ item.material or '' }}</td>
       <td class="center">{{ item.qty | int if item.qty == item.qty | int else item.qty }} {{ item.unit }}</td>
-      <td class="right">Rs. {{ "%.0f"|format(item.unit_price) }} /{{ item.unit }}</td>
+      <td class="right">
+        {% if q.quote_type == 'range' %}
+          Rs. {{ "%.0f"|format(item.min_unit_price) }}–{{ "%.0f"|format(item.unit_price) }}
+        {% else %}
+          Rs. {{ "%.0f"|format(item.unit_price) }} /{{ item.unit }}
+        {% endif %}
+      </td>
       <td class="center">{{ item.gst_percent | int if item.gst_percent == item.gst_percent | int else item.gst_percent }}%</td>
-      <td class="right"><strong>Rs. {{ "%.0f"|format(item.amount) }}</strong></td>
+      <td class="right">
+        {% if q.quote_type == 'range' %}
+          <strong>Rs. {{ "%.0f"|format(item.min_amount) }}–{{ "%.0f"|format(item.amount) }}</strong>
+        {% else %}
+          <strong>Rs. {{ "%.0f"|format(item.amount) }}</strong>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </tbody>
@@ -328,9 +340,16 @@
       <col style="width:100px;" />
     </colgroup>
     {% set items_sub = q.items | sum(attribute='amount') %}
+    {% set min_items_sub = q.items | sum(attribute='min_amount') %}
     <tr>
       <td colspan="5">Total</td>
-      <td>Rs. {{ "%.0f"|format(items_sub) }}</td>
+      <td>
+        {% if q.quote_type == 'range' %}
+          Rs. {{ "%.0f"|format(min_items_sub) }}–{{ "%.0f"|format(items_sub) }}
+        {% else %}
+          Rs. {{ "%.0f"|format(items_sub) }}
+        {% endif %}
+      </td>
     </tr>
     {% if q.igst_amount %}
     {% set gst_pct = q.items[0].gst_percent if q.items else 0 %}
@@ -347,7 +366,13 @@
     {% endfor %}
     <tr class="grand-total">
       <td colspan="5">Grand Total</td>
-      <td>Rs. {{ "%.0f"|format(q.total_amount or 0) }}</td>
+      <td>
+        {% if q.quote_type == 'range' and q.min_total_amount %}
+          Rs. {{ "%.0f"|format(q.min_total_amount) }} – Rs. {{ "%.0f"|format(q.total_amount or 0) }}
+        {% else %}
+          Rs. {{ "%.0f"|format(q.total_amount or 0) }}
+        {% endif %}
+      </td>
     </tr>
   </table>
 </div>

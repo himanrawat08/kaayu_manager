@@ -12,7 +12,7 @@ from app.database import get_db
 from app.models.project import Project
 from app.models.quotation import (
     Quotation, QuoteItem, QuoteSundry,
-    QUOTE_STATUSES, QUOTE_STATUS_LABELS, QUOTE_STATUS_CLS,
+    QUOTE_STATUSES, QUOTE_STATUS_LABELS, QUOTE_STATUS_CLS, QUOTE_TYPES,
 )
 from app.services.log_activity import log_activity
 from app.templates_config import templates
@@ -62,6 +62,19 @@ def _recalculate(q: Quotation) -> None:
     q.sgst_amount     = 0.0
     q.igst_amount     = float(items_gst)   # repurposed: stores total per-item GST
     q.total_amount    = float(total)
+
+    # For range quotes also compute the minimum grand total
+    if getattr(q, "quote_type", "standard") == "range":
+        min_items_sub = sum(D(str(item.min_amount)) for item in q.items)
+        min_items_gst = sum(
+            (D(str(item.min_amount)) * D(str(item.gst_percent or 0)) / 100).quantize(D("0.01"), rounding=ROUND_HALF_UP)
+            for item in q.items
+        )
+        q.min_total_amount = float(
+            (min_items_sub + min_items_gst + sundries_sub).quantize(D("1"), rounding=ROUND_HALF_UP)
+        )
+    else:
+        q.min_total_amount = 0.0
 
 
 def _parse_float(s: str) -> float:
@@ -231,6 +244,7 @@ def quotes_create(
     payment_account_no: str = Form(""),
     payment_ifsc: str = Form(""),
     payment_bank_name: str = Form(""),
+    quote_type: str = Form("standard"),
     item_name: List[str] = Form(default=[]),
     size: List[str] = Form(default=[]),
     material: List[str] = Form(default=[]),
@@ -238,6 +252,7 @@ def quotes_create(
     qty: List[str] = Form(default=[]),
     unit: List[str] = Form(default=[]),
     unit_price: List[str] = Form(default=[]),
+    min_unit_price: List[str] = Form(default=[]),
     gst_percent: List[str] = Form(default=[]),
     sundry_particular: List[str] = Form(default=[]),
     sundry_amount: List[str] = Form(default=[]),
@@ -247,6 +262,7 @@ def quotes_create(
     if not project:
         return RedirectResponse(url="/quotes/new", status_code=303)
 
+    q_type = quote_type if quote_type in QUOTE_TYPES else "standard"
     max_ver = db.query(func.max(Quotation.version)).filter(
         Quotation.project_id == project_id
     ).scalar() or 0
@@ -256,6 +272,7 @@ def quotes_create(
         project_id=project_id,
         version=max_ver + 1,
         status="draft",
+        quote_type=q_type,
         valid_until=_parse_date(valid_until),
         notes=notes.strip() or None,
         terms_conditions=terms_conditions.strip() or None,
@@ -279,9 +296,10 @@ def quotes_create(
         name = name.strip()
         if not name:
             continue
-        q_qty   = _parse_float(qty[i] if i < len(qty) else "1") or 1
-        q_price = _parse_float(unit_price[i] if i < len(unit_price) else "0")
-        q_gst   = _clamp_percent(gst_percent[i] if i < len(gst_percent) else "0")
+        q_qty      = _parse_float(qty[i] if i < len(qty) else "1") or 1
+        q_price    = _parse_float(unit_price[i] if i < len(unit_price) else "0")
+        q_min_price = _parse_float(min_unit_price[i] if i < len(min_unit_price) else "0") if q_type == "range" else 0.0
+        q_gst      = _clamp_percent(gst_percent[i] if i < len(gst_percent) else "0")
         db.add(QuoteItem(
             quote_id=q.id,
             sort_order=i,
@@ -292,8 +310,10 @@ def quotes_create(
             qty=q_qty,
             unit=(unit[i].strip() if i < len(unit) else "") or "pcs",
             unit_price=q_price,
+            min_unit_price=q_min_price,
             gst_percent=q_gst,
             amount=round(q_qty * q_price, 2),
+            min_amount=round(q_qty * q_min_price, 2),
         ))
 
     for i, particular in enumerate(sundry_particular):
@@ -389,6 +409,7 @@ def quotes_update(
     payment_account_no: str = Form(""),
     payment_ifsc: str = Form(""),
     payment_bank_name: str = Form(""),
+    quote_type: str = Form("standard"),
     item_name: List[str] = Form(default=[]),
     size: List[str] = Form(default=[]),
     material: List[str] = Form(default=[]),
@@ -396,6 +417,7 @@ def quotes_update(
     qty: List[str] = Form(default=[]),
     unit: List[str] = Form(default=[]),
     unit_price: List[str] = Form(default=[]),
+    min_unit_price: List[str] = Form(default=[]),
     gst_percent: List[str] = Form(default=[]),
     sundry_particular: List[str] = Form(default=[]),
     sundry_amount: List[str] = Form(default=[]),
@@ -405,6 +427,8 @@ def quotes_update(
     if not q:
         return RedirectResponse(url="/quotes", status_code=303)
 
+    q_type = quote_type if quote_type in QUOTE_TYPES else "standard"
+    q.quote_type            = q_type
     q.valid_until           = _parse_date(valid_until)
     q.notes                 = notes.strip() or None
     q.terms_conditions      = terms_conditions.strip() or None
@@ -432,9 +456,10 @@ def quotes_update(
         name = name.strip()
         if not name:
             continue
-        q_qty   = _parse_float(qty[i] if i < len(qty) else "1") or 1
-        q_price = _parse_float(unit_price[i] if i < len(unit_price) else "0")
-        q_gst   = _clamp_percent(gst_percent[i] if i < len(gst_percent) else "0")
+        q_qty      = _parse_float(qty[i] if i < len(qty) else "1") or 1
+        q_price    = _parse_float(unit_price[i] if i < len(unit_price) else "0")
+        q_min_price = _parse_float(min_unit_price[i] if i < len(min_unit_price) else "0") if q_type == "range" else 0.0
+        q_gst      = _clamp_percent(gst_percent[i] if i < len(gst_percent) else "0")
         db.add(QuoteItem(
             quote_id=q.id,
             sort_order=i,
@@ -445,8 +470,10 @@ def quotes_update(
             qty=q_qty,
             unit=(unit[i].strip() if i < len(unit) else "") or "pcs",
             unit_price=q_price,
+            min_unit_price=q_min_price,
             gst_percent=q_gst,
             amount=round(q_qty * q_price, 2),
+            min_amount=round(q_qty * q_min_price, 2),
         ))
 
     for i, particular in enumerate(sundry_particular):
@@ -556,6 +583,7 @@ def quotes_new_version(request: Request, quote_id: int, db: Session = Depends(ge
         project_id=original.project_id,
         version=max_ver + 1,
         status="draft",
+        quote_type=original.quote_type,
         valid_until=original.valid_until,
         notes=original.notes,
         terms_conditions=original.terms_conditions,
@@ -586,8 +614,10 @@ def quotes_new_version(request: Request, quote_id: int, db: Session = Depends(ge
             qty=item.qty,
             unit=item.unit,
             unit_price=item.unit_price,
+            min_unit_price=item.min_unit_price,
             gst_percent=item.gst_percent,
             amount=item.amount,
+            min_amount=item.min_amount,
         ))
 
     for s in original.sundries:
@@ -606,6 +636,79 @@ def quotes_new_version(request: Request, quote_id: int, db: Session = Depends(ge
     log_activity(db, request.session.get("user_name"), "Created new quote version",
                  entity_type="quote", entity_id=new_q.id, detail=new_q.quote_number)
     return RedirectResponse(url=f"/quotes/{new_q.id}", status_code=303)
+
+
+# ── Convert range → final standard quote ──────────────────────────────────────
+
+@router.post("/{quote_id}/convert-to-final")
+def quotes_convert_to_final(request: Request, quote_id: int, db: Session = Depends(get_db)):
+    original = db.query(Quotation).filter(Quotation.id == quote_id).first()
+    if not original or original.quote_type != "range":
+        return RedirectResponse(url=f"/quotes/{quote_id}", status_code=303)
+
+    max_ver = db.query(func.max(Quotation.version)).filter(
+        Quotation.project_id == original.project_id
+    ).scalar() or 0
+
+    new_q = Quotation(
+        quote_number=_generate_quote_number(db, original.client_name),
+        project_id=original.project_id,
+        version=max_ver + 1,
+        status="draft",
+        quote_type="standard",
+        converted_from_id=original.id,
+        valid_until=original.valid_until,
+        notes=original.notes,
+        terms_conditions=original.terms_conditions,
+        cgst_percent=0.0,
+        sgst_percent=0.0,
+        igst_percent=0.0,
+        client_name=original.client_name,
+        client_address=original.client_address,
+        contact_name=original.contact_name,
+        contact_number=original.contact_number,
+        payment_terms=original.payment_terms,
+        payment_account_name=original.payment_account_name,
+        payment_account_no=original.payment_account_no,
+        payment_ifsc=original.payment_ifsc,
+        payment_bank_name=original.payment_bank_name,
+    )
+    db.add(new_q)
+    db.flush()
+
+    for item in original.items:
+        db.add(QuoteItem(
+            quote_id=new_q.id,
+            sort_order=item.sort_order,
+            size=item.size,
+            item_name=item.item_name,
+            material=item.material,
+            description=item.description,
+            qty=item.qty,
+            unit=item.unit,
+            unit_price=item.unit_price,  # starts from max rate; user edits to final
+            min_unit_price=0.0,
+            gst_percent=item.gst_percent,
+            amount=item.amount,
+            min_amount=0.0,
+        ))
+
+    for s in original.sundries:
+        db.add(QuoteSundry(
+            quote_id=new_q.id,
+            sort_order=s.sort_order,
+            particular=s.particular,
+            amount=s.amount,
+        ))
+
+    db.flush()
+    db.refresh(new_q)
+    _recalculate(new_q)
+    db.commit()
+
+    log_activity(db, request.session.get("user_name"), "Converted range quote to final",
+                 entity_type="quote", entity_id=new_q.id, detail=new_q.quote_number)
+    return RedirectResponse(url=f"/quotes/{new_q.id}/edit", status_code=303)
 
 
 # ── Delete ────────────────────────────────────────────────────────────────────

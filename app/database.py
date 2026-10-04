@@ -111,6 +111,11 @@ def _migrate_schema():
         "ALTER TABLE tasks ALTER COLUMN assigned_to TYPE TEXT",
         "ALTER TABLE subtasks ADD COLUMN IF NOT EXISTS assigned_to TEXT",
         "ALTER TABLE subtasks ADD COLUMN IF NOT EXISTS due_date DATE",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS quote_type VARCHAR(20) NOT NULL DEFAULT 'standard'",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS min_total_amount FLOAT NOT NULL DEFAULT 0.0",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS converted_from_id INTEGER",
+        "ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS min_unit_price FLOAT NOT NULL DEFAULT 0.0",
+        "ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS min_amount FLOAT NOT NULL DEFAULT 0.0",
     ]
     with engine.connect() as conn:
         for sql in migrations:
