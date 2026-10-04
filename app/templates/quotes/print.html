@@ -302,7 +302,7 @@
       </td>
       <td style="color:#5C5546; font-size:11px;">{{ item.material or '' }}</td>
       <td class="center">{{ item.qty | int if item.qty == item.qty | int else item.qty }} {{ item.unit }}</td>
-      <td class="right">
+      <td class="right" style="font-size: 10.5px;">
         {% if q.quote_type == 'range' %}
           Rs. {{ "%.0f"|format(item.min_unit_price) }}–{{ "%.0f"|format(item.unit_price) }}
         {% else %}
@@ -310,7 +310,7 @@
         {% endif %}
       </td>
       <td class="center">{{ item.gst_percent | int if item.gst_percent == item.gst_percent | int else item.gst_percent }}%</td>
-      <td class="right">
+      <td class="right" style="font-size: 10.5px;">
         {% if q.quote_type == 'range' %}
           <strong>Rs. {{ "%.0f"|format(item.min_amount) }}–{{ "%.0f"|format(item.amount) }}</strong>
         {% else %}
@@ -343,7 +343,7 @@
     {% set min_items_sub = q.items | sum(attribute='min_amount') %}
     <tr>
       <td colspan="5">Total</td>
-      <td>
+      <td style="font-size: 10.5px;">
         {% if q.quote_type == 'range' %}
           Rs. {{ "%.0f"|format(min_items_sub) }}–{{ "%.0f"|format(items_sub) }}
         {% else %}
@@ -366,7 +366,7 @@
     {% endfor %}
     <tr class="grand-total">
       <td colspan="5">Grand Total</td>
-      <td>
+      <td style="font-size: 11px;">
         {% if q.quote_type == 'range' and q.min_total_amount %}
           Rs. {{ "%.0f"|format(q.min_total_amount) }} – Rs. {{ "%.0f"|format(q.total_amount or 0) }}
         {% else %}
