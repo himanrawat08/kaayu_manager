@@ -366,9 +366,9 @@
     {% endfor %}
     <tr class="grand-total">
       <td colspan="5">Grand Total</td>
-      <td style="font-size: 11px;">
+      <td style="font-size: 10.5px;">
         {% if q.quote_type == 'range' and q.min_total_amount %}
-          Rs. {{ "%.0f"|format(q.min_total_amount) }} – Rs. {{ "%.0f"|format(q.total_amount or 0) }}
+          Rs. {{ "%.0f"|format(q.min_total_amount) }}–{{ "%.0f"|format(q.total_amount or 0) }}
         {% else %}
           Rs. {{ "%.0f"|format(q.total_amount or 0) }}
         {% endif %}
