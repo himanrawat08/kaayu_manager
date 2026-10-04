@@ -353,9 +353,19 @@
     </tr>
     {% if q.igst_amount %}
     {% set gst_pct = q.items[0].gst_percent if q.items else 0 %}
+    {% if q.quote_type == 'range' %}
+      {% set ns = namespace(min_gst=0) %}
+      {% for item in q.items %}{% set ns.min_gst = ns.min_gst + (item.min_amount * (item.gst_percent or 0) / 100) %}{% endfor %}
+    {% endif %}
     <tr>
       <td colspan="5">GST {{ gst_pct | int if gst_pct == gst_pct | int else gst_pct }}%</td>
-      <td>Rs. {{ "%.0f"|format(q.igst_amount) }}</td>
+      <td style="font-size: 10.5px;">
+        {% if q.quote_type == 'range' %}
+          Rs. {{ "%.0f"|format(ns.min_gst) }}–{{ "%.0f"|format(q.igst_amount) }}
+        {% else %}
+          Rs. {{ "%.0f"|format(q.igst_amount) }}
+        {% endif %}
+      </td>
     </tr>
     {% endif %}
     {% for s in q.sundries %}

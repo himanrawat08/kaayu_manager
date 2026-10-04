@@ -200,9 +200,19 @@
             <td class="py-1 text-right">₹{{ "%.0f"|format(q.subtotal or 0) }}</td>
           </tr>
           {% if q.igst_amount %}
+          {% if q.quote_type == 'range' %}
+            {% set ns = namespace(min_gst=0) %}
+            {% for item in q.items %}{% set ns.min_gst = ns.min_gst + (item.min_amount * (item.gst_percent or 0) / 100) %}{% endfor %}
+          {% endif %}
           <tr>
             <td class="py-1 text-gray-500">GST</td>
-            <td class="py-1 text-right">₹{{ "%.0f"|format(q.igst_amount) }}</td>
+            <td class="py-1 text-right">
+              {% if q.quote_type == 'range' %}
+                ₹{{ "%.0f"|format(ns.min_gst) }} – ₹{{ "%.0f"|format(q.igst_amount) }}
+              {% else %}
+                ₹{{ "%.0f"|format(q.igst_amount) }}
+              {% endif %}
+            </td>
           </tr>
           {% endif %}
           {% for s in q.sundries %}
